@@ -163,19 +163,38 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		return
 	}
 	api := "https://tinyurl.com/api-create.php?url=" + url.QueryEscape(*customer.SubscriptionLink)
-	resp, err := http.Get(api)
-	if err != nil || resp.StatusCode >= 400 {
+	client := http.Client{Timeout: 5 * time.Second}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, api, nil)
+	if err != nil {
+		slog.Error("new request", "err", err)
+		return
+	}
+
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode >= http.StatusBadRequest {
 		alt := "https://is.gd/create.php?format=simple&url=" + url.QueryEscape(*customer.SubscriptionLink)
-		resp, err = http.Get(alt)
+		req, err = http.NewRequestWithContext(ctx, http.MethodGet, alt, nil)
+		if err != nil {
+			slog.Error("new alt request", "err", err)
+			return
+		}
+		resp, err = client.Do(req)
 		if err != nil {
 			slog.Error("shorten", "err", err)
 			return
 		}
 	}
 	defer resp.Body.Close()
-	data, _ := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Error("read short url", "err", err)
+		return
+	}
 	shortURL := string(data)
+	h.shortMu.Lock()
 	h.shortLinks[customer.TelegramID] = append(h.shortLinks[customer.TelegramID], ShortLink{URL: shortURL, CreatedAt: time.Now()})
+	h.shortMu.Unlock()
 	kb := [][]models.InlineKeyboardButton{
 		{{Text: h.translation.GetText(lang, "open_short_link_button"), URL: shortURL}},
 		{{Text: h.translation.GetText(lang, "short_list_button"), CallbackData: CallbackShortList}},
@@ -195,7 +214,9 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 
 func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	lang := update.CallbackQuery.From.LanguageCode
+	h.shortMu.RLock()
 	list := h.shortLinks[update.CallbackQuery.From.ID]
+	h.shortMu.RUnlock()
 	var text string
 	if len(list) == 0 {
 		text = h.translation.GetText(lang, "short_list_text")

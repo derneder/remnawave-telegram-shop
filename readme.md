@@ -288,5 +288,6 @@ go run ./cmd/bot
 
 ## Observability
 
-Prometheus metrics are exposed on port 9100. Use Grafana/Prometheus stack to visualize latency and error counters.
+Prometheus metrics are exposed on the port specified by `HEALTH_CHECK_PORT` (default 8080).
+Use Grafana/Prometheus stack to visualize latency and error counters.
 
