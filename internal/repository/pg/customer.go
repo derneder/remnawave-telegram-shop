@@ -28,6 +28,36 @@ func NewCustomerRepository(pool *pgxpool.Pool) *CustomerRepository {
 
 type Customer = domain.Customer
 
+func (cr *CustomerRepository) findOne(ctx context.Context, predicate sq.Sqlizer) (*Customer, error) {
+	buildSelect := sq.Select("id", "telegram_id", "expire_at", "created_at", "subscription_link", "language", "balance").
+		From("customer").
+		Where(predicate).
+		PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := buildSelect.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build select query: %w", err)
+	}
+
+	var customer Customer
+	err = cr.pool.QueryRow(ctx, sql, args...).Scan(
+		&customer.ID,
+		&customer.TelegramID,
+		&customer.ExpireAt,
+		&customer.CreatedAt,
+		&customer.SubscriptionLink,
+		&customer.Language,
+		&customer.Balance,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to query customer: %w", err)
+	}
+	return &customer, nil
+}
+
 func (cr *CustomerRepository) FindByExpirationRange(ctx context.Context, startDate, endDate time.Time) (*[]Customer, error) {
 	buildSelect := sq.Select("id", "telegram_id", "expire_at", "created_at", "subscription_link", "language", "balance").
 		From("customer").
@@ -77,65 +107,11 @@ func (cr *CustomerRepository) FindByExpirationRange(ctx context.Context, startDa
 }
 
 func (cr *CustomerRepository) FindById(ctx context.Context, id int64) (*Customer, error) {
-	buildSelect := sq.Select("id", "telegram_id", "expire_at", "created_at", "subscription_link", "language", "balance").
-		From("customer").
-		Where(sq.Eq{"id": id}).
-		PlaceholderFormat(sq.Dollar)
-
-	sql, args, err := buildSelect.ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build select query: %w", err)
-	}
-
-	var customer Customer
-
-	err = cr.pool.QueryRow(ctx, sql, args...).Scan(
-		&customer.ID,
-		&customer.TelegramID,
-		&customer.ExpireAt,
-		&customer.CreatedAt,
-		&customer.SubscriptionLink,
-		&customer.Language,
-		&customer.Balance,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to query customer: %w", err)
-	}
-	return &customer, nil
+	return cr.findOne(ctx, sq.Eq{"id": id})
 }
 
 func (cr *CustomerRepository) FindByTelegramId(ctx context.Context, telegramId int64) (*Customer, error) {
-	buildSelect := sq.Select("id", "telegram_id", "expire_at", "created_at", "subscription_link", "language", "balance").
-		From("customer").
-		Where(sq.Eq{"telegram_id": telegramId}).
-		PlaceholderFormat(sq.Dollar)
-
-	sql, args, err := buildSelect.ToSql()
-	if err != nil {
-		return nil, fmt.Errorf("failed to build select query: %w", err)
-	}
-
-	var customer Customer
-
-	err = cr.pool.QueryRow(ctx, sql, args...).Scan(
-		&customer.ID,
-		&customer.TelegramID,
-		&customer.ExpireAt,
-		&customer.CreatedAt,
-		&customer.SubscriptionLink,
-		&customer.Language,
-		&customer.Balance,
-	)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to query customer: %w", err)
-	}
-	return &customer, nil
+	return cr.findOne(ctx, sq.Eq{"telegram_id": telegramId})
 }
 
 func (cr *CustomerRepository) Create(ctx context.Context, customer *Customer) (*Customer, error) {
