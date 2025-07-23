@@ -196,6 +196,9 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode >= http.StatusBadRequest {
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
 		alt := "https://is.gd/create.php?format=simple&url=" + url.QueryEscape(*customer.SubscriptionLink)
 		req, err = http.NewRequestWithContext(ctx, http.MethodGet, alt, nil)
 		if err != nil {
@@ -203,7 +206,10 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 			return
 		}
 		resp, err = client.Do(req)
-		if err != nil {
+		if err != nil || resp.StatusCode >= http.StatusBadRequest {
+			if resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
 			slog.Error("shorten", "err", err)
 			return
 		}
