@@ -149,10 +149,20 @@ git clone https://github.com/Jolymmiels/remnawave-telegram-shop && cd remnawave-
 mv .env.sample .env
 ```
 
-3. Run the bot:
+3. Запустите контейнеры и примените миграции:
 
 ```bash
-docker compose up -d
+make dc-up
+make dc-migrate
+```
+
+## Запуск через Docker Compose
+
+Для остановки или просмотра логов доступны удобные цели Makefile:
+
+```bash
+make dc-logs    # смотреть логи
+make dc-down    # остановить контейнеры
 ```
 
 ## Tribute payment setup instructions
