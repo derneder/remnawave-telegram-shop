@@ -291,14 +291,7 @@ func InitConfig() {
 		return isWebAppLinkEnabled
 	}()
 
-	conf.miniApp = func() string {
-		v := os.Getenv("MINI_APP_URL")
-		if v != "" {
-			return v
-		} else {
-			return ""
-		}
-	}()
+	conf.miniApp = strings.TrimSpace(os.Getenv("MINI_APP_URL"))
 
 	conf.trialTrafficLimit = mustEnvInt("TRIAL_TRAFFIC_LIMIT")
 

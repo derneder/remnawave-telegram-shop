@@ -16,6 +16,7 @@ import (
 	"github.com/go-telegram/bot/models"
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
+	"remnawave-tg-shop-bot/internal/ui"
 )
 
 func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -168,7 +169,7 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 		}
 	}()
 	data, _ := io.ReadAll(resp.Body)
-	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
+	kb := ui.ConnectKeyboard(lang, "back_button", CallbackOther)
 	chatID, _, ok := callbackChatMessage(update)
 	if !ok {
 		slog.Error("callback message missing")
