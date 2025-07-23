@@ -14,15 +14,17 @@ import (
 	"log/slog"
 
 	"remnawave-tg-shop-bot/internal/observability"
+	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 )
 
 // App groups dependencies of the bot.
 type App struct {
-	Bot  *bot.Bot
-	Pool *pgxpool.Pool
-	Cron *cron.Cron
+	Bot   *bot.Bot
+	Pool  *pgxpool.Pool
+	Cron  *cron.Cron
+	Cache *cache.Cache
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -67,9 +69,14 @@ func New(ctx context.Context) (*App, error) {
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
 
-	return &App{Bot: b, Pool: pool, Cron: cron.New()}, nil
+	c := cache.NewCache(time.Hour)
+
+	return &App{Bot: b, Pool: pool, Cron: cron.New(), Cache: c}, nil
 }
 
 func (a *App) Close() {
 	a.Pool.Close()
+	if a.Cache != nil {
+		a.Cache.Close()
+	}
 }
