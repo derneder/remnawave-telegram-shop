@@ -11,7 +11,6 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 
-	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
 	domainpurchase "remnawave-tg-shop-bot/internal/domain/purchase"
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
@@ -19,37 +18,6 @@ import (
 )
 
 // stub implementations
-
-type stubCustomerRepo struct{ ctx context.Context }
-
-func (s *stubCustomerRepo) FindById(ctx context.Context, id int64) (*domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (s *stubCustomerRepo) FindByTelegramId(ctx context.Context, telegramId int64) (*domaincustomer.Customer, error) {
-	s.ctx = ctx
-	return &domaincustomer.Customer{ID: 1, TelegramID: telegramId, Language: "en", Balance: 0}, nil
-}
-func (s *stubCustomerRepo) Create(ctx context.Context, c *domaincustomer.Customer) (*domaincustomer.Customer, error) {
-	return c, nil
-}
-func (s *stubCustomerRepo) UpdateFields(ctx context.Context, id int64, updates map[string]interface{}) error {
-	return nil
-}
-func (s *stubCustomerRepo) FindByTelegramIds(ctx context.Context, telegramIDs []int64) ([]domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (s *stubCustomerRepo) DeleteByNotInTelegramIds(ctx context.Context, telegramIDs []int64) error {
-	return nil
-}
-func (s *stubCustomerRepo) CreateBatch(ctx context.Context, customers []domaincustomer.Customer) error {
-	return nil
-}
-func (s *stubCustomerRepo) UpdateBatch(ctx context.Context, customers []domaincustomer.Customer) error {
-	return nil
-}
-func (s *stubCustomerRepo) FindByExpirationRange(ctx context.Context, startDate, endDate time.Time) (*[]domaincustomer.Customer, error) {
-	return nil, nil
-}
 
 type stubPurchaseRepo struct {
 	ctxCreate context.Context

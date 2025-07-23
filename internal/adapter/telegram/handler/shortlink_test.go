@@ -52,31 +52,6 @@ func (dummyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header), Request: req}, nil
 }
 
-type stubCustomerRepoSL struct{}
-
-func (stubCustomerRepoSL) FindById(context.Context, int64) (*domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (stubCustomerRepoSL) FindByTelegramId(context.Context, int64) (*domaincustomer.Customer, error) {
-	link := "https://example.com"
-	return &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}, nil
-}
-func (stubCustomerRepoSL) Create(ctx context.Context, c *domaincustomer.Customer) (*domaincustomer.Customer, error) {
-	return c, nil
-}
-func (stubCustomerRepoSL) UpdateFields(context.Context, int64, map[string]interface{}) error {
-	return nil
-}
-func (stubCustomerRepoSL) FindByTelegramIds(context.Context, []int64) ([]domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (stubCustomerRepoSL) DeleteByNotInTelegramIds(context.Context, []int64) error      { return nil }
-func (stubCustomerRepoSL) CreateBatch(context.Context, []domaincustomer.Customer) error { return nil }
-func (stubCustomerRepoSL) UpdateBatch(context.Context, []domaincustomer.Customer) error { return nil }
-func (stubCustomerRepoSL) FindByExpirationRange(context.Context, time.Time, time.Time) (*[]domaincustomer.Customer, error) {
-	return nil, nil
-}
-
 func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 	rt := &testRoundTripper{}
 	oldTransport := http.DefaultTransport
@@ -89,8 +64,9 @@ func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 		t.Fatalf("new bot: %v", err)
 	}
 
+	link := "https://example.com"
 	h := &Handler{
-		customerRepository: stubCustomerRepoSL{},
+		customerRepository: &stubCustomerRepo{customerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}},
 		shortLinks:         make(map[int64][]ShortLink),
 		translation:        &translation.Manager{},
 	}
