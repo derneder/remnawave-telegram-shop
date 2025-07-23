@@ -24,8 +24,6 @@ services:
   bot:
     # Собранный образ с GitHub Container Registry
     image: ghcr.io/jolymmiels/remnawave-telegram-shop-bot:latest
-    build:
-      context: .
     env_file:
       - .env
     depends_on:
