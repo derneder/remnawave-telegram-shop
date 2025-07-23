@@ -13,11 +13,18 @@ import (
 	"github.com/robfig/cron/v3"
 	"log/slog"
 
+	"remnawave-tg-shop-bot/internal/adapter/payment/cryptopay"
+	"remnawave-tg-shop-bot/internal/adapter/payment/yookassa"
+	"remnawave-tg-shop-bot/internal/adapter/remnawave"
+	tgHandler "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
+	tgMessenger "remnawave-tg-shop-bot/internal/adapter/telegram/messenger"
 	"remnawave-tg-shop-bot/internal/observability"
+	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
-	pg "remnawave-tg-shop-bot/internal/repository/pg"
-	"remnawave-tg-shop-bot/internal/service/notification"
+	pgrepo "remnawave-tg-shop-bot/internal/repository/pg"
+	"remnawave-tg-shop-bot/internal/service/payment"
+	syncsvc "remnawave-tg-shop-bot/internal/service/sync"
 )
 
 // App groups dependencies of the bot.
@@ -52,6 +59,24 @@ func New(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create bot: %w", err)
 	}
+
+	customerRepo := pgrepo.NewCustomerRepository(pool)
+	purchaseRepo := pgrepo.NewPurchaseRepository(pool)
+	referralRepo := pgrepo.NewReferralRepository(pool)
+	promoRepo := pgrepo.NewPromocodeRepository(pool)
+	promoUsageRepo := pgrepo.NewPromocodeUsageRepository(pool)
+	c := cache.NewCache(time.Minute)
+
+	remClient := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
+	messenger := tgMessenger.NewBotMessenger(b)
+	cryptoClient := cryptopay.NewCryptoPayClient(config.CryptoPayUrl(), config.CryptoPayToken())
+	yookasaClient := yookasa.NewClient(config.YookasaUrl(), config.YookasaShopId(), config.YookasaSecretKey())
+
+	paymentSvc := payment.NewPaymentService(tm, purchaseRepo, remClient, customerRepo, messenger, cryptoClient, yookasaClient, referralRepo, promoRepo, promoUsageRepo, c)
+	syncSvc := syncsvc.NewSyncService(remClient, customerRepo)
+
+	h := tgHandler.NewHandler(syncSvc, paymentSvc, tm, customerRepo, purchaseRepo, cryptoClient, yookasaClient, referralRepo, promoRepo, promoUsageRepo, c)
+	initHandlers(b, h)
 
 	metricsSrv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", config.GetHealthCheckPort()),
