@@ -24,10 +24,9 @@ func main() {
 		slog.Error("init app", "err", err)
 		return
 	}
-	defer a.Close()
+	defer a.Shutdown(ctx)
 
-	a.Cron.Start()
-	defer a.Cron.Stop()
+	a.Start()
 
 	a.Bot.Start(ctx)
 }
