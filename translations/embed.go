@@ -2,5 +2,5 @@ package translations
 
 import "embed"
 
-//go:embed *.json
+//go:embed *.yml
 var FS embed.FS
