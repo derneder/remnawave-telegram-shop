@@ -1,10 +1,11 @@
-package notification
+package notification_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/robfig/cron/v3"
+	notif "remnawave-tg-shop-bot/internal/service/notification"
 )
 
 type mockNotifier struct{ called bool }
@@ -17,7 +18,7 @@ func (m *mockNotifier) SendSubscriptionNotifications(ctx context.Context) error 
 func TestRegisterSubscriptionCron(t *testing.T) {
 	c := cron.New()
 	m := &mockNotifier{}
-	if err := RegisterSubscriptionCron(c, m); err != nil {
+	if err := notif.RegisterSubscriptionCron(c, m); err != nil {
 		t.Fatalf("register cron: %v", err)
 	}
 	entries := c.Entries()

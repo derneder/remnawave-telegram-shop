@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"bytes"
@@ -11,10 +11,12 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 
+	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	domainpurchase "remnawave-tg-shop-bot/internal/domain/purchase"
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	"remnawave-tg-shop-bot/internal/service/payment"
+	"remnawave-tg-shop-bot/tests/testutils"
 )
 
 // stub implementations
@@ -64,7 +66,7 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
-	custRepo := &stubCustomerRepo{}
+	custRepo := &testutils.StubCustomerRepo{}
 	purchRepo := &stubPurchaseRepo{}
 	messenger := &stubMessenger{}
 	cache := cache.NewCache(context.Background(), time.Minute)
@@ -72,12 +74,7 @@ func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
 	trans := translation.GetInstance()
 	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, messenger, nil, nil, nil, nil, cache)
 
-	h := &Handler{
-		customerRepository: custRepo,
-		paymentService:     paySvc,
-		translation:        trans,
-		cache:              cache,
-	}
+	h := handlerpkg.NewHandler(nil, paySvc, trans, custRepo, nil, nil, nil, nil, cache)
 
 	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &httpClient{}), bot.WithSkipGetMe())
 	if err != nil {
@@ -95,7 +92,7 @@ func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "k", "v")
 	h.PaymentCallbackHandler(ctx, b, upd)
 
-	if custRepo.ctx.Value("k") != "v" {
+	if custRepo.Ctx.Value("k") != "v" {
 		t.Errorf("context not propagated to repository")
 	}
 	if purchRepo.ctxCreate.Value("k") != "v" || purchRepo.ctxUpdate.Value("k") != "v" {

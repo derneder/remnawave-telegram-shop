@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"context"
@@ -11,7 +11,9 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 
+	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	"remnawave-tg-shop-bot/tests/testutils"
 )
 
 type startHTTPClient struct{}
@@ -28,8 +30,8 @@ func TestStartCommandHandler_NoArgs(t *testing.T) {
 		t.Fatalf("init translations: %v", err)
 	}
 
-	repo := &stubCustomerRepo{}
-	h := &Handler{customerRepository: repo, translation: trans}
+	repo := &testutils.StubCustomerRepo{}
+	h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, nil, nil, nil, nil)
 
 	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
 	if err != nil {
@@ -48,7 +50,7 @@ func TestStartCommandHandler_NoArgs(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "k", "v")
 	h.StartCommandHandler(ctx, b, upd)
 
-	if repo.ctx.Value("k") != "v" {
+	if repo.Ctx.Value("k") != "v" {
 		t.Errorf("context not propagated")
 	}
 }

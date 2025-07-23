@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"context"
@@ -11,8 +11,10 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	"remnawave-tg-shop-bot/tests/testutils"
 )
 
 type closeRecorder struct {
@@ -65,11 +67,7 @@ func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 	}
 
 	link := "https://example.com"
-	h := &Handler{
-		customerRepository: &stubCustomerRepo{customerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}},
-		shortLinks:         make(map[int64][]ShortLink),
-		translation:        &translation.Manager{},
-	}
+	h := handlerpkg.NewHandler(nil, nil, &translation.Manager{}, &testutils.StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}}, nil, nil, nil, nil, nil)
 
 	upd := &models.Update{CallbackQuery: &models.CallbackQuery{From: models.User{ID: 1, LanguageCode: "en"}}}
 
