@@ -15,7 +15,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
-          version: v1.59
+          version: v1.59.1
           args: --config=.golangci.yml --timeout=5m
       - name: Vet
         run: go vet ./...
