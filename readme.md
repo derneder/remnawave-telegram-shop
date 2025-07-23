@@ -318,3 +318,9 @@ Integration tests (if any) can be executed with:
 go test ./tests/integration -tags integration
 ```
 
+To generate coverage report:
+
+```bash
+make cover
+```
+
