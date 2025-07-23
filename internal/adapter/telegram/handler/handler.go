@@ -29,6 +29,7 @@ type Handler struct {
 	awaitingPromo            map[int64]bool
 	promoMu                  sync.RWMutex
 	shortLinks               map[int64][]ShortLink
+	shortMu                  sync.RWMutex
 }
 
 type ShortLink struct {

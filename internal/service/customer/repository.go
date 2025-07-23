@@ -1,6 +1,7 @@
 package customer
 
-import "remnawave-tg-shop-bot/internal/repository"
+import domain "remnawave-tg-shop-bot/internal/domain/customer"
 
-// Repository is an alias for repository.CustomerRepository for backward compatibility.
-type Repository = repository.CustomerRepository
+// Repository exposes persistence operations for customers.
+// It aliases the domain layer interface so services depend only on abstractions.
+type Repository = domain.Repository

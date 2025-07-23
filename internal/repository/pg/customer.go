@@ -19,6 +19,9 @@ type CustomerRepository struct {
 	pool *pgxpool.Pool
 }
 
+// Ensure CustomerRepository satisfies the domain interface.
+var _ domain.Repository = (*CustomerRepository)(nil)
+
 func NewCustomerRepository(pool *pgxpool.Pool) *CustomerRepository {
 	return &CustomerRepository{pool: pool}
 }

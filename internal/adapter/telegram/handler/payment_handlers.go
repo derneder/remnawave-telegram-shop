@@ -18,7 +18,11 @@ import (
 )
 
 func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	langCode := update.CallbackQuery.From.LanguageCode
 
 	var priceButtons []models.InlineKeyboardButton
@@ -57,14 +61,14 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 		{Text: h.translation.GetText(langCode, "back_to_account_button"), CallbackData: CallbackStart},
 	})
 
-	customer, _ := h.customerRepository.FindByTelegramId(ctx, callback.Chat.ID)
+	customer, _ := h.customerRepository.FindByTelegramId(ctx, chatID)
 	bal := 0
 	if customer != nil {
 		bal = int(customer.Balance)
 	}
 	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:    callback.Chat.ID,
-		MessageID: callback.ID,
+		ChatID:    chatID,
+		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: keyboard,
@@ -78,7 +82,11 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 }
 
 func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	callbackQuery := parseCallbackData(update.CallbackQuery.Data)
 	langCode := update.CallbackQuery.From.LanguageCode
 	month := callbackQuery["month"]
@@ -92,8 +100,8 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 	})
 
 	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
-		ChatID:    callback.Chat.ID,
-		MessageID: callback.ID,
+		ChatID:    chatID,
+		MessageID: msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: keyboard,
 		},
@@ -105,7 +113,11 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 }
 
 func (h *Handler) PaymentCallbackHandler(_ context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	callbackQuery := parseCallbackData(update.CallbackQuery.Data)
 	month, err := strconv.Atoi(callbackQuery["month"])
 	if err != nil {
@@ -127,13 +139,13 @@ func (h *Handler) PaymentCallbackHandler(_ context.Context, b *bot.Bot, update *
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
-	customer, err := h.customerRepository.FindByTelegramId(ctx, callback.Chat.ID)
+	customer, err := h.customerRepository.FindByTelegramId(ctx, chatID)
 	if err != nil {
 		slog.Error("Error finding customer", "err", err)
 		return
 	}
 	if customer == nil {
-		slog.Error("customer not exist", "chatID", callback.Chat.ID, "err", err)
+		slog.Error("customer not exist", "chatID", chatID, "err", err)
 		return
 	}
 
@@ -147,8 +159,8 @@ func (h *Handler) PaymentCallbackHandler(_ context.Context, b *bot.Bot, update *
 	langCode := update.CallbackQuery.From.LanguageCode
 
 	message, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
-		ChatID:    callback.Chat.ID,
-		MessageID: callback.ID,
+		ChatID:    chatID,
+		MessageID: msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: [][]models.InlineKeyboardButton{
 				{
@@ -192,9 +204,13 @@ func (h *Handler) SuccessPaymentHandler(ctx context.Context, b *bot.Bot, update 
 }
 
 func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	lang := update.CallbackQuery.From.LanguageCode
-	customer, _ := h.customerRepository.FindByTelegramId(ctx, callback.Chat.ID)
+	customer, _ := h.customerRepository.FindByTelegramId(ctx, chatID)
 	if customer == nil {
 		return
 	}
@@ -208,8 +224,8 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 	}
 
 	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      callback.Chat.ID,
-		MessageID:   callback.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
@@ -220,9 +236,13 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 }
 
 func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	lang := update.CallbackQuery.From.LanguageCode
-	customer, _ := h.customerRepository.FindByTelegramId(ctx, callback.Chat.ID)
+	customer, _ := h.customerRepository.FindByTelegramId(ctx, chatID)
 	if customer == nil {
 		return
 	}
@@ -245,8 +265,8 @@ func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackBalance}},
 	}
 	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      callback.Chat.ID,
-		MessageID:   callback.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		Text:        fmt.Sprintf(h.translation.GetText(lang, "topup_intro_text"), int(customer.Balance)),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
 	})
@@ -256,7 +276,11 @@ func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *
 }
 
 func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	data := parseCallbackData(update.CallbackQuery.Data)
 	amount := data["amount"]
 	lang := update.CallbackQuery.From.LanguageCode
@@ -277,8 +301,8 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackTopup}})
 
 	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
-		ChatID:      callback.Chat.ID,
-		MessageID:   callback.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
 	})
 	if err != nil {
@@ -286,13 +310,17 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 }
 func (h *Handler) PayFromBalanceCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, _, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	data := parseCallbackData(update.CallbackQuery.Data)
 	month, _ := strconv.Atoi(data["month"])
 
 	ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	customer, err := h.customerRepository.FindByTelegramId(ctxTimeout, callback.Chat.ID)
+	customer, err := h.customerRepository.FindByTelegramId(ctxTimeout, chatID)
 	if err != nil || customer == nil {
 		return
 	}

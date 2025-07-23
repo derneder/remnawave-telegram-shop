@@ -52,3 +52,16 @@ func (h *Handler) CreateCustomerIfNotExistMiddleware(next bot.HandlerFunc) bot.H
 		next(ctx, b, update)
 	}
 }
+
+// LogUpdateMiddleware prints basic info about incoming updates.
+func LogUpdateMiddleware(next bot.HandlerFunc) bot.HandlerFunc {
+	return func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		switch {
+		case update.Message != nil:
+			slog.Info("update", "type", "message", "chat", update.Message.Chat.ID)
+		case update.CallbackQuery != nil:
+			slog.Info("update", "type", "callback", "from", update.CallbackQuery.From.ID)
+		}
+		next(ctx, b, update)
+	}
+}
