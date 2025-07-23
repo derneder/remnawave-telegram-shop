@@ -11,39 +11,37 @@ import (
 )
 
 type config struct {
-	telegramToken                                             string
-	price1, price3, price6                                    int
-	starsPrice1, starsPrice3, starsPrice6                     int
-	remnawaveUrl, remnawaveToken, remnawaveMode               string
-	databaseURL                                               string
-	cryptoPayURL, cryptoPayToken                              string
-	botURL                                                    string
-	yookasaURL, yookasaShopId, yookasaSecretKey, yookasaEmail string
-	trafficLimit, trialTrafficLimit                           int
-	feedbackURL                                               string
-	channelURL                                                string
-	serverStatusURL                                           string
-	supportURL                                                string
-	tosURL                                                    string
-	isYookasaEnabled                                          bool
-	isCryptoEnabled                                           bool
-	isTelegramStarsEnabled                                    bool
-	adminTelegramIds                                          map[int64]struct{}
-	trialDays                                                 int
-	inboundUUIDs                                              map[uuid.UUID]uuid.UUID
-	referralDays                                              int
-	referralBonus                                             int
-	miniApp                                                   string
-	enableAutoPayment                                         bool
-	healthCheckPort                                           int
-	tributeWebhookUrl, tributeAPIKey, tributePaymentUrl       string
-	isWebAppLinkEnabled                                       bool
-	xApiKey                                                   string
-	telegramProxyURL                                          string
-	telegramProxyHost                                         string
-	telegramProxyPort                                         int
-	telegramProxyKey                                          string
-	telegramProxyChannel                                      string
+	telegramToken                                       string
+	price1, price3, price6                              int
+	starsPrice1, starsPrice3, starsPrice6               int
+	remnawaveUrl, remnawaveToken, remnawaveMode         string
+	databaseURL                                         string
+	cryptoPayURL, cryptoPayToken                        string
+	botURL                                              string
+	trafficLimit, trialTrafficLimit                     int
+	feedbackURL                                         string
+	channelURL                                          string
+	serverStatusURL                                     string
+	supportURL                                          string
+	tosURL                                              string
+	isCryptoEnabled                                     bool
+	isTelegramStarsEnabled                              bool
+	adminTelegramIds                                    map[int64]struct{}
+	trialDays                                           int
+	inboundUUIDs                                        map[uuid.UUID]uuid.UUID
+	referralDays                                        int
+	referralBonus                                       int
+	miniApp                                             string
+	enableAutoPayment                                   bool
+	healthCheckPort                                     int
+	tributeWebhookUrl, tributeAPIKey, tributePaymentUrl string
+	isWebAppLinkEnabled                                 bool
+	xApiKey                                             string
+	telegramProxyURL                                    string
+	telegramProxyHost                                   string
+	telegramProxyPort                                   int
+	telegramProxyKey                                    string
+	telegramProxyChannel                                string
 }
 
 var conf config
@@ -122,10 +120,6 @@ func TosURL() string {
 	return conf.tosURL
 }
 
-func YookasaEmail() string {
-	return conf.yookasaEmail
-}
-
 func Price1() int {
 	return conf.price1
 }
@@ -190,25 +184,12 @@ func BotURL() string {
 func SetBotURL(botURL string) {
 	conf.botURL = botURL
 }
-func YookasaUrl() string {
-	return conf.yookasaURL
-}
-func YookasaShopId() string {
-	return conf.yookasaShopId
-}
-func YookasaSecretKey() string {
-	return conf.yookasaSecretKey
-}
 func TrafficLimit() int {
 	return conf.trafficLimit * bytesInGigabyte
 }
 
 func IsCryptoPayEnabled() bool {
 	return conf.isCryptoEnabled
-}
-
-func IsYookasaEnabled() bool {
-	return conf.isYookasaEnabled
 }
 
 func IsTelegramStarsEnabled() bool {
@@ -361,14 +342,6 @@ func InitConfig() {
 	if conf.isCryptoEnabled {
 		conf.cryptoPayURL = mustEnv("CRYPTO_PAY_URL")
 		conf.cryptoPayToken = mustEnv("CRYPTO_PAY_TOKEN")
-	}
-
-	conf.isYookasaEnabled = envBool("YOOKASA_ENABLED")
-	if conf.isYookasaEnabled {
-		conf.yookasaURL = mustEnv("YOOKASA_URL")
-		conf.yookasaShopId = mustEnv("YOOKASA_SHOP_ID")
-		conf.yookasaSecretKey = mustEnv("YOOKASA_SECRET_KEY")
-		conf.yookasaEmail = mustEnv("YOOKASA_EMAIL")
 	}
 
 	conf.trafficLimit = mustEnvInt("TRAFFIC_LIMIT")

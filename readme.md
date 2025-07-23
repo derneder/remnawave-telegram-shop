@@ -12,10 +12,9 @@ purchase and manage subscriptions through Telegram with multiple payment system 
 
 ### Payment Systems
 
-- [YooKassa API](https://yookassa.ru/developers/api)
 - [CryptoPay API](https://help.crypt.bot/crypto-pay-api)
- - Telegram Stars
- - Tribute
+- Telegram Stars
+- Tribute
 
 #### Telegram Stars pricing
 
@@ -85,11 +84,6 @@ The application requires the following environment variables to be set:
 | `CRYPTO_PAY_ENABLED`     | Enable/disable CryptoPay payment method (true/false)                                                                                         |
 | `CRYPTO_PAY_TOKEN`       | CryptoPay API token                                                                                                                          |
 | `CRYPTO_PAY_URL`         | CryptoPay API URL                                                                                                                            |
-| `YOOKASA_ENABLED`        | Enable/disable YooKassa payment method (true/false)                                                                                          |
-| `YOOKASA_SECRET_KEY`     | YooKassa API secret key                                                                                                                      |
-| `YOOKASA_SHOP_ID`        | YooKassa shop identifier                                                                                                                     |
-| `YOOKASA_URL`            | YooKassa API URL                                                                                                                             |
-| `YOOKASA_EMAIL`          | Email address associated with YooKassa account                                                                                               |
 | `TRAFFIC_LIMIT`          | Maximum allowed traffic in gb (0 to set unlimited)                                                                                           |
 | `TELEGRAM_STARS_ENABLED` | Enable/disable Telegram Stars payment method (true/false)                                                                                    |
 | `SERVER_STATUS_URL`      | URL to server status page (optional) - if not set, button will not be displayed                                                              |
