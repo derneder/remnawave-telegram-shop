@@ -9,12 +9,10 @@ import (
 	"testing"
 
 	"gopkg.in/yaml.v3"
-
-	"remnawave-tg-shop-bot/internal/pkg/translation"
 )
 
 func TestLoadTranslationsFallback(t *testing.T) {
-	tm := translation.GetInstance()
+	tm := GetInstance()
 	if err := tm.InitDefaultTranslations(); err != nil {
 		t.Fatalf("init translations: %v", err)
 	}
