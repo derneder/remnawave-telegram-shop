@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -9,6 +11,7 @@ import (
 	"github.com/go-telegram/bot/models"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/robfig/cron/v3"
+	"log/slog"
 
 	"remnawave-tg-shop-bot/internal/observability"
 	"remnawave-tg-shop-bot/internal/pkg/config"
@@ -27,12 +30,12 @@ func New(ctx context.Context) (*App, error) {
 
 	tm := translation.GetInstance()
 	if err := tm.InitDefaultTranslations(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("init translations: %w", err)
 	}
 
 	pool, err := InitDatabase(ctx, config.DatabaseURL())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect db: %w", err)
 	}
 
 	b, err := bot.New(config.TelegramToken(), bot.WithMiddlewares(
@@ -45,11 +48,23 @@ func New(ctx context.Context) (*App, error) {
 		},
 	))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create bot: %w", err)
+	}
+
+	metricsSrv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", config.GetHealthCheckPort()),
+		Handler: observability.Handler(),
 	}
 
 	go func() {
-		http.ListenAndServe(":9100", observability.Handler())
+		if err := metricsSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("metrics server", "err", err)
+		}
+	}()
+
+	go func() {
+		<-ctx.Done()
+		_ = metricsSrv.Shutdown(context.Background())
 	}()
 
 	return &App{Bot: b, Pool: pool, Cron: cron.New()}, nil

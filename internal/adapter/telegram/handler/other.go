@@ -175,7 +175,9 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 	defer resp.Body.Close()
 	data, _ := io.ReadAll(resp.Body)
 	shortURL := string(data)
+	h.shortMu.Lock()
 	h.shortLinks[customer.TelegramID] = append(h.shortLinks[customer.TelegramID], ShortLink{URL: shortURL, CreatedAt: time.Now()})
+	h.shortMu.Unlock()
 	kb := [][]models.InlineKeyboardButton{
 		{{Text: h.translation.GetText(lang, "open_short_link_button"), URL: shortURL}},
 		{{Text: h.translation.GetText(lang, "short_list_button"), CallbackData: CallbackShortList}},
@@ -195,7 +197,9 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 
 func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	lang := update.CallbackQuery.From.LanguageCode
+	h.shortMu.RLock()
 	list := h.shortLinks[update.CallbackQuery.From.ID]
+	h.shortMu.RUnlock()
 	var text string
 	if len(list) == 0 {
 		text = h.translation.GetText(lang, "short_list_text")
