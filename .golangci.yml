@@ -1,6 +1,11 @@
-version: 2
+version: "2"
 run:
   timeout: 5m
 linters:
-  disable-all: true
-  enable: []
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - gosec
+  disable:
+    - revive

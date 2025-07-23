@@ -89,16 +89,16 @@ func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
 		},
 	}
 
-	ctx := context.WithValue(context.Background(), "k", "v")
+	ctx := context.WithValue(context.Background(), ctxKey{}, "v")
 	h.PaymentCallbackHandler(ctx, b, upd)
 
-	if custRepo.Ctx.Value("k") != "v" {
+	if custRepo.Ctx.Value(ctxKey{}) != "v" {
 		t.Errorf("context not propagated to repository")
 	}
-	if purchRepo.ctxCreate.Value("k") != "v" || purchRepo.ctxUpdate.Value("k") != "v" {
+	if purchRepo.ctxCreate.Value(ctxKey{}) != "v" || purchRepo.ctxUpdate.Value(ctxKey{}) != "v" {
 		t.Errorf("context not propagated to purchase repository")
 	}
-	if messenger.ctx.Value("k") != "v" {
+	if messenger.ctx.Value(ctxKey{}) != "v" {
 		t.Errorf("context not propagated to messenger")
 	}
 }

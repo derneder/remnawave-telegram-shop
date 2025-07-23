@@ -47,10 +47,10 @@ func TestStartCommandHandler_NoArgs(t *testing.T) {
 		},
 	}
 
-	ctx := context.WithValue(context.Background(), "k", "v")
+	ctx := context.WithValue(context.Background(), ctxKey{}, "v")
 	h.StartCommandHandler(ctx, b, upd)
 
-	if repo.Ctx.Value("k") != "v" {
+	if repo.Ctx.Value(ctxKey{}) != "v" {
 		t.Errorf("context not propagated")
 	}
 }

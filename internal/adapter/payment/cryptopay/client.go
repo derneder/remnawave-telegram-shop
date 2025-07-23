@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 )
 
@@ -46,7 +47,11 @@ func (c *Client) CreateInvoice(invoiceReq *InvoiceRequest) (*InvoiceResponse, er
 	if err != nil {
 		return nil, fmt.Errorf("error while making invoice req: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			slog.Error("close body", "err", cerr)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -109,7 +114,11 @@ func (c *Client) GetInvoices(status, fiat, asset, invoiceIds string, offset, lim
 	if err != nil {
 		return nil, fmt.Errorf("error while making query: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			slog.Error("close body", "err", cerr)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
