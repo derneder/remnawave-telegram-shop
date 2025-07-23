@@ -13,7 +13,13 @@ import (
 	"github.com/robfig/cron/v3"
 	"log/slog"
 
+	"remnawave-tg-shop-bot/internal/adapter/payment/cryptopay"
+	"remnawave-tg-shop-bot/internal/adapter/payment/yookassa"
+	"remnawave-tg-shop-bot/internal/adapter/remnawave"
+	tgHandler "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
+	tgMessenger "remnawave-tg-shop-bot/internal/adapter/telegram/messenger"
 	"remnawave-tg-shop-bot/internal/observability"
+	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
@@ -22,9 +28,10 @@ import (
 
 // App groups dependencies of the bot.
 type App struct {
-	Bot  *bot.Bot
-	Pool *pgxpool.Pool
-	Cron *cron.Cron
+	Bot   *bot.Bot
+	Pool  *pgxpool.Pool
+	Cron  *cron.Cron
+	Cache *cache.Cache
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -52,7 +59,6 @@ func New(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create bot: %w", err)
 	}
-
 	customerRepo := pg.NewCustomerRepository(pool)
 	subSvc := notification.NewSubscriptionService(customerRepo, b, tm)
 	c := cron.New()
@@ -75,10 +81,17 @@ func New(ctx context.Context) (*App, error) {
 		<-ctx.Done()
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
+	c := cache.NewCache(time.Hour)
 
 	return &App{Bot: b, Pool: pool, Cron: c}, nil
 }
 
 func (a *App) Close() {
+	if a.Cron != nil {
+		a.Cron.Stop()
+	}
 	a.Pool.Close()
+	if a.Cache != nil {
+		a.Cache.Close()
+	}
 }
