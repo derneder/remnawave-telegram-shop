@@ -14,6 +14,7 @@ import (
 	"log/slog"
 
 	"remnawave-tg-shop-bot/internal/observability"
+	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
@@ -22,9 +23,10 @@ import (
 
 // App groups dependencies of the bot.
 type App struct {
-	Bot  *bot.Bot
-	Pool *pgxpool.Pool
-	Cron *cron.Cron
+	Bot   *bot.Bot
+	Pool  *pgxpool.Pool
+	Cron  *cron.Cron
+	Cache *cache.Cache
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -68,23 +70,9 @@ func New(ctx context.Context) (*App, error) {
 		<-ctx.Done()
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
+	c := cache.NewCache(time.Hour)
 
-	c := cron.New()
-
-	customerRepo := pg.NewCustomerRepository(pool)
-	notifSvc := notification.NewSubscriptionService(customerRepo, b, tm)
-
-	if _, err := c.AddFunc("@daily", func() {
-		if err := notifSvc.SendSubscriptionNotifications(context.Background()); err != nil {
-			slog.Error("send subscription notifications", "err", err)
-		}
-	}); err != nil {
-		return nil, fmt.Errorf("schedule notifications: %w", err)
-	}
-
-	c.Start()
-
-	return &App{Bot: b, Pool: pool, Cron: c}, nil
+	return &App{Bot: b, Pool: pool, Cron: cron.New(), Cache: c}, nil
 }
 
 func (a *App) Close() {
@@ -92,4 +80,7 @@ func (a *App) Close() {
 		a.Cron.Stop()
 	}
 	a.Pool.Close()
+	if a.Cache != nil {
+		a.Cache.Close()
+	}
 }
