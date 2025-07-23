@@ -264,12 +264,18 @@ func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		},
 		{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackBalance}},
 	}
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	text := fmt.Sprintf(h.translation.GetText(lang, "topup_intro_text"), int(customer.Balance))
+	params := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
-		Text:        fmt.Sprintf(h.translation.GetText(lang, "topup_intro_text"), int(customer.Balance)),
+		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		slog.Error("Error sending topup message", "err", err)
 	}
