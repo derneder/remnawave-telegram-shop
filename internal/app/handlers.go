@@ -6,7 +6,8 @@ import (
 	"remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 )
 
-func initHandlers(b *bot.Bot, h *handler.Handler) {
+func (a *App) InitHandlers(h *handler.Handler) {
+	b := a.Bot
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypeExact, h.StartCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/menu", bot.MatchTypeExact, h.MenuCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, h.HelpCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
