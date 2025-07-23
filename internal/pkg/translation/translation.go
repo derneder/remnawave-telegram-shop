@@ -1,7 +1,6 @@
 package translation
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"gopkg.in/yaml.v3"
 	"remnawave-tg-shop-bot/translations"
 )
 
@@ -44,11 +44,11 @@ func (tm *Manager) InitFromFS(fsys fs.FS, dir string) error {
 	}
 
 	for _, file := range files {
-		if file.IsDir() || !strings.HasSuffix(file.Name(), ".json") {
+		if file.IsDir() || !strings.HasSuffix(file.Name(), ".yml") {
 			continue
 		}
 
-		langCode := strings.TrimSuffix(file.Name(), ".json")
+		langCode := strings.TrimSuffix(file.Name(), ".yml")
 		filePath := filepath.Join(dir, file.Name())
 
 		content, err := fs.ReadFile(fsys, filePath)
@@ -57,7 +57,7 @@ func (tm *Manager) InitFromFS(fsys fs.FS, dir string) error {
 		}
 
 		var translation Translation
-		if err := json.Unmarshal(content, &translation); err != nil {
+		if err := yaml.Unmarshal(content, &translation); err != nil {
 			return fmt.Errorf("failed to parse translation file %s: %w", file.Name(), err)
 		}
 
