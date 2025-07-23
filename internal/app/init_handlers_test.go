@@ -56,7 +56,7 @@ func TestInitHandlers(t *testing.T) {
 	}
 
 	repo := &fakeCustomerRepo{}
-	h := handler.NewHandler(nil, nil, tm, repo, nil, nil, nil, nil, nil, nil, nil)
+	h := handler.NewHandler(nil, nil, tm, repo, nil, nil, nil, nil, nil)
 
 	initHandlers(b, h)
 

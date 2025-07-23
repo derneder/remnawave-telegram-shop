@@ -286,11 +286,13 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	lang := update.CallbackQuery.From.LanguageCode
 
 	var keyboard [][]models.InlineKeyboardButton
-	if config.IsCryptoPayEnabled() {
-		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "crypto_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeCrypto, amount)}})
-	}
-	if config.GetTributePaymentUrl() != "" {
-		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "tribute_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeTribute, amount)}})
+	for _, p := range h.paymentService.EnabledProviders() {
+		switch p.Type() {
+		case pg.InvoiceTypeCrypto:
+			keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "crypto_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeCrypto, amount)}})
+		case pg.InvoiceTypeTribute:
+			keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "tribute_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeTribute, amount)}})
+		}
 	}
 	if config.IsTelegramStarsEnabled() {
 		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "stars_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeTelegram, amount)}})

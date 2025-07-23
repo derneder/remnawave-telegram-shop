@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"remnawave-tg-shop-bot/internal/adapter/payment/cryptopay"
 	"remnawave-tg-shop-bot/internal/adapter/remnawave"
 	tg "remnawave-tg-shop-bot/internal/adapter/telegram/messenger"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
@@ -32,11 +31,22 @@ type PaymentService struct {
 	customerRepository       custrepo.Repository
 	messenger                tg.Messenger
 	translation              *translation.Manager
-	cryptoPayClient          *cryptopay.Client
+	providers                map[domainpurchase.InvoiceType]Provider
 	referralRepository       *pg.ReferralRepository
 	promocodeRepository      *pg.PromocodeRepository
 	promocodeUsageRepository *pg.PromocodeUsageRepository
 	cache                    *cache.Cache
+}
+
+// EnabledProviders returns slice of active payment providers.
+func (s PaymentService) EnabledProviders() []Provider {
+	var res []Provider
+	for _, p := range s.providers {
+		if p.Enabled() {
+			res = append(res, p)
+		}
+	}
+	return res
 }
 
 func NewPaymentService(
@@ -45,19 +55,25 @@ func NewPaymentService(
 	remnawaveClient *remnawave.Client,
 	customerRepository custrepo.Repository,
 	messenger tg.Messenger,
-	cryptoPayClient *cryptopay.Client,
+	providers []Provider,
 	referralRepository *pg.ReferralRepository,
 	promocodeRepository *pg.PromocodeRepository,
 	promocodeUsageRepository *pg.PromocodeUsageRepository,
 	cache *cache.Cache,
 ) *PaymentService {
+	provMap := make(map[domainpurchase.InvoiceType]Provider)
+	for _, p := range providers {
+		if p != nil {
+			provMap[p.Type()] = p
+		}
+	}
 	return &PaymentService{
 		repo:                     repo,
 		remnawaveClient:          remnawaveClient,
 		customerRepository:       customerRepository,
 		messenger:                messenger,
 		translation:              translation,
-		cryptoPayClient:          cryptoPayClient,
+		providers:                provMap,
 		referralRepository:       referralRepository,
 		promocodeRepository:      promocodeRepository,
 		promocodeUsageRepository: promocodeUsageRepository,
@@ -171,58 +187,20 @@ func (s PaymentService) CreatePurchase(ctx context.Context, amount int, months i
 	}
 	switch invoiceType {
 	case domainpurchase.InvoiceTypeCrypto:
-		return s.createCryptoInvoice(ctx, amount, months, customer)
+		if p, ok := s.providers[domainpurchase.InvoiceTypeCrypto]; ok {
+			return p.CreateInvoice(ctx, amount, months, customer)
+		}
+		return "", 0, fmt.Errorf("unknown invoice type: %s", invoiceType)
 	case domainpurchase.InvoiceTypeTelegram:
 		return s.createTelegramInvoice(ctx, amount, months, customer)
 	case domainpurchase.InvoiceTypeTribute:
-		return s.createTributeInvoice(ctx, amount, months, customer)
+		if p, ok := s.providers[domainpurchase.InvoiceTypeTribute]; ok {
+			return p.CreateInvoice(ctx, amount, months, customer)
+		}
+		return "", 0, fmt.Errorf("unknown invoice type: %s", invoiceType)
 	default:
 		return "", 0, fmt.Errorf("unknown invoice type: %s", invoiceType)
 	}
-}
-
-func (s PaymentService) createCryptoInvoice(ctx context.Context, amount int, months int, customer *domaincustomer.Customer) (url string, purchaseId int64, err error) {
-	purchaseId, err = s.repo.Create(ctx, &domainpurchase.Purchase{
-		InvoiceType: domainpurchase.InvoiceTypeCrypto,
-		Status:      domainpurchase.StatusNew,
-		Amount:      float64(amount),
-		Currency:    "RUB",
-		CustomerID:  customer.ID,
-		Month:       months,
-	})
-	if err != nil {
-		slog.Error("Error creating purchase", "err", err)
-		return "", 0, err
-	}
-
-	invoice, err := s.cryptoPayClient.CreateInvoice(&cryptopay.InvoiceRequest{
-		CurrencyType:   "fiat",
-		Fiat:           "RUB",
-		Amount:         fmt.Sprintf("%d", amount),
-		AcceptedAssets: "USDT",
-		Payload:        fmt.Sprintf("purchaseId=%d&username=%s", purchaseId, ctx.Value(contextkey.Username)),
-		Description:    fmt.Sprintf("Subscription on %d month", months),
-		PaidBtnName:    "callback",
-		PaidBtnUrl:     config.BotURL(),
-	})
-	if err != nil {
-		slog.Error("Error creating invoice", "err", err)
-		return "", 0, err
-	}
-
-	updates := map[string]interface{}{
-		"crypto_invoice_url": invoice.BotInvoiceUrl,
-		"crypto_invoice_id":  invoice.InvoiceID,
-		"status":             domainpurchase.StatusPending,
-	}
-
-	err = s.repo.UpdateFields(ctx, purchaseId, updates)
-	if err != nil {
-		slog.Error("Error updating purchase", "err", err)
-		return "", 0, err
-	}
-
-	return invoice.BotInvoiceUrl, purchaseId, nil
 }
 
 func (s PaymentService) createTelegramInvoice(ctx context.Context, amount int, months int, customer *domaincustomer.Customer) (url string, purchaseId int64, err error) {
@@ -323,23 +301,6 @@ func (s PaymentService) CancelPayment(purchaseId int64) error {
 	}
 
 	return nil
-}
-
-func (s PaymentService) createTributeInvoice(ctx context.Context, amount int, months int, customer *domaincustomer.Customer) (url string, purchaseId int64, err error) {
-	purchaseId, err = s.repo.Create(ctx, &domainpurchase.Purchase{
-		InvoiceType: domainpurchase.InvoiceTypeTribute,
-		Status:      domainpurchase.StatusPending,
-		Amount:      float64(amount),
-		Currency:    "RUB",
-		CustomerID:  customer.ID,
-		Month:       months,
-	})
-	if err != nil {
-		slog.Error("Error creating purchase", "err", err)
-		return "", 0, err
-	}
-
-	return "", purchaseId, nil
 }
 
 func (s PaymentService) GetUser(ctx context.Context, telegramId int64) (*remapi.UserDto, error) {
