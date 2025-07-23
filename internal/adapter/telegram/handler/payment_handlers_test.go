@@ -102,7 +102,7 @@ func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
 	cache := cache.NewCache(time.Minute)
 	defer cache.Close()
 	trans := translation.GetInstance()
-	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, messenger, nil, nil, nil, nil, nil, cache)
+	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, messenger, nil, nil, nil, nil, cache)
 
 	h := &Handler{
 		customerRepository: custRepo,
