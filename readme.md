@@ -324,3 +324,5 @@ To generate coverage report:
 make cover
 ```
 
+
+Ensure `DATABASE_URL` is set to a test PostgreSQL instance before running integration tests.
