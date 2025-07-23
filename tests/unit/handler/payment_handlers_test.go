@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"bytes"
@@ -11,45 +11,15 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 
-	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
+	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	domainpurchase "remnawave-tg-shop-bot/internal/domain/purchase"
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	"remnawave-tg-shop-bot/internal/service/payment"
+	"remnawave-tg-shop-bot/tests/testutils"
 )
 
 // stub implementations
-
-type stubCustomerRepo struct{ ctx context.Context }
-
-func (s *stubCustomerRepo) FindById(ctx context.Context, id int64) (*domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (s *stubCustomerRepo) FindByTelegramId(ctx context.Context, telegramId int64) (*domaincustomer.Customer, error) {
-	s.ctx = ctx
-	return &domaincustomer.Customer{ID: 1, TelegramID: telegramId, Language: "en", Balance: 0}, nil
-}
-func (s *stubCustomerRepo) Create(ctx context.Context, c *domaincustomer.Customer) (*domaincustomer.Customer, error) {
-	return c, nil
-}
-func (s *stubCustomerRepo) UpdateFields(ctx context.Context, id int64, updates map[string]interface{}) error {
-	return nil
-}
-func (s *stubCustomerRepo) FindByTelegramIds(ctx context.Context, telegramIDs []int64) ([]domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (s *stubCustomerRepo) DeleteByNotInTelegramIds(ctx context.Context, telegramIDs []int64) error {
-	return nil
-}
-func (s *stubCustomerRepo) CreateBatch(ctx context.Context, customers []domaincustomer.Customer) error {
-	return nil
-}
-func (s *stubCustomerRepo) UpdateBatch(ctx context.Context, customers []domaincustomer.Customer) error {
-	return nil
-}
-func (s *stubCustomerRepo) FindByExpirationRange(ctx context.Context, startDate, endDate time.Time) (*[]domaincustomer.Customer, error) {
-	return nil, nil
-}
 
 type stubPurchaseRepo struct {
 	ctxCreate context.Context
@@ -96,20 +66,15 @@ func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
-	custRepo := &stubCustomerRepo{}
+	custRepo := &testutils.StubCustomerRepo{}
 	purchRepo := &stubPurchaseRepo{}
 	messenger := &stubMessenger{}
-	cache := cache.NewCache(time.Minute)
+	cache := cache.NewCache(context.Background(), time.Minute)
 	defer cache.Close()
 	trans := translation.GetInstance()
-	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, messenger, nil, nil, nil, nil, nil, cache)
+	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, messenger, nil, nil, nil, nil, cache)
 
-	h := &Handler{
-		customerRepository: custRepo,
-		paymentService:     paySvc,
-		translation:        trans,
-		cache:              cache,
-	}
+	h := handlerpkg.NewHandler(nil, paySvc, trans, custRepo, nil, nil, nil, nil, cache)
 
 	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &httpClient{}), bot.WithSkipGetMe())
 	if err != nil {
@@ -124,16 +89,16 @@ func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
 		},
 	}
 
-	ctx := context.WithValue(context.Background(), "k", "v")
+	ctx := context.WithValue(context.Background(), ctxKey{}, "v")
 	h.PaymentCallbackHandler(ctx, b, upd)
 
-	if custRepo.ctx.Value("k") != "v" {
+	if custRepo.Ctx.Value(ctxKey{}) != "v" {
 		t.Errorf("context not propagated to repository")
 	}
-	if purchRepo.ctxCreate.Value("k") != "v" || purchRepo.ctxUpdate.Value("k") != "v" {
+	if purchRepo.ctxCreate.Value(ctxKey{}) != "v" || purchRepo.ctxUpdate.Value(ctxKey{}) != "v" {
 		t.Errorf("context not propagated to purchase repository")
 	}
-	if messenger.ctx.Value("k") != "v" {
+	if messenger.ctx.Value(ctxKey{}) != "v" {
 		t.Errorf("context not propagated to messenger")
 	}
 }

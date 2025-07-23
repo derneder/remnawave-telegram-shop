@@ -12,10 +12,9 @@ purchase and manage subscriptions through Telegram with multiple payment system 
 
 ### Payment Systems
 
-- [YooKassa API](https://yookassa.ru/developers/api)
 - [CryptoPay API](https://help.crypt.bot/crypto-pay-api)
- - Telegram Stars
- - Tribute
+- Telegram Stars
+- Tribute
 
 #### Telegram Stars pricing
 
@@ -85,11 +84,6 @@ The application requires the following environment variables to be set:
 | `CRYPTO_PAY_ENABLED`     | Enable/disable CryptoPay payment method (true/false)                                                                                         |
 | `CRYPTO_PAY_TOKEN`       | CryptoPay API token                                                                                                                          |
 | `CRYPTO_PAY_URL`         | CryptoPay API URL                                                                                                                            |
-| `YOOKASA_ENABLED`        | Enable/disable YooKassa payment method (true/false)                                                                                          |
-| `YOOKASA_SECRET_KEY`     | YooKassa API secret key                                                                                                                      |
-| `YOOKASA_SHOP_ID`        | YooKassa shop identifier                                                                                                                     |
-| `YOOKASA_URL`            | YooKassa API URL                                                                                                                             |
-| `YOOKASA_EMAIL`          | Email address associated with YooKassa account                                                                                               |
 | `TRAFFIC_LIMIT`          | Maximum allowed traffic in gb (0 to set unlimited)                                                                                           |
 | `TELEGRAM_STARS_ENABLED` | Enable/disable Telegram Stars payment method (true/false)                                                                                    |
 | `SERVER_STATUS_URL`      | URL to server status page (optional) - if not set, button will not be displayed                                                              |
@@ -155,10 +149,20 @@ git clone https://github.com/Jolymmiels/remnawave-telegram-shop && cd remnawave-
 mv .env.sample .env
 ```
 
-3. Run the bot:
+3. Запустите контейнеры и примените миграции:
 
 ```bash
-docker compose up -d
+make dc-up
+make dc-migrate
+```
+
+## Запуск через Docker Compose
+
+Для остановки или просмотра логов доступны удобные цели Makefile:
+
+```bash
+make dc-logs    # смотреть логи
+make dc-down    # остановить контейнеры
 ```
 
 ## Tribute payment setup instructions
@@ -212,7 +216,10 @@ docker compose down && docker compose up -d
 
 ## How to change bot messages
 
-Go to folder translations inside bot folder and change needed language.
+All localized texts are stored in YAML files under the `translations` directory.
+Edit `en.yml` and `ru.yml` to update existing keys or add new ones. Run
+`make i18n-check` to ensure that both locales contain the same set of keys and
+that there are no unused strings in the codebase.
 
 ## Update Instructions
 
@@ -291,3 +298,31 @@ go run ./cmd/bot
 Prometheus metrics are exposed on the port specified by `HEALTH_CHECK_PORT` (default 8080).
 Use Grafana/Prometheus stack to visualize latency and error counters.
 
+## Tests
+
+All tests live under the `tests/` directory.
+
+- `tests/unit` contains unit tests.
+- `tests/integration` is reserved for integration tests (run with `-tags integration`).
+- `tests/testutils` stores common stubs and helpers used across tests.
+
+Run unit tests with:
+
+```bash
+go test ./...
+```
+
+Integration tests (if any) can be executed with:
+
+```bash
+go test ./tests/integration -tags integration
+```
+
+To generate coverage report:
+
+```bash
+make cover
+```
+
+
+Ensure `DATABASE_URL` is set to a test PostgreSQL instance before running integration tests.

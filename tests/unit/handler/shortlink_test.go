@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"context"
@@ -11,8 +11,10 @@ import (
 
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
+	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	"remnawave-tg-shop-bot/tests/testutils"
 )
 
 type closeRecorder struct {
@@ -52,31 +54,6 @@ func (dummyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header), Request: req}, nil
 }
 
-type stubCustomerRepo struct{}
-
-func (stubCustomerRepo) FindById(context.Context, int64) (*domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (stubCustomerRepo) FindByTelegramId(context.Context, int64) (*domaincustomer.Customer, error) {
-	link := "https://example.com"
-	return &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}, nil
-}
-func (stubCustomerRepo) Create(ctx context.Context, c *domaincustomer.Customer) (*domaincustomer.Customer, error) {
-	return c, nil
-}
-func (stubCustomerRepo) UpdateFields(context.Context, int64, map[string]interface{}) error {
-	return nil
-}
-func (stubCustomerRepo) FindByTelegramIds(context.Context, []int64) ([]domaincustomer.Customer, error) {
-	return nil, nil
-}
-func (stubCustomerRepo) DeleteByNotInTelegramIds(context.Context, []int64) error      { return nil }
-func (stubCustomerRepo) CreateBatch(context.Context, []domaincustomer.Customer) error { return nil }
-func (stubCustomerRepo) UpdateBatch(context.Context, []domaincustomer.Customer) error { return nil }
-func (stubCustomerRepo) FindByExpirationRange(context.Context, time.Time, time.Time) (*[]domaincustomer.Customer, error) {
-	return nil, nil
-}
-
 func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 	rt := &testRoundTripper{}
 	oldTransport := http.DefaultTransport
@@ -89,11 +66,8 @@ func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 		t.Fatalf("new bot: %v", err)
 	}
 
-	h := &Handler{
-		customerRepository: stubCustomerRepo{},
-		shortLinks:         make(map[int64][]ShortLink),
-		translation:        &translation.Manager{},
-	}
+	link := "https://example.com"
+	h := handlerpkg.NewHandler(nil, nil, &translation.Manager{}, &testutils.StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}}, nil, nil, nil, nil, nil)
 
 	upd := &models.Update{CallbackQuery: &models.CallbackQuery{From: models.User{ID: 1, LanguageCode: "en"}}}
 

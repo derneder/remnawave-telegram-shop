@@ -1,9 +1,9 @@
 project_name: remnawave-telegram-shop-bot
 builds:
   - main: ./cmd/bot
-    goos: [linux]
+    goos: [linux, darwin, windows]
     goarch: [amd64, arm64]
-    ldflags: -s -w
+    ldflags: -s -w -X main.Version={{.Version}}
     flags: ["-trimpath", "-buildvcs=false"]
 release:
   github:

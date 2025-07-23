@@ -72,7 +72,7 @@ func (h *Handler) ActivateTrialCallbackHandler(ctx context.Context, b *bot.Bot, 
 		slog.Error("callback message missing")
 		return
 	}
-	ctxWithUsername := context.WithValue(ctx, contextkey.Username, update.CallbackQuery.From.Username)
+	ctxWithUsername := context.WithValue(ctx, contextkey.Username, contextkey.CleanUsername(update.CallbackQuery.From.Username))
 	_, err = h.paymentService.ActivateTrial(ctxWithUsername, update.CallbackQuery.From.ID)
 	if err != nil {
 		slog.Error("Error activate trial", "err", err)

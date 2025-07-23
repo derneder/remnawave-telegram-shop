@@ -13,11 +13,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"log/slog"
 
-	"remnawave-tg-shop-bot/internal/adapter/payment/cryptopay"
-	"remnawave-tg-shop-bot/internal/adapter/payment/yookassa"
-	"remnawave-tg-shop-bot/internal/adapter/remnawave"
-	tgHandler "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
-	tgMessenger "remnawave-tg-shop-bot/internal/adapter/telegram/messenger"
 	"remnawave-tg-shop-bot/internal/observability"
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/config"
@@ -61,14 +56,16 @@ func New(ctx context.Context) (*App, error) {
 	}
 	customerRepo := pg.NewCustomerRepository(pool)
 	subSvc := notification.NewSubscriptionService(customerRepo, b, tm)
-	c := cron.New()
-	if err := notification.RegisterSubscriptionCron(c, subSvc); err != nil {
+
+	sched := cron.New(cron.WithLocation(time.UTC))
+	if err := notification.RegisterSubscriptionCron(sched, subSvc); err != nil {
 		return nil, fmt.Errorf("schedule subscription cron: %w", err)
 	}
 
 	metricsSrv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", config.GetHealthCheckPort()),
-		Handler: observability.Handler(),
+		Addr:              fmt.Sprintf(":%d", config.GetHealthCheckPort()),
+		Handler:           observability.Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	go func() {
@@ -81,17 +78,31 @@ func New(ctx context.Context) (*App, error) {
 		<-ctx.Done()
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
-	c := cache.NewCache(time.Hour)
+	cache := cache.NewCache(ctx, time.Hour)
 
-	return &App{Bot: b, Pool: pool, Cron: c}, nil
+	return &App{Bot: b, Pool: pool, Cron: sched, Cache: cache}, nil
 }
 
-func (a *App) Close() {
+func (a *App) Start() {
 	if a.Cron != nil {
-		a.Cron.Stop()
+		a.Cron.Start()
+	}
+}
+
+func (a *App) Shutdown(ctx context.Context) {
+	if a.Cache != nil {
+		defer a.Cache.Close()
+	}
+
+	if a.Cron != nil {
+		stopCtx := a.Cron.Stop()
+		select {
+		case <-stopCtx.Done():
+		case <-ctx.Done():
+		}
+	}
+	if a.Bot != nil {
+		_, _ = a.Bot.Close(ctx)
 	}
 	a.Pool.Close()
-	if a.Cache != nil {
-		a.Cache.Close()
-	}
 }

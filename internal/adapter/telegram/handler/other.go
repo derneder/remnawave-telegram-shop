@@ -16,6 +16,7 @@ import (
 	"github.com/go-telegram/bot/models"
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
+	"remnawave-tg-shop-bot/internal/ui"
 )
 
 func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -123,7 +124,11 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		slog.Error("download keys", "err", err)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			slog.Error("close body", "err", cerr)
+		}
+	}()
 	data, _ := io.ReadAll(resp.Body)
 
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
@@ -153,14 +158,18 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 	}
 	encoded := url.QueryEscape(*customer.SubscriptionLink)
 	qrURL := "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encoded
-	resp, err := http.Get(qrURL)
+	resp, err := http.Get(qrURL) //nolint:gosec // variable URL is intended
 	if err != nil {
 		slog.Error("fetch qr", "err", err)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			slog.Error("close body", "err", cerr)
+		}
+	}()
 	data, _ := io.ReadAll(resp.Body)
-	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
+	kb := ui.ConnectKeyboard(lang, "back_button", CallbackOther)
 	chatID, _, ok := callbackChatMessage(update)
 	if !ok {
 		slog.Error("callback message missing")
@@ -197,7 +206,9 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode >= http.StatusBadRequest {
 		if resp != nil && resp.Body != nil {
-			resp.Body.Close()
+			if cerr := resp.Body.Close(); cerr != nil {
+				slog.Error("close body", "err", cerr)
+			}
 		}
 		alt := "https://is.gd/create.php?format=simple&url=" + url.QueryEscape(*customer.SubscriptionLink)
 		req, err = http.NewRequestWithContext(ctx, http.MethodGet, alt, nil)
@@ -208,13 +219,19 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		resp, err = client.Do(req)
 		if err != nil || resp.StatusCode >= http.StatusBadRequest {
 			if resp != nil && resp.Body != nil {
-				resp.Body.Close()
+				if cerr := resp.Body.Close(); cerr != nil {
+					slog.Error("close body", "err", cerr)
+				}
 			}
 			slog.Error("shorten", "err", err)
 			return
 		}
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			slog.Error("close body", "err", cerr)
+		}
+	}()
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		slog.Error("read short url", "err", err)

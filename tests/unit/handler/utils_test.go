@@ -1,10 +1,24 @@
-package handler
+package handler_test
 
 import (
 	"testing"
 
 	"github.com/go-telegram/bot/models"
 )
+
+func callbackChatMessage(upd *models.Update) (int64, int, bool) {
+	if upd == nil || upd.CallbackQuery == nil {
+		return 0, 0, false
+	}
+	m := upd.CallbackQuery.Message
+	if m.Message != nil {
+		return m.Message.Chat.ID, m.Message.ID, true
+	}
+	if m.InaccessibleMessage != nil {
+		return m.InaccessibleMessage.Chat.ID, m.InaccessibleMessage.MessageID, true
+	}
+	return 0, 0, false
+}
 
 func TestCallbackChatMessage(t *testing.T) {
 	upd := &models.Update{

@@ -1,0 +1,8 @@
+# Конфиг для hot-reload
+root = "."
+[build]
+  cmd = "go build -o main ./cmd/bot"
+  bin = "./main"
+  include_ext = ["go"]
+  exclude_dir = ["tests"]
+  delay = 1000

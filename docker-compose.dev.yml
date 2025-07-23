@@ -1,0 +1,18 @@
+services:
+  bot:
+    image: cosmtrek/air
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ./translations:/translations:ro
+    command: air -c .air.toml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:${HEALTH_CHECK_PORT:-8080}/ > /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

@@ -149,7 +149,7 @@ func (h *Handler) PaymentCallbackHandler(ctx context.Context, b *bot.Bot, update
 		return
 	}
 
-	ctxWithUsername := context.WithValue(ctx, contextkey.Username, update.CallbackQuery.From.Username)
+	ctxWithUsername := context.WithValue(ctx, contextkey.Username, contextkey.CleanUsername(update.CallbackQuery.From.Username))
 	paymentURL, purchaseId, err := h.paymentService.CreatePurchase(ctxWithUsername, price, month, customer, invoiceType)
 	if err != nil {
 		slog.Error("Error creating payment", "err", err)
@@ -196,7 +196,7 @@ func (h *Handler) SuccessPaymentHandler(ctx context.Context, b *bot.Bot, update 
 		return
 	}
 
-	ctxWithUsername := context.WithValue(ctx, contextkey.Username, username)
+	ctxWithUsername := context.WithValue(ctx, contextkey.Username, contextkey.CleanUsername(username))
 	err = h.paymentService.ProcessPurchaseById(ctxWithUsername, int64(purchaseId))
 	if err != nil {
 		slog.Error("Error processing purchase", "err", err)
@@ -264,12 +264,18 @@ func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		},
 		{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackBalance}},
 	}
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	text := fmt.Sprintf(h.translation.GetText(lang, "topup_intro_text"), int(customer.Balance))
+	params := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
-		Text:        fmt.Sprintf(h.translation.GetText(lang, "topup_intro_text"), int(customer.Balance)),
+		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		slog.Error("Error sending topup message", "err", err)
 	}
@@ -286,14 +292,13 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	lang := update.CallbackQuery.From.LanguageCode
 
 	var keyboard [][]models.InlineKeyboardButton
-	if config.IsCryptoPayEnabled() {
-		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "crypto_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeCrypto, amount)}})
-	}
-	if config.IsYookasaEnabled() {
-		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "card_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeYookasa, amount)}})
-	}
-	if config.GetTributePaymentUrl() != "" {
-		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "tribute_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeTribute, amount)}})
+	for _, p := range h.paymentService.EnabledProviders() {
+		switch p.Type() {
+		case pg.InvoiceTypeCrypto:
+			keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "crypto_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeCrypto, amount)}})
+		case pg.InvoiceTypeTribute:
+			keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "tribute_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeTribute, amount)}})
+		}
 	}
 	if config.IsTelegramStarsEnabled() {
 		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "stars_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeTelegram, amount)}})
