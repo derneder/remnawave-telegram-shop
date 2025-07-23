@@ -285,3 +285,23 @@ go run ./cmd/bot
 Prometheus metrics are exposed on the port specified by `HEALTH_CHECK_PORT` (default 8080).
 Use Grafana/Prometheus stack to visualize latency and error counters.
 
+## Tests
+
+All tests live under the `tests/` directory.
+
+- `tests/unit` contains unit tests.
+- `tests/integration` is reserved for integration tests (run with `-tags integration`).
+- `tests/testutils` stores common stubs and helpers used across tests.
+
+Run unit tests with:
+
+```bash
+go test ./...
+```
+
+Integration tests (if any) can be executed with:
+
+```bash
+go test ./tests/integration -tags integration
+```
+
