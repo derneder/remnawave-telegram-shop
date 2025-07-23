@@ -1,0 +1,11 @@
+project_name: remnawave-telegram-shop-bot
+builds:
+  - main: ./cmd/bot
+    goos: [linux]
+    goarch: [amd64, arm64]
+    ldflags: -s -w
+    flags: ["-trimpath", "-buildvcs=false"]
+release:
+  github:
+    owner: Jolymmiels
+    name: remnawave-telegram-shop
