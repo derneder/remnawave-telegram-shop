@@ -1,0 +1,139 @@
+package handler
+
+import (
+	"bytes"
+	"context"
+	"io"
+	"net/http"
+	"testing"
+	"time"
+
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
+
+	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
+	domainpurchase "remnawave-tg-shop-bot/internal/domain/purchase"
+	"remnawave-tg-shop-bot/internal/pkg/cache"
+	"remnawave-tg-shop-bot/internal/pkg/translation"
+	"remnawave-tg-shop-bot/internal/service/payment"
+)
+
+// stub implementations
+
+type stubCustomerRepo struct{ ctx context.Context }
+
+func (s *stubCustomerRepo) FindById(ctx context.Context, id int64) (*domaincustomer.Customer, error) {
+	return nil, nil
+}
+func (s *stubCustomerRepo) FindByTelegramId(ctx context.Context, telegramId int64) (*domaincustomer.Customer, error) {
+	s.ctx = ctx
+	return &domaincustomer.Customer{ID: 1, TelegramID: telegramId, Language: "en", Balance: 0}, nil
+}
+func (s *stubCustomerRepo) Create(ctx context.Context, c *domaincustomer.Customer) (*domaincustomer.Customer, error) {
+	return c, nil
+}
+func (s *stubCustomerRepo) UpdateFields(ctx context.Context, id int64, updates map[string]interface{}) error {
+	return nil
+}
+func (s *stubCustomerRepo) FindByTelegramIds(ctx context.Context, telegramIDs []int64) ([]domaincustomer.Customer, error) {
+	return nil, nil
+}
+func (s *stubCustomerRepo) DeleteByNotInTelegramIds(ctx context.Context, telegramIDs []int64) error {
+	return nil
+}
+func (s *stubCustomerRepo) CreateBatch(ctx context.Context, customers []domaincustomer.Customer) error {
+	return nil
+}
+func (s *stubCustomerRepo) UpdateBatch(ctx context.Context, customers []domaincustomer.Customer) error {
+	return nil
+}
+func (s *stubCustomerRepo) FindByExpirationRange(ctx context.Context, startDate, endDate time.Time) (*[]domaincustomer.Customer, error) {
+	return nil, nil
+}
+
+type stubPurchaseRepo struct {
+	ctxCreate context.Context
+	ctxUpdate context.Context
+}
+
+func (s *stubPurchaseRepo) Create(ctx context.Context, p *domainpurchase.Purchase) (int64, error) {
+	s.ctxCreate = ctx
+	return 1, nil
+}
+func (s *stubPurchaseRepo) FindByInvoiceTypeAndStatus(ctx context.Context, invoiceType domainpurchase.InvoiceType, status domainpurchase.Status) (*[]domainpurchase.Purchase, error) {
+	return nil, nil
+}
+func (s *stubPurchaseRepo) FindById(ctx context.Context, id int64) (*domainpurchase.Purchase, error) {
+	return nil, nil
+}
+func (s *stubPurchaseRepo) UpdateFields(ctx context.Context, id int64, updates map[string]interface{}) error {
+	s.ctxUpdate = ctx
+	return nil
+}
+func (s *stubPurchaseRepo) MarkAsPaid(ctx context.Context, purchaseID int64) error { return nil }
+
+type stubMessenger struct{ ctx context.Context }
+
+func (m *stubMessenger) SendMessage(ctx context.Context, params *bot.SendMessageParams) (*models.Message, error) {
+	m.ctx = ctx
+	return &models.Message{}, nil
+}
+func (m *stubMessenger) DeleteMessage(ctx context.Context, params *bot.DeleteMessageParams) (bool, error) {
+	m.ctx = ctx
+	return true, nil
+}
+func (m *stubMessenger) CreateInvoiceLink(ctx context.Context, params *bot.CreateInvoiceLinkParams) (string, error) {
+	m.ctx = ctx
+	return "link", nil
+}
+
+type httpClient struct{}
+
+func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	resp := &http.Response{StatusCode: http.StatusOK}
+	resp.Body = io.NopCloser(bytes.NewReader([]byte(`{"ok":true,"result":{"message_id":1}}`)))
+	return resp, nil
+}
+
+func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
+	custRepo := &stubCustomerRepo{}
+	purchRepo := &stubPurchaseRepo{}
+	messenger := &stubMessenger{}
+	cache := cache.NewCache(time.Minute)
+	defer cache.Close()
+	trans := translation.GetInstance()
+	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, messenger, nil, nil, nil, nil, nil, cache)
+
+	h := &Handler{
+		customerRepository: custRepo,
+		paymentService:     paySvc,
+		translation:        trans,
+		cache:              cache,
+	}
+
+	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &httpClient{}), bot.WithSkipGetMe())
+	if err != nil {
+		t.Fatalf("bot init: %v", err)
+	}
+
+	upd := &models.Update{
+		CallbackQuery: &models.CallbackQuery{
+			Data:    "payment?month=1&amount=10&invoiceType=telegram",
+			From:    models.User{ID: 1, LanguageCode: "en", Username: "user"},
+			Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}},
+		},
+	}
+
+	ctx := context.WithValue(context.Background(), "k", "v")
+	h.PaymentCallbackHandler(ctx, b, upd)
+
+	if custRepo.ctx.Value("k") != "v" {
+		t.Errorf("context not propagated to repository")
+	}
+	if purchRepo.ctxCreate.Value("k") != "v" || purchRepo.ctxUpdate.Value("k") != "v" {
+		t.Errorf("context not propagated to purchase repository")
+	}
+	if messenger.ctx.Value("k") != "v" {
+		t.Errorf("context not propagated to messenger")
+	}
+}

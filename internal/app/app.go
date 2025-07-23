@@ -16,6 +16,8 @@ import (
 	"remnawave-tg-shop-bot/internal/observability"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	pg "remnawave-tg-shop-bot/internal/repository/pg"
+	"remnawave-tg-shop-bot/internal/service/notification"
 )
 
 // App groups dependencies of the bot.
@@ -67,7 +69,25 @@ func New(ctx context.Context) (*App, error) {
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
 
-	return &App{Bot: b, Pool: pool, Cron: cron.New()}, nil
+	c := cron.New(cron.WithLocation(time.UTC))
+
+	customerRepo := pg.NewCustomerRepository(pool)
+	subSvc := notification.NewSubscriptionService(customerRepo, b, tm)
+	if _, err := c.AddFunc("0 16 * * *", func() {
+		if err := subSvc.SendSubscriptionNotifications(context.Background()); err != nil {
+			slog.Error("subscription notification job", "err", err)
+		}
+	}); err != nil {
+		return nil, fmt.Errorf("schedule notification job: %w", err)
+	}
+
+	c.Start()
+	go func() {
+		<-ctx.Done()
+		<-c.Stop().Done()
+	}()
+
+	return &App{Bot: b, Pool: pool, Cron: c}, nil
 }
 
 func (a *App) Close() {
