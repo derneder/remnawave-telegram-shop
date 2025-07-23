@@ -50,15 +50,19 @@ func (h *Handler) ConnectCommandHandler(ctx context.Context, b *bot.Bot, update 
 }
 
 func (h *Handler) ConnectCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 
-	customer, err := h.customerRepository.FindByTelegramId(ctx, callback.Chat.ID)
+	customer, err := h.customerRepository.FindByTelegramId(ctx, chatID)
 	if err != nil {
 		slog.Error("Error finding customer", "err", err)
 		return
 	}
 	if customer == nil {
-		slog.Error("customer not exist", "telegramId", utils.MaskHalfInt64(callback.Chat.ID), "error", err)
+		slog.Error("customer not exist", "telegramId", utils.MaskHalfInt64(chatID), "error", err)
 		return
 	}
 
@@ -77,8 +81,8 @@ func (h *Handler) ConnectCallbackHandler(ctx context.Context, b *bot.Bot, update
 
 	isDisabled := true
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:    callback.Chat.ID,
-		MessageID: callback.ID,
+		ChatID:    chatID,
+		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
 		Text:      buildConnectText(customer, langCode),
 		LinkPreviewOptions: &models.LinkPreviewOptions{

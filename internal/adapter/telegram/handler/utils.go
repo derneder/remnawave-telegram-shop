@@ -30,6 +30,22 @@ func parseCallbackData(data string) map[string]string {
 	return result
 }
 
+// callbackChatMessage extracts chat and message IDs from a callback update.
+// It supports both accessible and inaccessible messages.
+func callbackChatMessage(upd *models.Update) (int64, int, bool) {
+	if upd == nil || upd.CallbackQuery == nil {
+		return 0, 0, false
+	}
+	m := upd.CallbackQuery.Message
+	if m.Message != nil {
+		return m.Message.Chat.ID, m.Message.ID, true
+	}
+	if m.InaccessibleMessage != nil {
+		return m.InaccessibleMessage.Chat.ID, m.InaccessibleMessage.MessageID, true
+	}
+	return 0, 0, false
+}
+
 func (h *Handler) findOrCreateCustomer(ctx context.Context, telegramID int64, lang string) (*domaincustomer.Customer, error) {
 	customer, err := h.customerRepository.FindByTelegramId(ctx, telegramID)
 	if err != nil {
