@@ -22,9 +22,8 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
-	pgrepo "remnawave-tg-shop-bot/internal/repository/pg"
-	"remnawave-tg-shop-bot/internal/service/payment"
-	syncsvc "remnawave-tg-shop-bot/internal/service/sync"
+	pg "remnawave-tg-shop-bot/internal/repository/pg"
+	"remnawave-tg-shop-bot/internal/service/notification"
 )
 
 // App groups dependencies of the bot.
@@ -60,24 +59,12 @@ func New(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create bot: %w", err)
 	}
-
-	customerRepo := pgrepo.NewCustomerRepository(pool)
-	purchaseRepo := pgrepo.NewPurchaseRepository(pool)
-	referralRepo := pgrepo.NewReferralRepository(pool)
-	promoRepo := pgrepo.NewPromocodeRepository(pool)
-	promoUsageRepo := pgrepo.NewPromocodeUsageRepository(pool)
-	c := cache.NewCache(time.Minute)
-
-	remClient := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
-	messenger := tgMessenger.NewBotMessenger(b)
-	cryptoClient := cryptopay.NewCryptoPayClient(config.CryptoPayUrl(), config.CryptoPayToken())
-	yookasaClient := yookasa.NewClient(config.YookasaUrl(), config.YookasaShopId(), config.YookasaSecretKey())
-
-	paymentSvc := payment.NewPaymentService(tm, purchaseRepo, remClient, customerRepo, messenger, cryptoClient, yookasaClient, referralRepo, promoRepo, promoUsageRepo, c)
-	syncSvc := syncsvc.NewSyncService(remClient, customerRepo)
-
-	h := tgHandler.NewHandler(syncSvc, paymentSvc, tm, customerRepo, purchaseRepo, cryptoClient, yookasaClient, referralRepo, promoRepo, promoUsageRepo, c)
-	initHandlers(b, h)
+	customerRepo := pg.NewCustomerRepository(pool)
+	subSvc := notification.NewSubscriptionService(customerRepo, b, tm)
+	c := cron.New()
+	if err := notification.RegisterSubscriptionCron(c, subSvc); err != nil {
+		return nil, fmt.Errorf("schedule subscription cron: %w", err)
+	}
 
 	metricsSrv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", config.GetHealthCheckPort()),
@@ -96,7 +83,7 @@ func New(ctx context.Context) (*App, error) {
 	}()
 	c := cache.NewCache(time.Hour)
 
-	return &App{Bot: b, Pool: pool, Cron: cron.New(), Cache: c}, nil
+	return &App{Bot: b, Pool: pool, Cron: c}, nil
 }
 
 func (a *App) Close() {
