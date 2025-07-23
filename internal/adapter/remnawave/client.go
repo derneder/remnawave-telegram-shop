@@ -6,19 +6,29 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"remnawave-tg-shop-bot/internal/pkg/config"
-	"remnawave-tg-shop-bot/internal/pkg/contextkey"
-	"remnawave-tg-shop-bot/utils"
 	"strconv"
 	"strings"
 	"time"
 
 	remapi "github.com/Jolymmiles/remnawave-api-go/api"
 	"github.com/google/uuid"
+
+	"remnawave-tg-shop-bot/internal/pkg/config"
+	"remnawave-tg-shop-bot/internal/pkg/contextkey"
+	"remnawave-tg-shop-bot/utils"
 )
 
+type remAPI interface {
+	UsersControllerGetAllUsers(ctx context.Context, params remapi.UsersControllerGetAllUsersParams, options ...remapi.RequestOption) (*remapi.GetAllUsersResponseDto, error)
+	UsersControllerGetUserByTelegramId(ctx context.Context, params remapi.UsersControllerGetUserByTelegramIdParams, options ...remapi.RequestOption) (remapi.UsersControllerGetUserByTelegramIdRes, error)
+	UsersControllerUpdateUser(ctx context.Context, request *remapi.UpdateUserRequestDto, options ...remapi.RequestOption) (*remapi.UserResponseDto, error)
+	InboundsControllerGetInbounds(ctx context.Context, options ...remapi.RequestOption) (*remapi.GetInboundsResponseDto, error)
+	UsersControllerCreateUser(ctx context.Context, request *remapi.CreateUserRequestDto, options ...remapi.RequestOption) (*remapi.UserResponseDto, error)
+	UsersStatsControllerGetUserUsageByRange(ctx context.Context, params remapi.UsersStatsControllerGetUserUsageByRangeParams, options ...remapi.RequestOption) (remapi.UsersStatsControllerGetUserUsageByRangeRes, error)
+}
+
 type Client struct {
-	client *remapi.Client
+	client remAPI
 }
 
 type headerTransport struct {
@@ -136,11 +146,12 @@ func (r *Client) updateUser(ctx context.Context, existingUser *remapi.UserDto, t
 	}
 
 	var username string
-	if ctx.Value(contextkey.Username) != nil {
-		username = ctx.Value(contextkey.Username).(string)
-		userUpdate.Description = remapi.NewOptNilString(username)
-	} else {
-		username = ""
+	if u := contextkey.UsernameFromContext(ctx); u != "" {
+		desc, _ := existingUser.Description.Get()
+		if desc != u {
+			userUpdate.Description = remapi.NewOptNilString(u)
+		}
+		username = u
 	}
 
 	updateUser, err := r.client.UsersControllerUpdateUser(ctx, userUpdate)
@@ -186,11 +197,9 @@ func (r *Client) createUser(ctx context.Context, telegramId int64, trafficLimit 
 	}
 
 	var tgUsername string
-	if ctx.Value(contextkey.Username) != nil {
-		tgUsername = ctx.Value(contextkey.Username).(string)
-		createUserRequestDto.Description = remapi.NewOptString(ctx.Value(contextkey.Username).(string))
-	} else {
-		tgUsername = ""
+	if u := contextkey.UsernameFromContext(ctx); u != "" {
+		tgUsername = u
+		createUserRequestDto.Description = remapi.NewOptString(u)
 	}
 
 	userCreate, err := r.client.UsersControllerCreateUser(ctx, &createUserRequestDto)
