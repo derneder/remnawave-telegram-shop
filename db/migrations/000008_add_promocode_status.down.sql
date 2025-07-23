@@ -1,0 +1,1 @@
+ALTER TABLE promocode DROP COLUMN IF EXISTS active;
