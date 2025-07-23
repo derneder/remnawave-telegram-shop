@@ -30,11 +30,15 @@ func (h *Handler) TrialCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	if c.SubscriptionLink != nil {
 		return
 	}
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	langCode := update.CallbackQuery.From.LanguageCode
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:    callback.Chat.ID,
-		MessageID: callback.ID,
+		ChatID:    chatID,
+		MessageID: msgID,
 		Text:      h.translation.GetText(langCode, "trial_text"),
 		ParseMode: models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: [][]models.InlineKeyboardButton{
@@ -63,7 +67,11 @@ func (h *Handler) ActivateTrialCallbackHandler(ctx context.Context, b *bot.Bot, 
 	if c.SubscriptionLink != nil {
 		return
 	}
-	callback := update.CallbackQuery.Message.Message
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	ctxWithUsername := context.WithValue(ctx, contextkey.Username, update.CallbackQuery.From.Username)
 	_, err = h.paymentService.ActivateTrial(ctxWithUsername, update.CallbackQuery.From.ID)
 	if err != nil {
@@ -72,8 +80,8 @@ func (h *Handler) ActivateTrialCallbackHandler(ctx context.Context, b *bot.Bot, 
 
 	langCode := update.CallbackQuery.From.LanguageCode
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      callback.Chat.ID,
-		MessageID:   callback.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		Text:        h.translation.GetText(langCode, "trial_activated"),
 		ParseMode:   models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: ui.ConnectKeyboard(langCode, "back_to_account_button", CallbackStart)},

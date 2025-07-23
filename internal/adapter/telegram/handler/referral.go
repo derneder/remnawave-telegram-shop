@@ -16,6 +16,11 @@ import (
 
 func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	_, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
@@ -38,8 +43,8 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(langCode, "referral_menu_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -51,6 +56,11 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 
 func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
@@ -60,6 +70,10 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 	monthStr := data["m"]
 	usesStr := data["u"]
 	msg := update.CallbackQuery.Message.Message
+	if msg == nil {
+		slog.Error("callback message missing")
+		return
+	}
 	if usesStr == "" {
 		h.promptPromoUses(ctx, b, msg, langCode)
 		return
@@ -81,8 +95,8 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 
 	if err != nil {
 		_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-			ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-			MessageID:   update.CallbackQuery.Message.Message.ID,
+			ChatID:      chatID,
+			MessageID:   msgID,
 			ParseMode:   models.ParseModeHTML,
 			Text:        h.translation.GetText(langCode, "insufficient_balance"),
 			ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -95,8 +109,8 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        fmt.Sprintf(h.translation.GetText(langCode, "promocode_created"), code),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -110,6 +124,12 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 
 func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
+
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 
 	_, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
@@ -126,8 +146,8 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(langCode, "enter_promocode_prompt"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -140,6 +160,11 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 
 func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
@@ -162,7 +187,7 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 
 	bonusTotal := subscribed * config.GetReferralBonus()
 
-	refLink := fmt.Sprintf("https://telegram.me/share/url?url=https://t.me/%s?start=ref_%d", update.CallbackQuery.Message.Message.From.Username, customer.TelegramID)
+	refLink := fmt.Sprintf("https://telegram.me/share/url?url=https://t.me/%s?start=ref_%d", update.CallbackQuery.From.Username, customer.TelegramID)
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "referral_system_text"), invited, subscribed, bonusTotal, refLink, config.GetReferralBonus())
 
@@ -176,8 +201,8 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -189,6 +214,11 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 
 func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	_, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
@@ -208,8 +238,8 @@ func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(langCode, "personal_codes_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -221,6 +251,11 @@ func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 
 func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
@@ -263,8 +298,8 @@ func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoCodes}})
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        textBuilder.String(),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -329,6 +364,12 @@ func (h *Handler) PromoUnfreezeCallbackHandler(ctx context.Context, b *bot.Bot, 
 func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
 
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
+
 	parts := strings.Split(update.CallbackQuery.Data, ":")
 	if len(parts) != 2 {
 		return
@@ -347,8 +388,8 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 			{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoList}},
 		}
 		_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-			ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
-			MessageID: update.CallbackQuery.Message.Message.ID,
+			ChatID:    chatID,
+			MessageID: msgID,
 			ParseMode: models.ParseModeHTML,
 			// TODO: Серега, нужен текст. БУКАВЫ
 			Text:        h.translation.GetText(langCode, "promo_active_when_delete"),
@@ -366,8 +407,8 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID: update.CallbackQuery.Message.Message.ID,
+		ChatID:    chatID,
+		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
 		// TODO: Серега, нужен текст. БУКАВЫ
 		Text:        h.translation.GetText(langCode, "promo_confirm_when_delete"),

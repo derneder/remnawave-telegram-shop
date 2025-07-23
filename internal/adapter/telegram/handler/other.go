@@ -39,9 +39,15 @@ func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	}
 	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackStart}})
 
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
+
 	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(lang, "other_menu_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -56,7 +62,7 @@ func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+		ChatID:      chatID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(lang, "other_menu_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -86,9 +92,16 @@ func (h *Handler) RegenKeyCallbackHandler(ctx context.Context, b *bot.Bot, updat
 func (h *Handler) simpleBack(ctx context.Context, b *bot.Bot, update *models.Update, text string) {
 	lang := update.CallbackQuery.From.LanguageCode
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
+
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
+
 	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -114,8 +127,13 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 	data, _ := io.ReadAll(resp.Body)
 
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
+	chatID, _, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	_, err = b.SendDocument(ctx, &bot.SendDocumentParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+		ChatID:      chatID,
 		Document:    &models.InputFileUpload{Filename: "keys.txt", Data: bytes.NewReader(data)},
 		Caption:     h.translation.GetText(lang, "keys_text"),
 		ParseMode:   models.ParseModeHTML,
@@ -143,8 +161,13 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 	defer resp.Body.Close()
 	data, _ := io.ReadAll(resp.Body)
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
+	chatID, _, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
 	_, err = b.SendPhoto(ctx, &bot.SendPhotoParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+		ChatID:      chatID,
 		Photo:       &models.InputFileUpload{Filename: "qr.png", Data: bytes.NewReader(data)},
 		Caption:     fmt.Sprintf(h.translation.GetText(lang, "qr_text"), *customer.SubscriptionLink),
 		ParseMode:   models.ParseModeHTML,
@@ -200,9 +223,15 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		{{Text: h.translation.GetText(lang, "short_list_button"), CallbackData: CallbackShortList}},
 		{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}},
 	}
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
+
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        fmt.Sprintf(h.translation.GetText(lang, "short_created_text"), shortURL),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -233,9 +262,15 @@ func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		text = fmt.Sprintf(h.translation.GetText(lang, "short_list_text"), bld.String())
 	}
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
+
 	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -260,9 +295,15 @@ func (h *Handler) ProxyCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		config.TelegramProxyPort(),
 		config.TelegramProxyKey(),
 	)
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
+
 	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
-		MessageID:   update.CallbackQuery.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
