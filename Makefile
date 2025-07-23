@@ -13,8 +13,8 @@ dc-logs:
         docker compose logs -f
 
 i18n-check:
-       go test ./tests/unit/translation -run TestTranslationsConsistency
+       go test ./tests -run TestTranslationsConsistency
 
 cover:
-       go test ./... -coverprofile=coverage.out
+       go test ./tests -cover -coverpkg=./... -coverprofile=coverage.out
        go tool cover -func=coverage.out

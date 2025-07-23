@@ -14,6 +14,11 @@ func makeConnectButton(miniAppURL, lang string) models.InlineKeyboardButton {
 	return models.InlineKeyboardButton{Text: tm.GetText(lang, "connect_button"), URL: miniAppURL}
 }
 
+// MakeConnectButton exposes makeConnectButton for tests.
+func MakeConnectButton(miniAppURL, lang string) models.InlineKeyboardButton {
+	return makeConnectButton(miniAppURL, lang)
+}
+
 func ConnectKeyboard(lang, backKey, backCallback string) [][]models.InlineKeyboardButton {
 	tm := translation.GetInstance()
 	var kb [][]models.InlineKeyboardButton
