@@ -71,6 +71,11 @@ func NewClient(baseURL, token, mode string) *Client {
 	return &Client{client: api}
 }
 
+// NewClientWithAPI is a helper exported for tests.
+func NewClientWithAPI(api remAPI) *Client {
+	return &Client{client: api}
+}
+
 func (r *Client) Ping(ctx context.Context) error {
 	params := remapi.UsersControllerGetAllUsersParams{
 		Size:  remapi.NewOptFloat64(1),
@@ -163,6 +168,11 @@ func (r *Client) updateUser(ctx context.Context, existingUser *remapi.UserDto, t
 	return &updateUser.Response, nil
 }
 
+// UpdateUserInternal is exported for tests and wraps updateUser.
+func (r *Client) UpdateUserInternal(ctx context.Context, existingUser *remapi.UserDto, trafficLimit int, days int) (*remapi.UserDto, error) {
+	return r.updateUser(ctx, existingUser, trafficLimit, days)
+}
+
 func (r *Client) createUser(ctx context.Context, telegramId int64, trafficLimit int, days int) (*remapi.UserDto, error) {
 	expireAt := time.Now().UTC().AddDate(0, 0, days)
 	username := fmt.Sprintf("%d", telegramId)
@@ -208,6 +218,11 @@ func (r *Client) createUser(ctx context.Context, telegramId int64, trafficLimit 
 	}
 	slog.Info("created user", "telegramId", utils.MaskHalf(strconv.FormatInt(telegramId, 10)), "username", utils.MaskHalf(tgUsername), "days", days)
 	return &userCreate.Response, nil
+}
+
+// CreateUserInternal is exported for tests and wraps createUser.
+func (r *Client) CreateUserInternal(ctx context.Context, telegramId int64, trafficLimit int, days int) (*remapi.UserDto, error) {
+	return r.createUser(ctx, telegramId, trafficLimit, days)
 }
 
 func (r *Client) GetUserByTelegramID(ctx context.Context, telegramId int64) (*remapi.UserDto, error) {
