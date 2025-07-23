@@ -41,7 +41,11 @@ func (c *Client) WebHookHandler() http.Handler {
 			http.Error(w, "invalid body", http.StatusBadRequest)
 			return
 		}
-		defer r.Body.Close()
+		defer func() {
+			if cerr := r.Body.Close(); cerr != nil {
+				slog.Error("close body", "err", cerr)
+			}
+		}()
 
 		signature := r.Header.Get("trbt-signature")
 		if signature == "" {

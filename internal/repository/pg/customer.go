@@ -184,7 +184,7 @@ func (cr *CustomerRepository) UpdateFields(ctx context.Context, id int64, update
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(ctx) //nolint:errcheck // ignore rollback error
 
 	result, err := tx.Exec(ctx, sql, args...)
 	if err != nil {
@@ -262,7 +262,7 @@ func (cr *CustomerRepository) CreateBatch(ctx context.Context, customers []Custo
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(ctx) //nolint:errcheck // ignore rollback error
 
 	_, err = tx.Exec(ctx, sqlStr, args...)
 	if err != nil {
@@ -294,7 +294,7 @@ func (cr *CustomerRepository) UpdateBatch(ctx context.Context, customers []Custo
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(ctx) //nolint:errcheck // ignore rollback error
 
 	_, err = tx.Exec(ctx, query, args...)
 	if err != nil {
@@ -334,7 +334,9 @@ func (cr *CustomerRepository) DeleteByNotInTelegramIds(ctx context.Context, tele
 		}
 		for promoRows.Next() {
 			var id int
-			promoRows.Scan(&id)
+			if err := promoRows.Scan(&id); err != nil {
+				return fmt.Errorf("scan promo id: %w", err)
+			}
 			promoIDs = append(promoIDs, id)
 		}
 

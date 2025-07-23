@@ -63,8 +63,9 @@ func New(ctx context.Context) (*App, error) {
 	}
 
 	metricsSrv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", config.GetHealthCheckPort()),
-		Handler: observability.Handler(),
+		Addr:              fmt.Sprintf(":%d", config.GetHealthCheckPort()),
+		Handler:           observability.Handler(),
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	go func() {
