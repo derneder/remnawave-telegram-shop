@@ -29,9 +29,10 @@ import (
 
 // App groups dependencies of the bot.
 type App struct {
-	Bot  *bot.Bot
-	Pool *pgxpool.Pool
-	Cron *cron.Cron
+	Bot   *bot.Bot
+	Pool  *pgxpool.Pool
+	Cron  *cron.Cron
+	Cache *cache.Cache
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -93,28 +94,17 @@ func New(ctx context.Context) (*App, error) {
 		<-ctx.Done()
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
+	c := cache.NewCache(time.Hour)
 
-	c := cron.New(cron.WithLocation(time.UTC))
-
-	customerRepo := pg.NewCustomerRepository(pool)
-	subSvc := notification.NewSubscriptionService(customerRepo, b, tm)
-	if _, err := c.AddFunc("0 16 * * *", func() {
-		if err := subSvc.SendSubscriptionNotifications(context.Background()); err != nil {
-			slog.Error("subscription notification job", "err", err)
-		}
-	}); err != nil {
-		return nil, fmt.Errorf("schedule notification job: %w", err)
-	}
-
-	c.Start()
-	go func() {
-		<-ctx.Done()
-		<-c.Stop().Done()
-	}()
-
-	return &App{Bot: b, Pool: pool, Cron: c}, nil
+	return &App{Bot: b, Pool: pool, Cron: cron.New(), Cache: c}, nil
 }
 
 func (a *App) Close() {
+	if a.Cron != nil {
+		a.Cron.Stop()
+	}
 	a.Pool.Close()
+	if a.Cache != nil {
+		a.Cache.Close()
+	}
 }
