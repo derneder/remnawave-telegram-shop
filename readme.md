@@ -216,7 +216,10 @@ docker compose down && docker compose up -d
 
 ## How to change bot messages
 
-Go to folder translations inside bot folder and change needed language.
+All localized texts are stored in YAML files under the `translations` directory.
+Edit `en.yml` and `ru.yml` to update existing keys or add new ones. Run
+`make i18n-check` to ensure that both locales contain the same set of keys and
+that there are no unused strings in the codebase.
 
 ## Update Instructions
 
