@@ -112,7 +112,7 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 	}
 }
 
-func (h *Handler) PaymentCallbackHandler(_ context.Context, b *bot.Bot, update *models.Update) {
+func (h *Handler) PaymentCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	chatID, msgID, ok := callbackChatMessage(update)
 	if !ok {
 		slog.Error("callback message missing")
@@ -137,7 +137,7 @@ func (h *Handler) PaymentCallbackHandler(_ context.Context, b *bot.Bot, update *
 		price = config.Price(month)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 	customer, err := h.customerRepository.FindByTelegramId(ctx, chatID)
 	if err != nil {
@@ -318,7 +318,7 @@ func (h *Handler) PayFromBalanceCallbackHandler(ctx context.Context, b *bot.Bot,
 	data := parseCallbackData(update.CallbackQuery.Data)
 	month, _ := strconv.Atoi(data["month"])
 
-	ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctxTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	customer, err := h.customerRepository.FindByTelegramId(ctxTimeout, chatID)
 	if err != nil || customer == nil {
