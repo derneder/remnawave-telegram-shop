@@ -26,5 +26,8 @@ func main() {
 	}
 	defer a.Close()
 
+	a.Cron.Start()
+	defer a.Cron.Stop()
+
 	a.Bot.Start(ctx)
 }
