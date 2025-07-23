@@ -2,15 +2,12 @@ package purchase
 
 import (
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type InvoiceType string
 
 const (
 	InvoiceTypeCrypto   InvoiceType = "crypto"
-	InvoiceTypeYookasa  InvoiceType = "yookasa"
 	InvoiceTypeTelegram InvoiceType = "telegram"
 	InvoiceTypeTribute  InvoiceType = "tribute"
 )
@@ -37,6 +34,4 @@ type Purchase struct {
 	InvoiceType       InvoiceType
 	CryptoInvoiceID   *int64
 	CryptoInvoiceLink *string
-	YookasaURL        *string
-	YookasaID         *uuid.UUID
 }

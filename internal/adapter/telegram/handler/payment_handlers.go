@@ -289,9 +289,6 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	if config.IsCryptoPayEnabled() {
 		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "crypto_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeCrypto, amount)}})
 	}
-	if config.IsYookasaEnabled() {
-		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "card_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeYookasa, amount)}})
-	}
 	if config.GetTributePaymentUrl() != "" {
 		keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "tribute_button"), CallbackData: fmt.Sprintf("%s?month=0&invoiceType=%s&amount=%s", CallbackPayment, pg.InvoiceTypeTribute, amount)}})
 	}

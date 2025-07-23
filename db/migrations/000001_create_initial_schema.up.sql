@@ -22,7 +22,5 @@ CREATE TABLE purchase
     status             VARCHAR(20),
     invoice_type       VARCHAR(20),
     crypto_invoice_id  BIGINT,
-    crypto_invoice_url TEXT,
-    yookasa_url        TEXT,
-    yookasa_id         uuid
+    crypto_invoice_url TEXT
 );

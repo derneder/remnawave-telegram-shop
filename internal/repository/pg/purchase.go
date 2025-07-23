@@ -18,7 +18,6 @@ type Purchase = domain.Purchase
 
 const (
 	InvoiceTypeCrypto   = domain.InvoiceTypeCrypto
-	InvoiceTypeYookasa  = domain.InvoiceTypeYookasa
 	InvoiceTypeTelegram = domain.InvoiceTypeTelegram
 	InvoiceTypeTribute  = domain.InvoiceTypeTribute
 
@@ -40,8 +39,8 @@ func NewPurchaseRepository(pool *pgxpool.Pool) *PurchaseRepository {
 
 func (cr *PurchaseRepository) Create(ctx context.Context, purchase *Purchase) (int64, error) {
 	buildInsert := sq.Insert("purchase").
-		Columns("amount", "customer_id", "month", "currency", "expire_at", "status", "invoice_type", "crypto_invoice_id", "crypto_invoice_url", "yookasa_url", "yookasa_id").
-		Values(purchase.Amount, purchase.CustomerID, purchase.Month, purchase.Currency, purchase.ExpireAt, purchase.Status, purchase.InvoiceType, purchase.CryptoInvoiceID, purchase.CryptoInvoiceLink, purchase.YookasaURL, purchase.YookasaID).
+		Columns("amount", "customer_id", "month", "currency", "expire_at", "status", "invoice_type", "crypto_invoice_id", "crypto_invoice_url").
+		Values(purchase.Amount, purchase.CustomerID, purchase.Month, purchase.Currency, purchase.ExpireAt, purchase.Status, purchase.InvoiceType, purchase.CryptoInvoiceID, purchase.CryptoInvoiceLink).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
 
@@ -95,8 +94,6 @@ func (cr *PurchaseRepository) FindByInvoiceTypeAndStatus(ctx context.Context, in
 			&purchase.InvoiceType,
 			&purchase.CryptoInvoiceID,
 			&purchase.CryptoInvoiceLink,
-			&purchase.YookasaURL,
-			&purchase.YookasaID,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan purchase: %w", err)
@@ -136,8 +133,6 @@ func (cr *PurchaseRepository) FindById(ctx context.Context, id int64) (*Purchase
 		&purchase.InvoiceType,
 		&purchase.CryptoInvoiceID,
 		&purchase.CryptoInvoiceLink,
-		&purchase.YookasaURL,
-		&purchase.YookasaID,
 	)
 
 	if err != nil {

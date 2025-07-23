@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"remnawave-tg-shop-bot/internal/adapter/payment/cryptopay"
-	"remnawave-tg-shop-bot/internal/adapter/payment/yookassa"
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
@@ -18,7 +17,6 @@ type Handler struct {
 	customerRepository       custrepo.Repository
 	purchaseRepository       *pg.PurchaseRepository
 	cryptoPayClient          *cryptopay.Client
-	yookasaClient            *yookasa.Client
 	translation              *translation.Manager
 	paymentService           *payment.PaymentService
 	syncService              *syncsvc.SyncService
@@ -44,7 +42,6 @@ func NewHandler(
 	customerRepository custrepo.Repository,
 	purchaseRepository *pg.PurchaseRepository,
 	cryptoPayClient *cryptopay.Client,
-	yookasaClient *yookasa.Client,
 	referralRepository *pg.ReferralRepository,
 	promocodeRepository *pg.PromocodeRepository,
 	promocodeUsageRepository *pg.PromocodeUsageRepository,
@@ -55,7 +52,6 @@ func NewHandler(
 		customerRepository:       customerRepository,
 		purchaseRepository:       purchaseRepository,
 		cryptoPayClient:          cryptoPayClient,
-		yookasaClient:            yookasaClient,
 		translation:              translation,
 		referralRepository:       referralRepository,
 		promocodeRepository:      promocodeRepository,

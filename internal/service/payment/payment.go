@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"remnawave-tg-shop-bot/internal/adapter/payment/cryptopay"
-	"remnawave-tg-shop-bot/internal/adapter/payment/yookassa"
 	"remnawave-tg-shop-bot/internal/adapter/remnawave"
 	tg "remnawave-tg-shop-bot/internal/adapter/telegram/messenger"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
@@ -34,7 +33,6 @@ type PaymentService struct {
 	messenger                tg.Messenger
 	translation              *translation.Manager
 	cryptoPayClient          *cryptopay.Client
-	yookasaClient            *yookasa.Client
 	referralRepository       *pg.ReferralRepository
 	promocodeRepository      *pg.PromocodeRepository
 	promocodeUsageRepository *pg.PromocodeUsageRepository
@@ -48,7 +46,6 @@ func NewPaymentService(
 	customerRepository custrepo.Repository,
 	messenger tg.Messenger,
 	cryptoPayClient *cryptopay.Client,
-	yookasaClient *yookasa.Client,
 	referralRepository *pg.ReferralRepository,
 	promocodeRepository *pg.PromocodeRepository,
 	promocodeUsageRepository *pg.PromocodeUsageRepository,
@@ -61,7 +58,6 @@ func NewPaymentService(
 		messenger:                messenger,
 		translation:              translation,
 		cryptoPayClient:          cryptoPayClient,
-		yookasaClient:            yookasaClient,
 		referralRepository:       referralRepository,
 		promocodeRepository:      promocodeRepository,
 		promocodeUsageRepository: promocodeUsageRepository,
@@ -176,8 +172,6 @@ func (s PaymentService) CreatePurchase(ctx context.Context, amount int, months i
 	switch invoiceType {
 	case domainpurchase.InvoiceTypeCrypto:
 		return s.createCryptoInvoice(ctx, amount, months, customer)
-	case domainpurchase.InvoiceTypeYookasa:
-		return s.createYookasaInvoice(ctx, amount, months, customer)
 	case domainpurchase.InvoiceTypeTelegram:
 		return s.createTelegramInvoice(ctx, amount, months, customer)
 	case domainpurchase.InvoiceTypeTribute:
@@ -229,41 +223,6 @@ func (s PaymentService) createCryptoInvoice(ctx context.Context, amount int, mon
 	}
 
 	return invoice.BotInvoiceUrl, purchaseId, nil
-}
-
-func (s PaymentService) createYookasaInvoice(ctx context.Context, amount int, months int, customer *domaincustomer.Customer) (url string, purchaseId int64, err error) {
-	purchaseId, err = s.repo.Create(ctx, &domainpurchase.Purchase{
-		InvoiceType: domainpurchase.InvoiceTypeYookasa,
-		Status:      domainpurchase.StatusNew,
-		Amount:      float64(amount),
-		Currency:    "RUB",
-		CustomerID:  customer.ID,
-		Month:       months,
-	})
-	if err != nil {
-		slog.Error("Error creating purchase", "err", err)
-		return "", 0, err
-	}
-
-	invoice, err := s.yookasaClient.CreateInvoice(ctx, amount, months, customer.ID, purchaseId)
-	if err != nil {
-		slog.Error("Error creating invoice", "err", err)
-		return "", 0, err
-	}
-
-	updates := map[string]interface{}{
-		"yookasa_url": invoice.Confirmation.ConfirmationURL,
-		"yookasa_id":  invoice.ID,
-		"status":      domainpurchase.StatusPending,
-	}
-
-	err = s.repo.UpdateFields(ctx, purchaseId, updates)
-	if err != nil {
-		slog.Error("Error updating purchase", "err", err)
-		return "", 0, err
-	}
-
-	return invoice.Confirmation.ConfirmationURL, purchaseId, nil
 }
 
 func (s PaymentService) createTelegramInvoice(ctx context.Context, amount int, months int, customer *domaincustomer.Customer) (url string, purchaseId int64, err error) {
