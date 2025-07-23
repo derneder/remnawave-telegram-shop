@@ -17,6 +17,8 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	pg "remnawave-tg-shop-bot/internal/repository/pg"
+	"remnawave-tg-shop-bot/internal/service/notification"
 )
 
 // App groups dependencies of the bot.
@@ -68,13 +70,15 @@ func New(ctx context.Context) (*App, error) {
 		<-ctx.Done()
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
-
 	c := cache.NewCache(time.Hour)
 
 	return &App{Bot: b, Pool: pool, Cron: cron.New(), Cache: c}, nil
 }
 
 func (a *App) Close() {
+	if a.Cron != nil {
+		a.Cron.Stop()
+	}
 	a.Pool.Close()
 	if a.Cache != nil {
 		a.Cache.Close()
