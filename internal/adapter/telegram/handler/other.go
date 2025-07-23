@@ -163,17 +163,34 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		return
 	}
 	api := "https://tinyurl.com/api-create.php?url=" + url.QueryEscape(*customer.SubscriptionLink)
-	resp, err := http.Get(api)
-	if err != nil || resp.StatusCode >= 400 {
+	client := http.Client{Timeout: 5 * time.Second}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, api, nil)
+	if err != nil {
+		slog.Error("new request", "err", err)
+		return
+	}
+
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode >= http.StatusBadRequest {
 		alt := "https://is.gd/create.php?format=simple&url=" + url.QueryEscape(*customer.SubscriptionLink)
-		resp, err = http.Get(alt)
+		req, err = http.NewRequestWithContext(ctx, http.MethodGet, alt, nil)
+		if err != nil {
+			slog.Error("new alt request", "err", err)
+			return
+		}
+		resp, err = client.Do(req)
 		if err != nil {
 			slog.Error("shorten", "err", err)
 			return
 		}
 	}
 	defer resp.Body.Close()
-	data, _ := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Error("read short url", "err", err)
+		return
+	}
 	shortURL := string(data)
 	h.shortMu.Lock()
 	h.shortLinks[customer.TelegramID] = append(h.shortLinks[customer.TelegramID], ShortLink{URL: shortURL, CreatedAt: time.Now()})
