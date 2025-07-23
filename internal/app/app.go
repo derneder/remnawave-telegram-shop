@@ -77,7 +77,7 @@ func New(ctx context.Context) (*App, error) {
 		<-ctx.Done()
 		_ = metricsSrv.Shutdown(context.Background())
 	}()
-	cache := cache.NewCache(time.Hour)
+	cache := cache.NewCache(ctx, time.Hour)
 
 	return &App{Bot: b, Pool: pool, Cron: sched, Cache: cache}, nil
 }
@@ -89,15 +89,16 @@ func (a *App) Start() {
 }
 
 func (a *App) Shutdown(ctx context.Context) {
+	if a.Cache != nil {
+		defer a.Cache.Close()
+	}
+
 	if a.Cron != nil {
 		stopCtx := a.Cron.Stop()
 		select {
 		case <-stopCtx.Done():
 		case <-ctx.Done():
 		}
-	}
-	if a.Cache != nil {
-		a.Cache.Close()
 	}
 	if a.Bot != nil {
 		_, _ = a.Bot.Close(ctx)

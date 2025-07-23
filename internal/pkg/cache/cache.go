@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -11,19 +12,20 @@ type Item struct {
 }
 
 type Cache struct {
-	data  map[int64]Item
-	mutex sync.RWMutex
-	ttl   time.Duration
-	done  chan struct{}
+	data   map[int64]Item
+	mutex  sync.RWMutex
+	ttl    time.Duration
+	cancel context.CancelFunc
 }
 
-func NewCache(ttl time.Duration) *Cache {
+func NewCache(ctx context.Context, ttl time.Duration) *Cache {
+	ctx, cancel := context.WithCancel(ctx)
 	c := &Cache{
-		data: make(map[int64]Item),
-		ttl:  ttl,
-		done: make(chan struct{}),
+		data:   make(map[int64]Item),
+		ttl:    ttl,
+		cancel: cancel,
 	}
-	go c.cleanupExpired()
+	go c.cleanupExpired(ctx)
 	return c
 }
 
@@ -54,10 +56,12 @@ func (c *Cache) Delete(key int64) {
 
 // Close stops background cleanup goroutine.
 func (c *Cache) Close() {
-	close(c.done)
+	if c.cancel != nil {
+		c.cancel()
+	}
 }
 
-func (c *Cache) cleanupExpired() {
+func (c *Cache) cleanupExpired(ctx context.Context) {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 	for {
@@ -71,7 +75,7 @@ func (c *Cache) cleanupExpired() {
 				}
 			}
 			c.mutex.Unlock()
-		case <-c.done:
+		case <-ctx.Done():
 			return
 		}
 	}
