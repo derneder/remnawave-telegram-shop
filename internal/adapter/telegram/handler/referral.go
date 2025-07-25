@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	"remnawave-tg-shop-bot/internal/service/payment"
 )
 
 func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -284,9 +286,26 @@ func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, updat
 	}
 
 	code := parts[1]
-	if err := h.paymentService.ApplyPromocode(ctx, customer, code); err != nil {
-		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")}); serr != nil {
+	promo, err := h.paymentService.ApplyPromocode(ctx, customer, code)
+	if err != nil {
+		var text string
+		if errors.Is(err, payment.ErrPromocodeNotFound) {
+			text = tm.GetText(lang, "promo_not_found")
+		} else if errors.Is(err, payment.ErrPromocodeExpired) {
+			text = tm.GetText(lang, "promo_expired")
+		} else if errors.Is(err, payment.ErrPromocodeLimitExced) {
+			text = tm.GetText(lang, "promo_limit_reached")
+		} else {
+			text = tm.GetText(lang, "promo_invalid")
+		}
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: text}); serr != nil {
 			slog.Error("send promo invalid", "err", serr)
+		}
+		return
+	}
+	if promo.Type == 2 {
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ParseMode: models.ParseModeHTML, Text: fmt.Sprintf(tm.GetText(lang, "promo_balance_applied"), promo.Amount/100, int(customer.Balance))}); serr != nil {
+			slog.Error("send balance promo", "err", serr)
 		}
 		return
 	}
@@ -388,9 +407,26 @@ func (h *Handler) PromoCodeMessageHandler(ctx context.Context, b *bot.Bot, updat
 	}
 
 	code := strings.TrimSpace(update.Message.Text)
-	if err := h.paymentService.ApplyPromocode(ctx, customer, code); err != nil {
-		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")}); serr != nil {
+	promo, err := h.paymentService.ApplyPromocode(ctx, customer, code)
+	if err != nil {
+		var text string
+		if errors.Is(err, payment.ErrPromocodeNotFound) {
+			text = tm.GetText(lang, "promo_not_found")
+		} else if errors.Is(err, payment.ErrPromocodeExpired) {
+			text = tm.GetText(lang, "promo_expired")
+		} else if errors.Is(err, payment.ErrPromocodeLimitExced) {
+			text = tm.GetText(lang, "promo_limit_reached")
+		} else {
+			text = tm.GetText(lang, "promo_invalid")
+		}
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: text}); serr != nil {
 			slog.Error("send promo invalid", "err", serr)
+		}
+		return
+	}
+	if promo.Type == 2 {
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ParseMode: models.ParseModeHTML, Text: fmt.Sprintf(tm.GetText(lang, "promo_balance_applied"), promo.Amount/100, int(customer.Balance))}); serr != nil {
+			slog.Error("send balance promo", "err", serr)
 		}
 		return
 	}

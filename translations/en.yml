@@ -94,6 +94,10 @@ enter_promocode_prompt: "⭐️ Enter the promo code you received to activate it
   #hedgehog_promo\n\n💬 You can also send the code here or use /promocode"
 promo_invalid: Invalid promo code
 promo_applied: Promo applied! Subscription until %s
+promo_balance_applied: "✅ Promo code activated! %d RUB added to your balance. Current balance: %d RUB"
+promo_not_found: Promo code not found
+promo_expired: Promo code expired
+promo_limit_reached: Promo code usage limit exceeded
 activation_singular: activation
 activation_plural: activations
 subscription_active_hint: Follow the instructions and press ‘Connect’.
