@@ -8,6 +8,8 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
+	"remnawave-tg-shop-bot/internal/pkg/config"
+	"remnawave-tg-shop-bot/internal/pkg/contextkey"
 )
 
 func (h *Handler) CreateCustomerIfNotExistMiddleware(next bot.HandlerFunc) bot.HandlerFunc {
@@ -49,6 +51,7 @@ func (h *Handler) CreateCustomerIfNotExistMiddleware(next bot.HandlerFunc) bot.H
 			}
 		}
 
+		ctx = context.WithValue(ctx, contextkey.IsAdminKey, config.IsAdmin(telegramId))
 		next(ctx, b, update)
 	}
 }
