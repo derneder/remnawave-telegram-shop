@@ -2,19 +2,25 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	crypto "remnawave-tg-shop-bot/internal/adapter/payment/cryptopay"
+	tributewebhook "remnawave-tg-shop-bot/internal/adapter/payment/tribute"
 	"remnawave-tg-shop-bot/internal/adapter/remnawave"
 	tgHandler "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	tgMessenger "remnawave-tg-shop-bot/internal/adapter/telegram/messenger"
 	"remnawave-tg-shop-bot/internal/app"
+	"remnawave-tg-shop-bot/internal/observability"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
+	custsvc "remnawave-tg-shop-bot/internal/service/customer"
 	"remnawave-tg-shop-bot/internal/service/payment"
 	syncsvc "remnawave-tg-shop-bot/internal/service/sync"
 )
@@ -55,6 +61,8 @@ func main() {
 	cryptoClient := crypto.NewCryptoPayClient(config.CryptoPayUrl(), config.CryptoPayToken())
 	messenger := tgMessenger.NewBotMessenger(a.Bot)
 
+	svcCustomer := custsvc.NewService(customerRepo)
+
 	paySvc := payment.NewPaymentService(tm, purchaseRepo, remClient, customerRepo, messenger,
 		[]payment.Provider{
 			payment.NewCryptoPayProvider(purchaseRepo, cryptoClient),
@@ -65,6 +73,20 @@ func main() {
 	syncSvc := syncsvc.NewSyncService(remClient, customerRepo)
 
 	h := tgHandler.NewHandler(syncSvc, paySvc, tm, customerRepo, purchaseRepo, referralRepo, promoRepo, promoUsageRepo, a.Cache)
+
+	httpMux := http.NewServeMux()
+	httpMux.Handle("/healthcheck", observability.Handler())
+	cfg := config.Tribute()
+	if cfg.TributeWebhookPath != "" {
+		httpMux.Handle(cfg.TributeWebhookPath, tributewebhook.NewHandler(cfg.TributeAPIKey, svcCustomer))
+	}
+
+	go func() {
+		srv := &http.Server{Addr: fmt.Sprintf(":%d", config.GetHealthCheckPort()), Handler: httpMux, ReadHeaderTimeout: 5 * time.Second}
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("http server", "err", err)
+		}
+	}()
 
 	h.Start(ctx)
 
