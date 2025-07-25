@@ -66,6 +66,8 @@ func main() {
 
 	h := tgHandler.NewHandler(syncSvc, paySvc, tm, customerRepo, purchaseRepo, referralRepo, promoRepo, promoUsageRepo, a.Cache)
 
+	h.Start(ctx)
+
 	a.InitHandlers(h)
 
 	a.Start()
