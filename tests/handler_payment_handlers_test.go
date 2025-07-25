@@ -178,17 +178,24 @@ func TestSellCallbackHandler_Text(t *testing.T) {
 		}
 		h.SellCallbackHandler(context.Background(), b, upd)
 		got := parseText(t, client)
-
-		var line string
+		var (
+			emoji string
+			price int
+		)
 		switch tc.month {
 		case 1:
-			line = fmt.Sprintf(trans.GetText("ru", "plan_line_1"), trans.GetText("ru", "month_1"), config.Price1())
+			price = config.Price1()
+			emoji = "✨"
 		case 3:
-			line = fmt.Sprintf(trans.GetText("ru", "plan_line_3"), trans.GetText("ru", "month_3"), config.Price3())
+			price = config.Price3()
+			emoji = "❤️‍🔥"
 		case 6:
-			line = fmt.Sprintf(trans.GetText("ru", "plan_line_6"), trans.GetText("ru", "month_6"), config.Price6())
+			price = config.Price6()
+			emoji = "🔥"
 		}
-		expect := fmt.Sprintf(trans.GetText("ru", "selected_plan_text"), 100, line)
+		monthText := trans.GetText("ru", fmt.Sprintf("month_%d", tc.month))
+		line := fmt.Sprintf(trans.GetText("ru", "plan_line"), emoji, monthText, price)
+		expect := fmt.Sprintf(trans.GetText("ru", "choose_plan_text"), 100, line)
 
 		if got != expect {
 			t.Errorf("month %d text mismatch\nexpected: %q\n got: %q", tc.month, expect, got)
