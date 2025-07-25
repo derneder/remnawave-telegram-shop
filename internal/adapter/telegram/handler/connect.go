@@ -69,7 +69,7 @@ func (h *Handler) ConnectCallbackHandler(ctx context.Context, b *bot.Bot, update
 	langCode := update.CallbackQuery.From.LanguageCode
 
 	var markup [][]models.InlineKeyboardButton
-	if config.IsWepAppLinkEnabled() {
+	if config.IsWebAppLinkEnabled() {
 		if customer.SubscriptionLink != nil && customer.ExpireAt.After(time.Now()) {
 			markup = append(markup, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "connect_button"),
 				WebApp: &models.WebAppInfo{
@@ -117,7 +117,7 @@ func buildConnectText(customer *domaincustomer.Customer, langCode string) string
 			info.WriteString(fmt.Sprintf(subscriptionActiveText, formattedDate))
 
 			if customer.SubscriptionLink != nil && *customer.SubscriptionLink != "" {
-				if config.IsWepAppLinkEnabled() {
+				if config.IsWebAppLinkEnabled() {
 				} else {
 					subscriptionLinkText := tm.GetText(langCode, "subscription_link")
 					info.WriteString(fmt.Sprintf(subscriptionLinkText, *customer.SubscriptionLink))
