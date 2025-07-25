@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
@@ -33,6 +32,11 @@ func NewClient(paymentService *payment.PaymentService, customerRepository custre
 
 func (c *Client) WebHookHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
 		ctx, cancel := context.WithTimeout(r.Context(), time.Second*60)
 		defer cancel()
 		body, err := io.ReadAll(r.Body)
@@ -59,7 +63,7 @@ func (c *Client) WebHookHandler() http.Handler {
 		expected := hex.EncodeToString(mac.Sum(nil))
 
 		if !hmac.Equal([]byte(expected), []byte(signature)) {
-			log.Printf("webhook: bad signature (expected %s)", expected)
+			slog.Error("webhook: bad signature", "expected", expected)
 			http.Error(w, "invalid signature", http.StatusUnauthorized)
 			return
 		}
