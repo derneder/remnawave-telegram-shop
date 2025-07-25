@@ -58,45 +58,44 @@ Web server start on port defined in .env via HEALTH_CHECK_PORT
 ## Environment Variables
 
 The application requires the following environment variables to be set:
-
-| Variable                 | Description                                                                                                                                  |
-|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------| 
-| `PRICE_1`                | Price for 1 month                                                                                                                            |
-| `PRICE_3`                | Price for 3 month                                                                                                                            |
-| `PRICE_6`                | Price for 6 month                                                                                                                            |
-| `HEALTH_CHECK_PORT`      | Server port                                                                                                                                  |
-| `IS_WEB_APP_LINK`        | If true, then sublink will be showed as webapp..                                                                                             |
-| `X_API_KEY`              | https://remna.st/docs/security/tinyauth-for-nginx#issuing-api-keys                                                                           |
-| `MINI_APP_URL`           | tg WEB APP URL. if empty not be used.                                                                                                        |
-| `STARS_PRICE_1`          | Amount of Stars to charge for 1 month |
-| `STARS_PRICE_3`          | Amount of Stars to charge for 3 months |
-| `STARS_PRICE_6`          | Amount of Stars to charge for 6 months |
-| `REFERRAL_DAYS`          | Referral days. Optional, default 0 (disabled) |
-| `REFERRAL_BONUS`         | Bonus in RUB for successful referral |
-| `TELEGRAM_TOKEN`         | Telegram Bot API token for bot functionality                                                                                                 |
-| `DATABASE_URL`           | PostgreSQL connection string                                                                                                                 |
-| `POSTGRES_USER`          | PostgreSQL username                                                                                                                          |
-| `POSTGRES_PASSWORD`      | PostgreSQL password                                                                                                                          |
-| `POSTGRES_DB`            | PostgreSQL database name                                                                                                                     |
-| `REMNAWAVE_URL`          | Remnawave API URL                                                                                                                            |
-| `REMNAWAVE_MODE`         | Remnawave mode (remote/local), default is remote. If local set – you can pass http://remnawave:3000 to REMNAWAVE_URL                         |
-| `REMNAWAVE_TOKEN`        | Authentication token for Remnawave API                                                                                                       |
-| `CRYPTO_PAY_ENABLED`     | Enable/disable CryptoPay payment method (true/false)                                                                                         |
-| `CRYPTO_PAY_TOKEN`       | CryptoPay API token                                                                                                                          |
-| `CRYPTO_PAY_URL`         | CryptoPay API URL                                                                                                                            |
-| `TRAFFIC_LIMIT`          | Maximum allowed traffic in gb (0 to set unlimited)                                                                                           |
-| `TELEGRAM_STARS_ENABLED` | Enable/disable Telegram Stars payment method (true/false)                                                                                    |
-| `SERVER_STATUS_URL`      | URL to server status page (optional) - if not set, button will not be displayed                                                              |
-| `SUPPORT_URL`            | URL to support chat or page (optional) - if not set, button will not be displayed                                                            |
-| `FEEDBACK_URL`           | URL to feedback/reviews page (optional) - if not set, button will not be displayed                                                           |
-| `CHANNEL_URL`            | URL to Telegram channel (optional) - if not set, button will not be displayed                                                                |
-| `ADMIN_TELEGRAM_IDS` | Comma separated list of admin Telegram IDs                                                                                                                            |
-| `TRIAL_TRAFFIC_LIMIT`    | Maximum allowed traffic in gb for trial subscriptions                                                                                        |     
-| `TRIAL_DAYS`             | Number of days for trial subscriptions. if 0 = disabled.                                                                                     |
-| `INBOUND_UUIDS`          | Comma-separated list of inbound UUIDs to assign to users (e.g., "773db654-a8b2-413a-a50b-75c3536238fd,bc979bdd-f1fa-4d94-8a51-38a0f518a2a2") |
-| `TRIBUTE_WEBHOOK_URL`    | Path for webhook handler. Example: /tribute |
-| `TRIBUTE_API_KEY`        | Api key, which can be obtained via settings in Tribute app.                                                                                  |
-| `TRIBUTE_PAYMENT_URL`    | You payment url for Tribute. (Subscription telegram link)                                                                                    |
+| Variable | Description |
+|----------|-------------|
+| `PRICE_1` | Price for 1 month |
+| `PRICE_3` | Price for 3 months |
+| `PRICE_6` | Price for 6 months |
+| `HEALTH_CHECK_PORT` | Server port |
+| `IS_WEB_APP_LINK` | Show sublink as webapp when true |
+| `X_API_KEY` | https://remna.st/docs/security/tinyauth-for-nginx#issuing-api-keys |
+| `MINI_APP_URL` | TG Web App URL (optional) |
+| `STARS_PRICE_1` | Stars cost for 1 month |
+| `STARS_PRICE_3` | Stars cost for 3 months |
+| `STARS_PRICE_6` | Stars cost for 6 months |
+| `REFERRAL_DAYS` | Referral days (0 to disable) |
+| `REFERRAL_BONUS` | Bonus in RUB for successful referral |
+| `TELEGRAM_TOKEN` | Telegram Bot API token |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `POSTGRES_USER` | PostgreSQL username |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `POSTGRES_DB` | PostgreSQL database name |
+| `REMNAWAVE_URL` | Remnawave API URL |
+| `REMNAWAVE_MODE` | Remnawave mode remote/local. Use http://remnawave:3000 for local |
+| `REMNAWAVE_TOKEN` | Remnawave API authentication token |
+| `CRYPTO_PAY_ENABLED` | Enable CryptoPay payments (true/false) |
+| `CRYPTO_PAY_TOKEN` | CryptoPay API token |
+| `CRYPTO_PAY_URL` | CryptoPay API URL |
+| `TRAFFIC_LIMIT` | Max allowed traffic in GB (0 for unlimited) |
+| `TELEGRAM_STARS_ENABLED` | Enable Telegram Stars payments (true/false) |
+| `SERVER_STATUS_URL` | Optional server status URL |
+| `SUPPORT_URL` | Optional support URL |
+| `FEEDBACK_URL` | Optional feedback URL |
+| `CHANNEL_URL` | Optional Telegram channel URL |
+| `ADMIN_TELEGRAM_IDS` | Comma-separated list of admin IDs |
+| `TRIAL_TRAFFIC_LIMIT` | Traffic limit for trial subscriptions (GB) |
+| `TRIAL_DAYS` | Trial period length in days (0 to disable) |
+| `INBOUND_UUIDS` | Comma-separated inbound UUIDs to assign users |
+| `TRIBUTE_WEBHOOK_URL` | Path for Tribute webhook handler |
+| `TRIBUTE_API_KEY` | Tribute API key |
+| `TRIBUTE_PAYMENT_URL` | Tribute subscription link for Telegram |
 
 ## User Interface
 
@@ -155,6 +154,24 @@ mv .env.sample .env
 make dc-up
 make dc-migrate
 ```
+
+## Directory Layout
+
+```
+cmd/                Main applications (`bot` and `migrate`)
+internal/adapter/   Integrations with external systems (Telegram, Remnawave, payment)
+internal/app/       Application initialization and wiring
+internal/service/   Business logic
+internal/repository/ Data access layer
+internal/ui/        Telegram handlers and UI helpers
+db/migrations/      SQL migrations
+```
+
+### Common Commands
+
+- **Build bot**: `go build ./cmd/bot`
+- **Run migrations**: `make dc-migrate`
+- **Run tests**: `go test ./...`
 
 ## Запуск через Docker Compose
 
@@ -283,7 +300,15 @@ Run linters and build:
 ```bash
 go vet ./...
 staticcheck ./...
-Golint: golangci-lint run
+golangci-lint run
+go build ./cmd/bot
+```
+
+Format code before committing:
+
+```bash
+gofmt -w .
+goimports -w .
 ```
 
 Start bot locally:
@@ -326,3 +351,4 @@ make cover
 
 
 Ensure `DATABASE_URL` is set to a test PostgreSQL instance before running integration tests.
+
