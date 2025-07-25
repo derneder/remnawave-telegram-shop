@@ -13,6 +13,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Config holds Tribute-specific settings.
+type Config struct {
+	TributeAPIKey      string
+	TributeWebhookPath string
+}
+
 type config struct {
 	telegramToken                                       string
 	price1, price3, price6                              int
@@ -54,6 +60,14 @@ func GetTributeWebHookUrl() string {
 }
 func GetTributeAPIKey() string {
 	return conf.tributeAPIKey
+}
+
+// Tribute returns Tribute-related configuration.
+func Tribute() Config {
+	return Config{
+		TributeAPIKey:      conf.tributeAPIKey,
+		TributeWebhookPath: conf.tributeWebhookUrl,
+	}
 }
 
 func GetTributePaymentUrl() string {
@@ -409,13 +423,14 @@ func InitConfig() error {
 	}
 
 	conf.tributeWebhookUrl = os.Getenv("TRIBUTE_WEBHOOK_URL")
-	if conf.tributeWebhookUrl != "" {
-		if conf.tributeAPIKey, err = mustEnv("TRIBUTE_API_KEY"); err != nil {
-			return err
-		}
-		if conf.tributePaymentUrl, err = mustEnv("TRIBUTE_PAYMENT_URL"); err != nil {
-			return err
-		}
+	if conf.tributeWebhookUrl == "" {
+		return fmt.Errorf("TRIBUTE_WEBHOOK_URL is required")
+	}
+	if conf.tributeAPIKey, err = mustEnv("TRIBUTE_API_KEY"); err != nil {
+		return err
+	}
+	if conf.tributePaymentUrl, err = mustEnv("TRIBUTE_PAYMENT_URL"); err != nil {
+		return err
 	}
 
 	return ValidateConfig()
@@ -448,6 +463,17 @@ func ValidateToken(value, name string) error {
 	return nil
 }
 
+// ValidatePath ensures path starts with '/'.
+func ValidatePath(value, name string) error {
+	if value == "" {
+		return fmt.Errorf("%s is required", name)
+	}
+	if !strings.HasPrefix(value, "/") {
+		return fmt.Errorf("%s must start with \"/\"", name)
+	}
+	return nil
+}
+
 // ValidateConfig validates URLs and tokens loaded from environment.
 func ValidateConfig() error {
 	if err := ValidateToken(conf.telegramToken, "TELEGRAM_TOKEN"); err != nil {
@@ -467,16 +493,14 @@ func ValidateConfig() error {
 			return err
 		}
 	}
-	if conf.tributeWebhookUrl != "" {
-		if err := ValidateURL(conf.tributeWebhookUrl, "TRIBUTE_WEBHOOK_URL"); err != nil {
-			return err
-		}
-		if err := ValidateURL(conf.tributePaymentUrl, "TRIBUTE_PAYMENT_URL"); err != nil {
-			return err
-		}
-		if err := ValidateToken(conf.tributeAPIKey, "TRIBUTE_API_KEY"); err != nil {
-			return err
-		}
+	if err := ValidatePath(conf.tributeWebhookUrl, "TRIBUTE_WEBHOOK_URL"); err != nil {
+		return err
+	}
+	if err := ValidateURL(conf.tributePaymentUrl, "TRIBUTE_PAYMENT_URL"); err != nil {
+		return err
+	}
+	if err := ValidateToken(conf.tributeAPIKey, "TRIBUTE_API_KEY"); err != nil {
+		return err
 	}
 	if conf.telegramProxyURL != "" {
 		if err := ValidateURL(conf.telegramProxyURL, "TELEGRAM_PROXY_URL"); err != nil {
