@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -78,4 +79,45 @@ func (h *Handler) IsAwaitingPromo(id int64) bool {
 	h.promoMu.RLock()
 	defer h.promoMu.RUnlock()
 	return h.awaitingPromo[id]
+}
+
+const (
+	shortLinkTTL       = 5 * time.Minute
+	shortLinkMaxStored = 10
+)
+
+// Start runs background tasks for handler.
+func (h *Handler) Start(ctx context.Context) {
+	go h.cleanupShortLinks(ctx)
+}
+
+func (h *Handler) cleanupShortLinks(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			now := time.Now()
+			h.shortMu.Lock()
+			for id, links := range h.shortLinks {
+				var filtered []ShortLink
+				for _, l := range links {
+					if now.Sub(l.CreatedAt) < shortLinkTTL {
+						filtered = append(filtered, l)
+					}
+				}
+				if len(filtered) > shortLinkMaxStored {
+					filtered = filtered[len(filtered)-shortLinkMaxStored:]
+				}
+				if len(filtered) == 0 {
+					delete(h.shortLinks, id)
+				} else {
+					h.shortLinks[id] = filtered
+				}
+			}
+			h.shortMu.Unlock()
+		case <-ctx.Done():
+			return
+		}
+	}
 }
