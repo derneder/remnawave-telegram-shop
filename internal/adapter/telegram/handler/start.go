@@ -52,8 +52,12 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 					bonus := float64(config.GetReferralBonus())
 					_ = h.customerRepository.UpdateFields(ctx, referrer.ID, map[string]interface{}{"balance": referrer.Balance + bonus})
 					_ = h.customerRepository.UpdateFields(ctx, existingCustomer.ID, map[string]interface{}{"balance": bonus})
-					_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: h.translation.GetText(referrer.Language, "referral_bonus_granted")})
-					_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: existingCustomer.TelegramID, Text: h.translation.GetText(langCode, "referral_bonus_granted")})
+					if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: h.translation.GetText(referrer.Language, "referral_bonus_granted")}); err != nil {
+						slog.Error("send referral bonus", "err", err)
+					}
+					if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: existingCustomer.TelegramID, Text: h.translation.GetText(langCode, "referral_bonus_granted")}); err != nil {
+						slog.Error("send referral bonus", "err", err)
+					}
 					slog.Info("referral created", "referrerId", utils.MaskHalfInt64(referrerId), "refereeId", utils.MaskHalfInt64(existingCustomer.TelegramID))
 				}
 			}
@@ -75,10 +79,12 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 		startKb = append(startKb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "channel_button"), URL: config.ChannelURL()}})
 	}
 
-	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
+	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
 		ReplyMarkup: models.ReplyKeyboardRemove{RemoveKeyboard: true},
-	})
+	}); err != nil {
+		slog.Error("send remove keyboard", "err", err)
+	}
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "start_menu_text"), update.Message.From.FirstName)
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
@@ -230,10 +236,12 @@ func (h *Handler) MenuCommandHandler(ctx context.Context, b *bot.Bot, update *mo
 	kb := h.buildStartKeyboard(customer, lang)
 	text := fmt.Sprintf(h.translation.GetText(lang, "account_menu_text"), update.Message.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, customer, lang)
 
-	_, _ = b.SendMessage(ctxWithTime, &bot.SendMessageParams{
+	if _, err := b.SendMessage(ctxWithTime, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
 		ReplyMarkup: models.ReplyKeyboardRemove{RemoveKeyboard: true},
-	})
+	}); err != nil {
+		slog.Error("send remove keyboard", "err", err)
+	}
 
 	_, err = b.SendMessage(ctxWithTime, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
@@ -262,17 +270,23 @@ func (h *Handler) PromoCommandHandler(ctx context.Context, b *bot.Bot, update *m
 	if len(parts) > 1 {
 		code := parts[1]
 		if err := h.paymentService.ApplyPromocode(ctx, customer, code); err != nil {
-			_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "promo_invalid")})
+			if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "promo_invalid")}); serr != nil {
+				slog.Error("send promo invalid", "err", serr)
+			}
 			return
 		}
 		until := ""
 		if customer.ExpireAt != nil {
 			until = customer.ExpireAt.Format("02.01.2006 15:04")
 		}
-		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf(h.translation.GetText(lang, "promo_applied"), until)})
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf(h.translation.GetText(lang, "promo_applied"), until)}); serr != nil {
+			slog.Error("send promo applied", "err", serr)
+		}
 		return
 	}
 
 	h.expectPromo(update.Message.Chat.ID)
-	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "enter_promocode_prompt")})
+	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "enter_promocode_prompt")}); err != nil {
+		slog.Error("send enter promocode prompt", "err", err)
+	}
 }

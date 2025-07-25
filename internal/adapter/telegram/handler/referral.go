@@ -286,13 +286,17 @@ func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, updat
 
 	parts := strings.Fields(update.Message.Text)
 	if len(parts) < 2 {
-		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")})
+		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")}); err != nil {
+			slog.Error("send promo invalid", "err", err)
+		}
 		return
 	}
 
 	code := parts[1]
 	if err := h.paymentService.ApplyPromocode(ctx, customer, code); err != nil {
-		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")})
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")}); serr != nil {
+			slog.Error("send promo invalid", "err", serr)
+		}
 		return
 	}
 
@@ -301,7 +305,9 @@ func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, updat
 		until = customer.ExpireAt.Format("02.01.2006 15:04")
 	}
 
-	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf(tm.GetText(lang, "promo_applied"), until)})
+	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf(tm.GetText(lang, "promo_applied"), until)}); err != nil {
+		slog.Error("send promo applied", "err", err)
+	}
 }
 
 func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -384,7 +390,9 @@ func (h *Handler) PromoCodeMessageHandler(ctx context.Context, b *bot.Bot, updat
 
 	code := strings.TrimSpace(update.Message.Text)
 	if err := h.paymentService.ApplyPromocode(ctx, customer, code); err != nil {
-		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")})
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")}); serr != nil {
+			slog.Error("send promo invalid", "err", serr)
+		}
 		return
 	}
 
@@ -393,9 +401,11 @@ func (h *Handler) PromoCodeMessageHandler(ctx context.Context, b *bot.Bot, updat
 		until = customer.ExpireAt.Format("02.01.2006 15:04")
 	}
 
-	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
+	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   fmt.Sprintf(tm.GetText(lang, "promo_applied"), until)})
+		Text:   fmt.Sprintf(tm.GetText(lang, "promo_applied"), until)}); err != nil {
+		slog.Error("send promo applied", "err", err)
+	}
 }
 
 func (h *Handler) PromoFreezeCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
