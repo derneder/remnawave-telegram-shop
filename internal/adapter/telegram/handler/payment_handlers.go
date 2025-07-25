@@ -70,6 +70,35 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
+	var lines []string
+
+	if config.Price1() > 0 {
+		lines = append(lines, fmt.Sprintf(
+			h.translation.GetText(langCode, "plan_line"),
+			"✨",
+			h.translation.GetText(langCode, "month_1"),
+			config.Price1(),
+		))
+	}
+
+	if config.Price3() > 0 {
+		lines = append(lines, fmt.Sprintf(
+			h.translation.GetText(langCode, "plan_line"),
+			"❤️‍🔥",
+			h.translation.GetText(langCode, "month_3"),
+			config.Price3(),
+		))
+	}
+
+	if config.Price6() > 0 {
+		lines = append(lines, fmt.Sprintf(
+			h.translation.GetText(langCode, "plan_line"),
+			"🔥",
+			h.translation.GetText(langCode, "month_6"),
+			config.Price6(),
+		))
+	}
+
 	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
@@ -77,7 +106,7 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: keyboard,
 		},
-		Text: fmt.Sprintf(h.translation.GetText(langCode, "choose_plan_text"), bal, config.Price1(), config.Price3(), config.Price6()),
+		Text: fmt.Sprintf(h.translation.GetText(langCode, "choose_plan_text"), bal, strings.Join(lines, "\n")),
 	})
 
 	if err != nil {
@@ -103,7 +132,42 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackBuy},
 	})
 
-	text := fmt.Sprintf(h.translation.GetText(langCode, "selected_months"), month)
+	customer, _ := h.customerRepository.FindByTelegramId(ctx, chatID)
+	bal := 0
+	if customer != nil {
+		bal = int(customer.Balance)
+	}
+
+	var (
+		line      string
+		price     int
+		emoji     string
+		monthText string
+	)
+
+	switch month {
+	case "1":
+		price = config.Price1()
+		emoji = "✨"
+		monthText = h.translation.GetText(langCode, "month_1")
+	case "3":
+		price = config.Price3()
+		emoji = "❤️‍🔥"
+		monthText = h.translation.GetText(langCode, "month_3")
+	case "6":
+		price = config.Price6()
+		emoji = "🔥"
+		monthText = h.translation.GetText(langCode, "month_6")
+	}
+
+	line = fmt.Sprintf(
+		h.translation.GetText(langCode, "plan_line"),
+		emoji,
+		monthText,
+		price,
+	)
+
+	text := fmt.Sprintf(h.translation.GetText(langCode, "choose_plan_text"), bal, line)
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {
