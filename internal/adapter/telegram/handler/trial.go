@@ -30,9 +30,9 @@ func (h *Handler) TrialCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	if c.SubscriptionLink != nil {
 		return
 	}
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	langCode := update.CallbackQuery.From.LanguageCode
@@ -71,9 +71,9 @@ func (h *Handler) ActivateTrialCallbackHandler(ctx context.Context, b *bot.Bot, 
 	if c.SubscriptionLink != nil {
 		return
 	}
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	ctxWithUsername := context.WithValue(ctx, contextkey.Username, contextkey.CleanUsername(update.CallbackQuery.From.Username))
