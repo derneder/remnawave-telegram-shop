@@ -4,7 +4,7 @@ month_1: 1 month
 month_3: 3 months
 month_6: 6 months
 plan_line: "%s %s — %d rubles"
-choose_plan_text: "📌 Choose subscription period 📌\n\n💎 Current balance: %d rubles\n\n%s\n\n⭐ Payment will be deducted from your personal account."
+choose_plan_text: "📌 Choose subscription period 📌\n\n💎 Current balance: %d rubles\n\n%s\n\n⭐️ Payment will be deducted from your personal account."
 crypto_button: ₿ Cryptocurrency
 pay_button: 💸 Pay
 subscription_active: 'Your subscription is valid until: %s'
