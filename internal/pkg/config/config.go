@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"log"
@@ -226,40 +227,43 @@ func GetXApiKey() string {
 
 const bytesInGigabyte = 1073741824
 
-func mustEnv(key string) string {
+func mustEnv(key string) (string, error) {
 	v := os.Getenv(key)
 	if v == "" {
-		log.Panicf("env %q not set", key)
+		return "", fmt.Errorf("env %q not set", key)
 	}
-	return v
+	return v, nil
 }
 
-func mustEnvInt(key string) int {
-	v := mustEnv(key)
-	i, err := strconv.Atoi(v)
+func mustEnvInt(key string) (int, error) {
+	v, err := mustEnv(key)
 	if err != nil {
-		log.Panicf("invalid int in %q: %v", key, err)
-	}
-	return i
-}
-
-func envIntDefault(key string, def int) int {
-	v := os.Getenv(key)
-	if v == "" {
-		return def
+		return 0, err
 	}
 	i, err := strconv.Atoi(v)
 	if err != nil {
-		log.Panicf("invalid int in %q: %v", key, err)
+		return 0, fmt.Errorf("invalid int in %q: %w", key, err)
 	}
-	return i
+	return i, nil
+}
+
+func envIntDefault(key string, def int) (int, error) {
+	v := os.Getenv(key)
+	if v == "" {
+		return def, nil
+	}
+	i, err := strconv.Atoi(v)
+	if err != nil {
+		return 0, fmt.Errorf("invalid int in %q: %w", key, err)
+	}
+	return i, nil
 }
 
 func envBool(key string) bool {
 	return os.Getenv(key) == "true"
 }
 
-func InitConfig() {
+func InitConfig() error {
 	if os.Getenv("DISABLE_ENV_FILE") != "true" {
 		if err := godotenv.Load(".env"); err != nil {
 			log.Println("No .env loaded:", err)
@@ -268,7 +272,7 @@ func InitConfig() {
 	conf.adminTelegramIds = make(map[int64]struct{})
 	idsStr := os.Getenv("ADMIN_TELEGRAM_IDS")
 	if idsStr == "" {
-		log.Panic("ADMIN_TELEGRAM_IDS .env variable not set")
+		return fmt.Errorf("ADMIN_TELEGRAM_IDS .env variable not set")
 	}
 	for _, idStr := range strings.Split(idsStr, ",") {
 		idStr = strings.TrimSpace(idStr)
@@ -277,12 +281,15 @@ func InitConfig() {
 		}
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			log.Panicf("invalid admin id %s: %v", idStr, err)
+			return fmt.Errorf("invalid admin id %s: %w", idStr, err)
 		}
 		conf.adminTelegramIds[id] = struct{}{}
 	}
 
-	conf.telegramToken = mustEnv("TELEGRAM_TOKEN")
+	var err error
+	if conf.telegramToken, err = mustEnv("TELEGRAM_TOKEN"); err != nil {
+		return err
+	}
 
 	conf.xApiKey = os.Getenv("X_API_KEY")
 
@@ -293,53 +300,83 @@ func InitConfig() {
 
 	conf.miniApp = strings.TrimSpace(os.Getenv("MINI_APP_URL"))
 
-	conf.trialTrafficLimit = mustEnvInt("TRIAL_TRAFFIC_LIMIT")
+	if conf.trialTrafficLimit, err = mustEnvInt("TRIAL_TRAFFIC_LIMIT"); err != nil {
+		return err
+	}
 
-	conf.healthCheckPort = envIntDefault("HEALTH_CHECK_PORT", 8080)
+	if conf.healthCheckPort, err = envIntDefault("HEALTH_CHECK_PORT", 8080); err != nil {
+		return err
+	}
 
-	conf.trialDays = mustEnvInt("TRIAL_DAYS")
+	if conf.trialDays, err = mustEnvInt("TRIAL_DAYS"); err != nil {
+		return err
+	}
 
 	conf.enableAutoPayment = envBool("ENABLE_AUTO_PAYMENT")
 
-	conf.price1 = mustEnvInt("PRICE_1")
-	conf.price3 = mustEnvInt("PRICE_3")
-	conf.price6 = mustEnvInt("PRICE_6")
+	if conf.price1, err = mustEnvInt("PRICE_1"); err != nil {
+		return err
+	}
+	if conf.price3, err = mustEnvInt("PRICE_3"); err != nil {
+		return err
+	}
+	if conf.price6, err = mustEnvInt("PRICE_6"); err != nil {
+		return err
+	}
 
 	conf.isTelegramStarsEnabled = envBool("TELEGRAM_STARS_ENABLED")
 	if conf.isTelegramStarsEnabled {
-		conf.starsPrice1 = envIntDefault("STARS_PRICE_1", conf.price1)
-		conf.starsPrice3 = envIntDefault("STARS_PRICE_3", conf.price3)
-		conf.starsPrice6 = envIntDefault("STARS_PRICE_6", conf.price6)
+		if conf.starsPrice1, err = envIntDefault("STARS_PRICE_1", conf.price1); err != nil {
+			return err
+		}
+		if conf.starsPrice3, err = envIntDefault("STARS_PRICE_3", conf.price3); err != nil {
+			return err
+		}
+		if conf.starsPrice6, err = envIntDefault("STARS_PRICE_6", conf.price6); err != nil {
+			return err
+		}
 	}
 
-	conf.remnawaveUrl = mustEnv("REMNAWAVE_URL")
+	if conf.remnawaveUrl, err = mustEnv("REMNAWAVE_URL"); err != nil {
+		return err
+	}
 
-	conf.remnawaveMode = func() string {
-		v := os.Getenv("REMNAWAVE_MODE")
-		if v != "" {
-			if v != "remote" && v != "local" {
-				panic("REMNAWAVE_MODE .env variable must be either 'remote' or 'local'")
-			} else {
-				return v
-			}
-		} else {
-			return "remote"
-		}
-	}()
+	switch v := os.Getenv("REMNAWAVE_MODE"); v {
+	case "remote", "local":
+		conf.remnawaveMode = v
+	case "":
+		conf.remnawaveMode = "remote"
+	default:
+		return fmt.Errorf("REMNAWAVE_MODE .env variable must be either 'remote' or 'local'")
+	}
 
-	conf.remnawaveToken = mustEnv("REMNAWAVE_TOKEN")
+	if conf.remnawaveToken, err = mustEnv("REMNAWAVE_TOKEN"); err != nil {
+		return err
+	}
 
-	conf.databaseURL = mustEnv("DATABASE_URL")
+	if conf.databaseURL, err = mustEnv("DATABASE_URL"); err != nil {
+		return err
+	}
 
 	conf.isCryptoEnabled = envBool("CRYPTO_PAY_ENABLED")
 	if conf.isCryptoEnabled {
-		conf.cryptoPayURL = mustEnv("CRYPTO_PAY_URL")
-		conf.cryptoPayToken = mustEnv("CRYPTO_PAY_TOKEN")
+		if conf.cryptoPayURL, err = mustEnv("CRYPTO_PAY_URL"); err != nil {
+			return err
+		}
+		if conf.cryptoPayToken, err = mustEnv("CRYPTO_PAY_TOKEN"); err != nil {
+			return err
+		}
 	}
 
-	conf.trafficLimit = mustEnvInt("TRAFFIC_LIMIT")
-	conf.referralDays = envIntDefault("REFERRAL_DAYS", 0)
-	conf.referralBonus = envIntDefault("REFERRAL_BONUS", 150)
+	if conf.trafficLimit, err = mustEnvInt("TRAFFIC_LIMIT"); err != nil {
+		return err
+	}
+	if conf.referralDays, err = envIntDefault("REFERRAL_DAYS", 0); err != nil {
+		return err
+	}
+	if conf.referralBonus, err = envIntDefault("REFERRAL_BONUS", 150); err != nil {
+		return err
+	}
 
 	conf.serverStatusURL = os.Getenv("SERVER_STATUS_URL")
 	conf.supportURL = os.Getenv("SUPPORT_URL")
@@ -348,33 +385,35 @@ func InitConfig() {
 	conf.tosURL = os.Getenv("TOS_URL")
 	conf.telegramProxyURL = os.Getenv("TELEGRAM_PROXY_URL")
 	conf.telegramProxyHost = os.Getenv("TELEGRAM_PROXY_HOST")
-	conf.telegramProxyPort = envIntDefault("TELEGRAM_PROXY_PORT", 0)
+	if conf.telegramProxyPort, err = envIntDefault("TELEGRAM_PROXY_PORT", 0); err != nil {
+		return err
+	}
 	conf.telegramProxyKey = os.Getenv("TELEGRAM_PROXY_KEY")
 	conf.telegramProxyChannel = os.Getenv("TELEGRAM_PROXY_CHANNEL")
 
-	conf.inboundUUIDs = func() map[uuid.UUID]uuid.UUID {
-		v := os.Getenv("INBOUND_UUIDS")
-		if v != "" {
-			uuids := strings.Split(v, ",")
-			var inboundsMap = make(map[uuid.UUID]uuid.UUID)
-			for _, value := range uuids {
-				uuid, err := uuid.Parse(value)
-				if err != nil {
-					panic(err)
-				}
-				inboundsMap[uuid] = uuid
+	conf.inboundUUIDs = map[uuid.UUID]uuid.UUID{}
+	if v := os.Getenv("INBOUND_UUIDS"); v != "" {
+		uuids := strings.Split(v, ",")
+		for _, value := range uuids {
+			uid, pErr := uuid.Parse(value)
+			if pErr != nil {
+				return fmt.Errorf("parse inbound uuid %s: %w", value, pErr)
 			}
-			slog.Info("Loaded inbound UUIDs", "uuids", uuids)
-			return inboundsMap
-		} else {
-			slog.Info("No inbound UUIDs specified, all will be used")
-			return map[uuid.UUID]uuid.UUID{}
+			conf.inboundUUIDs[uid] = uid
 		}
-	}()
+		slog.Info("Loaded inbound UUIDs", "uuids", uuids)
+	} else {
+		slog.Info("No inbound UUIDs specified, all will be used")
+	}
 
 	conf.tributeWebhookUrl = os.Getenv("TRIBUTE_WEBHOOK_URL")
 	if conf.tributeWebhookUrl != "" {
-		conf.tributeAPIKey = mustEnv("TRIBUTE_API_KEY")
-		conf.tributePaymentUrl = mustEnv("TRIBUTE_PAYMENT_URL")
+		if conf.tributeAPIKey, err = mustEnv("TRIBUTE_API_KEY"); err != nil {
+			return err
+		}
+		if conf.tributePaymentUrl, err = mustEnv("TRIBUTE_PAYMENT_URL"); err != nil {
+			return err
+		}
 	}
+	return nil
 }

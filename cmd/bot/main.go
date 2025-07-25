@@ -26,6 +26,11 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
+	if err := config.InitConfig(); err != nil {
+		slog.Error("init config", "err", err)
+		return
+	}
+
 	slog.Info("starting bot", "version", Version)
 
 	a, err := app.New(ctx)
@@ -42,7 +47,11 @@ func main() {
 	promoRepo := pg.NewPromocodeRepository(a.Pool)
 	promoUsageRepo := pg.NewPromocodeUsageRepository(a.Pool)
 
-	remClient := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
+	remClient, err := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
+	if err != nil {
+		slog.Error("init remnawave client", "err", err)
+		return
+	}
 	cryptoClient := crypto.NewCryptoPayClient(config.CryptoPayUrl(), config.CryptoPayToken())
 	messenger := tgMessenger.NewBotMessenger(a.Bot)
 

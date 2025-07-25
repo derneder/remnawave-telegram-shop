@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	remnawave "remnawave-tg-shop-bot/internal/adapter/remnawave"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 )
 
@@ -17,7 +18,9 @@ func TestHeaderTransport(t *testing.T) {
 	t.Setenv("REFERRAL_BONUS", "0")
 	t.Setenv("X_API_KEY", "key")
 
-	config.InitConfig()
+	if err := config.InitConfig(); err != nil {
+		t.Fatalf("init config: %v", err)
+	}
 
 	var gotKey, gotForward string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +31,10 @@ func TestHeaderTransport(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "token", "local")
+	c, err := remnawave.NewClient(srv.URL, "token", "local")
+	if err != nil {
+		t.Fatalf("client: %v", err)
+	}
 	if err := c.Ping(context.Background()); err != nil {
 		t.Fatalf("ping: %v", err)
 	}
