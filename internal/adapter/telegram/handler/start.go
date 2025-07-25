@@ -108,9 +108,16 @@ func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	inlineKeyboard := h.buildStartKeyboard(existingCustomer, langCode)
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "account_menu_text"), callback.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, existingCustomer, langCode)
+
+	chatID, msgID, ok := callbackChatMessage(update)
+	if !ok {
+		slog.Error("callback message missing")
+		return
+	}
+
 	_, err = b.EditMessageText(ctxWithTime, &bot.EditMessageTextParams{
-		ChatID:      callback.Message.Message.Chat.ID,
-		MessageID:   callback.Message.Message.ID,
+		ChatID:      chatID,
+		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard},
 		Text:        text,
