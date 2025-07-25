@@ -119,6 +119,10 @@ qr_text: "🎉 Your QR code is ready! 🎉\n\nHow to use:\n1. Point your camera 
   it on your TV.\n\n🔗 Extra link:\nIf the QR code is unavailable, use this link:\n\
   %s\n\n💡 Tip:\nSave the QR code or link in a safe place to always have access to
   your subscription.\n\nChoose an action below 👇"
+qr_text_no_link: "🎉 Your QR code is ready! 🎉\n\nHow to use:\n1. Point your camera at the QR
+  code to connect automatically.\n2. Or download the image to a flash drive and open
+  it on your TV.\n\n💡 Tip:\nSave the QR code or link in a safe place to always have access to
+  your subscription.\n\nChoose an action below 👇"
 keys_text: "🔑 Individual keys list ready!\n\nOpen the attached file with any text
   editor.\n\n👉 Choose an action below to continue."
 short_created_text: "✨ Your short link is ready! It will be available for 5 minutes
