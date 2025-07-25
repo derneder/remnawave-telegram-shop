@@ -26,6 +26,11 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
+	if err := config.InitConfig(); err != nil {
+		slog.Error("init config", "err", err)
+		return
+	}
+
 	slog.Info("starting bot", "version", Version)
 
 	a, err := app.New(ctx)

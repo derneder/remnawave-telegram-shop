@@ -17,7 +17,9 @@ func TestInitConfigPrices(t *testing.T) {
 	t.Setenv("TRAFFIC_LIMIT", "100")
 	t.Setenv("REFERRAL_BONUS", "150")
 
-	config.InitConfig()
+	if err := config.InitConfig(); err != nil {
+		t.Fatalf("init config: %v", err)
+	}
 
 	if config.Price(3) != 30 {
 		t.Fatalf("price3 expected 30, got %d", config.Price(3))

@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-	config.InitConfig()
+	if err := config.InitConfig(); err != nil {
+		log.Fatalf("init config: %v", err)
+	}
 	ctx := context.Background()
 
 	pool, err := app.InitDatabase(ctx, config.DatabaseURL())
