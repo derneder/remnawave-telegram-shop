@@ -218,7 +218,7 @@ func GetHealthCheckPort() int {
 	return conf.healthCheckPort
 }
 
-func IsWepAppLinkEnabled() bool {
+func IsWebAppLinkEnabled() bool {
 	return conf.isWebAppLinkEnabled
 }
 
