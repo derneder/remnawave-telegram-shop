@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"remnawave-tg-shop-bot/internal/app"
 	"remnawave-tg-shop-bot/internal/pkg/config"
@@ -11,13 +11,15 @@ import (
 
 func main() {
 	if err := config.InitConfig(); err != nil {
-		log.Fatalf("init config: %v", err)
+		slog.Error("init config", "err", err)
+		return
 	}
 	ctx := context.Background()
 
 	pool, err := app.InitDatabase(ctx, config.DatabaseURL())
 	if err != nil {
-		log.Fatalf("init db: %v", err)
+		slog.Error("init db", "err", err)
+		return
 	}
 	defer pool.Close()
 
@@ -26,6 +28,9 @@ func main() {
 		MigrationsPath: "./db/migrations",
 		Steps:          0,
 	}, pool); err != nil {
-		log.Fatalf("migrate: %v", err)
+		slog.Error("migrate", "err", err)
+		return
 	}
+
+	slog.Info("migrations applied successfully")
 }
