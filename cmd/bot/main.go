@@ -20,6 +20,7 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
+	referralpg "remnawave-tg-shop-bot/internal/repository/pg/referral"
 	custsvc "remnawave-tg-shop-bot/internal/service/customer"
 	"remnawave-tg-shop-bot/internal/service/payment"
 	"remnawave-tg-shop-bot/internal/service/promotion"
@@ -50,7 +51,7 @@ func main() {
 	tm := translation.GetInstance()
 	customerRepo := pg.NewCustomerRepository(a.Pool)
 	purchaseRepo := pg.NewPurchaseRepository(a.Pool)
-	referralRepo := pg.NewReferralRepository(a.Pool)
+	referralRepo := referralpg.New(a.Pool)
 	promoRepo := pg.NewPromocodeRepository(a.Pool)
 	promoUsageRepo := pg.NewPromocodeUsageRepository(a.Pool)
 	promoSvc := promotion.NewService(promoRepo)
