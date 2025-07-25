@@ -50,9 +50,9 @@ func (h *Handler) ConnectCommandHandler(ctx context.Context, b *bot.Bot, update 
 }
 
 func (h *Handler) ConnectCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 
