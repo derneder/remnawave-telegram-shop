@@ -67,10 +67,6 @@ promo_delete_button: 🗑️ Delete
 promo_status_frozen: Code frozen
 promo_status_active: Code active
 promocode_created: Promo code %s created
-admin_subpromo_prompt: "Send: CODE DAYS LIMIT"
-admin_subpromo_done: Subscription promo %s created
-admin_balpromo_prompt: "Send: AMOUNT LIMIT"
-admin_balpromo_done: Balance promo %s created
 promo_choose_uses: '🔢 Choose number of uses:'
 promo_choose_plan: "📅 Choose subscription type 📅\n\n💰 Note:\nButtons below show the
   total cost considering the selected activations.\n\n📜 Your current balance: %d rubles"
@@ -94,6 +90,10 @@ enter_promocode_prompt: "⭐️ Enter the promo code you received to activate it
   #hedgehog_promo\n\n💬 You can also send the code here or use /promocode"
 promo_invalid: Invalid promo code
 promo_applied: Promo applied! Subscription until %s
+promo_balance_applied: "✅ Promo code activated! %d RUB added to your balance. Current balance: %d RUB"
+promo_not_found: Promo code not found
+promo_expired: Promo code expired
+promo_limit_reached: Promo code usage limit exceeded
 activation_singular: activation
 activation_plural: activations
 subscription_active_hint: Follow the instructions and press ‘Connect’.
@@ -146,3 +146,17 @@ choose_language_text: "🌐 Choose interface language"
 language_en: English
 language_ru: Russian
 language_changed: Language updated
+admin_panel_button: "⚙️ Admin panel"
+admin_promo_balance_button: "💰 Balance promo"
+admin_promo_sub_button: "📅 Subscription promo"
+create_button: "✅ Create"
+cancel_button: "❌ Cancel"
+manual_input_button: "Enter manually"
+promo_amount_prompt: "Choose amount"
+promo_limit_prompt: "Choose limit"
+promo_days_prompt: "Choose duration"
+promo_code_prompt: "Enter code"
+promo_confirm_text: "Amount: %d RUB, limit: %d"
+promo_balance_created: "✅ Balance promo `%s` created for %d RUB (limit: %d)"
+promo_sub_created: "✅ Promo SUB_%s created: %d days, limit: %d"
+promo_cancelled: "Promo creation cancelled"

@@ -11,6 +11,7 @@ purchase and manage subscriptions through Telegram with multiple payment system 
   remnawave.
 - `/addsubpromo <CODE> <days> <limit>` - create subscription promo for given days and activation limit (0 for infinite).
 - `/addbalpromo <amount> <limit>` - create balance promo adding amount (in rubles) with generated code.
+- `/promomanager` - interactive promo code manager for admins.
 
 ### Payment Systems
 
@@ -20,10 +21,12 @@ purchase and manage subscriptions through Telegram with multiple payment system 
 
 ### Админские промокоды: подписка и баланс
 
-Администраторы могут выдавать пользователям промокоды двух типов. Кнопки для их создания доступны в разделе «Мои промокоды» только админам.
+В главном меню админ видит кнопку «⚙️ Админ‑панель». Выбрав её, можно создать промокоды двух типов.
 
-- **Подписка** — `/addsubpromo <CODE> <days> <limit>` продлевает подписку на указанное количество дней.
-- **Баланс** — `/addbalpromo <amount> <limit>` начисляет сумму в рублях и автоматически генерирует код.
+- **Промокод на баланс** — пошагово укажите сумму и лимит, бот сгенерирует код и отправит его.
+- **Промокод на подписку** — выберите случайный код или введите свой, срок действия и лимит активаций.
+
+Все действия выполняются через встроенные клавиатуры без команд.
 
 #### Telegram Stars pricing
 

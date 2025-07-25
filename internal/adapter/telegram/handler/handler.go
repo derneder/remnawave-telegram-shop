@@ -27,9 +27,8 @@ type Handler struct {
 	promotionService         promotion.Creator
 	cache                    *cache.Cache
 	awaitingPromo            map[int64]bool
-	awaitingSubPromo         map[int64]bool
-	awaitingBalPromo         map[int64]bool
 	promoMu                  sync.RWMutex
+	adminStates              map[int64]*adminPromoState
 	shortLinks               map[int64][]ShortLink
 	shortMu                  sync.RWMutex
 }
@@ -62,8 +61,7 @@ func NewHandler(
 		promotionService:         promotionService,
 		cache:                    cache,
 		awaitingPromo:            make(map[int64]bool),
-		awaitingSubPromo:         make(map[int64]bool),
-		awaitingBalPromo:         make(map[int64]bool),
+		adminStates:              make(map[int64]*adminPromoState),
 		shortLinks:               make(map[int64][]ShortLink),
 	}
 }
@@ -72,38 +70,6 @@ func (h *Handler) expectPromo(id int64) {
 	h.promoMu.Lock()
 	h.awaitingPromo[id] = true
 	h.promoMu.Unlock()
-}
-
-func (h *Handler) expectSubPromo(id int64) {
-	h.promoMu.Lock()
-	h.awaitingSubPromo[id] = true
-	h.promoMu.Unlock()
-}
-
-func (h *Handler) consumeSubPromo(id int64) bool {
-	h.promoMu.Lock()
-	defer h.promoMu.Unlock()
-	if h.awaitingSubPromo[id] {
-		delete(h.awaitingSubPromo, id)
-		return true
-	}
-	return false
-}
-
-func (h *Handler) expectBalPromo(id int64) {
-	h.promoMu.Lock()
-	h.awaitingBalPromo[id] = true
-	h.promoMu.Unlock()
-}
-
-func (h *Handler) consumeBalPromo(id int64) bool {
-	h.promoMu.Lock()
-	defer h.promoMu.Unlock()
-	if h.awaitingBalPromo[id] {
-		delete(h.awaitingBalPromo, id)
-		return true
-	}
-	return false
 }
 
 func (h *Handler) consumePromo(id int64) bool {
@@ -120,18 +86,6 @@ func (h *Handler) IsAwaitingPromo(id int64) bool {
 	h.promoMu.RLock()
 	defer h.promoMu.RUnlock()
 	return h.awaitingPromo[id]
-}
-
-func (h *Handler) IsAwaitingSubPromo(id int64) bool {
-	h.promoMu.RLock()
-	defer h.promoMu.RUnlock()
-	return h.awaitingSubPromo[id]
-}
-
-func (h *Handler) IsAwaitingBalPromo(id int64) bool {
-	h.promoMu.RLock()
-	defer h.promoMu.RUnlock()
-	return h.awaitingBalPromo[id]
 }
 
 const (
