@@ -6,7 +6,10 @@ RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 FROM deps AS build
 COPY . .
-RUN apk add --no-cache ca-certificates tzdata && update-ca-certificates
+RUN apk add --no-cache \
+    ca-certificates=20250619-r0 \
+    tzdata=2025b-r0 \
+    && update-ca-certificates
 ARG TARGETOS TARGETARCH VERSION
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \

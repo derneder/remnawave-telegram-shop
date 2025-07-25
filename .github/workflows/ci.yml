@@ -17,8 +17,14 @@ jobs:
         with:
           version: v2.1
           args: --config=.golangci.yml --timeout=5m
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./Dockerfile
       - name: Vet
         run: go vet ./...
+      - name: Staticcheck
+        uses: dominikh/staticcheck-action@v1
       - name: Test build
         run: go build ./...
       - name: Unit tests
