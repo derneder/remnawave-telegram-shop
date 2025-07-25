@@ -42,7 +42,11 @@ func main() {
 	promoRepo := pg.NewPromocodeRepository(a.Pool)
 	promoUsageRepo := pg.NewPromocodeUsageRepository(a.Pool)
 
-	remClient := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
+	remClient, err := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
+	if err != nil {
+		slog.Error("init remnawave client", "err", err)
+		return
+	}
 	cryptoClient := crypto.NewCryptoPayClient(config.CryptoPayUrl(), config.CryptoPayToken())
 	messenger := tgMessenger.NewBotMessenger(a.Bot)
 
