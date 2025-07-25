@@ -23,7 +23,7 @@ func (t *qrRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	var b []byte
 	if req.Body != nil {
 		b, _ = io.ReadAll(req.Body)
-		req.Body.Close()
+		req.Body.Close() //nolint:errcheck,gosec
 	}
 	t.bodies = append(t.bodies, string(b))
 	if strings.Contains(req.URL.Host, "api.qrserver.com") {
@@ -44,7 +44,7 @@ func setupQRTest(t *testing.T, miniApp string) (*handlerpkg.Handler, *bot.Bot, *
 	}
 	link := "https://example.com/sub"
 	repo := &StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}}
-	h := handlerpkg.NewHandler(nil, nil, tm, repo, nil, nil, nil, nil, nil)
+	h := handlerpkg.NewHandler(nil, nil, tm, repo, nil, nil, nil, nil, nil, nil)
 	rt := &qrRoundTripper{}
 	http.DefaultTransport = rt
 	tgClient := &http.Client{Transport: rt}

@@ -11,8 +11,8 @@ const codeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // Service handles admin promocodes.
 type Creator interface {
-	CreateSubscription(ctx context.Context, code string, days, limit int) error
-	CreateBalance(ctx context.Context, amount, limit int) (string, error)
+	CreateSubscription(ctx context.Context, code string, days, limit int, createdBy int64) error
+	CreateBalance(ctx context.Context, amount, limit int, createdBy int64) (string, error)
 }
 
 type Service struct {
@@ -24,7 +24,7 @@ func NewService(repo Repository) *Service {
 }
 
 // CreateSubscription stores subscription promo code with given code and days.
-func (s *Service) CreateSubscription(ctx context.Context, code string, days, limit int) error {
+func (s *Service) CreateSubscription(ctx context.Context, code string, days, limit int, createdBy int64) error {
 	_, err := s.repo.Create(ctx, &pg.Promocode{
 		Code:      code,
 		Months:    0,
@@ -32,14 +32,14 @@ func (s *Service) CreateSubscription(ctx context.Context, code string, days, lim
 		Days:      days,
 		Amount:    0,
 		UsesLeft:  limit,
-		CreatedBy: 0,
+		CreatedBy: createdBy,
 		Active:    true,
 	})
 	return err
 }
 
 // CreateBalance generates random code and stores it with amount in cents.
-func (s *Service) CreateBalance(ctx context.Context, amount, limit int) (string, error) {
+func (s *Service) CreateBalance(ctx context.Context, amount, limit int, createdBy int64) (string, error) {
 	code, err := generateCode()
 	if err != nil {
 		return "", err
@@ -49,7 +49,7 @@ func (s *Service) CreateBalance(ctx context.Context, amount, limit int) (string,
 		Type:      2,
 		Amount:    amount,
 		UsesLeft:  limit,
-		CreatedBy: 0,
+		CreatedBy: createdBy,
 		Active:    true,
 	})
 	if err != nil {

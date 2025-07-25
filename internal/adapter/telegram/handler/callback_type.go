@@ -34,4 +34,6 @@ const (
 	CallbackProxy                   = "proxy"
 	CallbackAdminSubPromo           = "admin_subpromo"
 	CallbackAdminBalPromo           = "admin_balpromo"
+	CallbackLanguage                = "language"
+	CallbackSetLanguage             = "set_language"
 )

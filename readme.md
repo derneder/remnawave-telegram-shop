@@ -180,6 +180,7 @@ db/migrations/      SQL migrations
 
 - **Build bot**: `go build ./cmd/bot`
 - **Run migrations**: `make dc-migrate`
+  Migrations are also executed automatically when the bot starts.
 - **Run tests**: `go test ./...`
 
 ## Запуск через Docker Compose

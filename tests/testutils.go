@@ -7,7 +7,7 @@ import (
 	"time"
 
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
-	referralrepo "remnawave-tg-shop-bot/internal/service/referral"
+	referralrepo "remnawave-tg-shop-bot/internal/repository/referral"
 )
 
 // CtxKey is used in tests for context propagation checks.
@@ -99,32 +99,19 @@ func (s *StubCustomerRepo) FindByExpirationRange(ctx context.Context, startDate,
 type StubReferralRepo struct {
 	CreatedReferrerID int64
 	CreatedRefereeID  int64
-	MarkedID          int64
-	Referral          *referralrepo.Referral
+	Model             *referralrepo.Model
 }
 
-func (s *StubReferralRepo) Create(ctx context.Context, referrerID, refereeID int64) (*referralrepo.Referral, error) {
+func (s *StubReferralRepo) Create(ctx context.Context, referrerID, refereeID int64) error {
 	s.CreatedReferrerID = referrerID
 	s.CreatedRefereeID = refereeID
-	s.Referral = &referralrepo.Referral{ID: 1, ReferrerID: referrerID, RefereeID: refereeID}
-	return s.Referral, nil
-}
-func (StubReferralRepo) FindByReferrer(ctx context.Context, referrerID int64) ([]referralrepo.Referral, error) {
-	return nil, nil
-}
-func (StubReferralRepo) CountByReferrer(ctx context.Context, referrerID int64) (int, error) {
-	return 0, nil
-}
-func (s *StubReferralRepo) FindByReferee(ctx context.Context, refereeID int64) (*referralrepo.Referral, error) {
-	if s.Referral != nil && s.Referral.RefereeID == refereeID {
-		return s.Referral, nil
-	}
-	return nil, nil
-}
-func (s *StubReferralRepo) MarkBonusGranted(ctx context.Context, referralID int64) error {
-	s.MarkedID = referralID
-	if s.Referral != nil && s.Referral.ID == referralID {
-		s.Referral.BonusGranted = true
-	}
+	s.Model = &referralrepo.Model{ID: 1, ReferrerID: referrerID, RefereeID: refereeID, CreatedAt: time.Now()}
 	return nil
+}
+
+func (s *StubReferralRepo) FindByReferee(ctx context.Context, refereeID int64) (*referralrepo.Model, error) {
+	if s.Model != nil && s.Model.RefereeID == refereeID {
+		return s.Model, nil
+	}
+	return nil, nil
 }

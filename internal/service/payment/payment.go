@@ -14,8 +14,8 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	"remnawave-tg-shop-bot/internal/pkg/utils"
 	"remnawave-tg-shop-bot/internal/repository/pg"
+	referralrepo "remnawave-tg-shop-bot/internal/repository/referral"
 	custrepo "remnawave-tg-shop-bot/internal/service/customer"
-	referralrepo "remnawave-tg-shop-bot/internal/service/referral"
 	"remnawave-tg-shop-bot/internal/ui"
 	"strings"
 	"time"
@@ -129,13 +129,12 @@ func (s PaymentService) ProcessPurchaseById(ctx context.Context, purchaseId int6
 		return err
 	}
 
-	if referral, err := s.referralRepository.FindByReferee(ctx, customer.TelegramID); err == nil && referral != nil && !referral.BonusGranted {
+	if referral, err := s.referralRepository.FindByReferee(ctx, customer.TelegramID); err == nil && referral != nil {
 		referrer, err := s.customerRepository.FindByTelegramId(ctx, referral.ReferrerID)
 		if err == nil && referrer != nil {
 			bonus := float64(config.GetReferralBonus())
 			newBal := referrer.Balance + bonus
 			if err := s.customerRepository.UpdateFields(ctx, referrer.ID, map[string]interface{}{"balance": newBal}); err == nil {
-				_ = s.referralRepository.MarkBonusGranted(ctx, referral.ID)
 				if _, err := s.messenger.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: s.translation.GetText(referrer.Language, "referral_bonus_granted")}); err != nil {
 					slog.Error("send referral bonus", "err", err)
 				}

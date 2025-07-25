@@ -27,7 +27,7 @@ func (h *Handler) AddSubPromoCommandHandler(ctx context.Context, b *bot.Bot, upd
 	if err1 != nil || err2 != nil || days <= 0 || limit < 0 {
 		return
 	}
-	if err := h.promotionService.CreateSubscription(ctx, parts[1], days, limit); err != nil {
+	if err := h.promotionService.CreateSubscription(ctx, parts[1], days, limit, update.Message.Chat.ID); err != nil {
 		slog.Error("create sub promo", "err", err)
 	}
 }
@@ -45,7 +45,7 @@ func (h *Handler) AddBalPromoCommandHandler(ctx context.Context, b *bot.Bot, upd
 	if err1 != nil || err2 != nil || amountRub <= 0 || limit < 0 {
 		return
 	}
-	code, err := h.promotionService.CreateBalance(ctx, amountRub*100, limit)
+	code, err := h.promotionService.CreateBalance(ctx, amountRub*100, limit, update.Message.Chat.ID)
 	if err != nil {
 		slog.Error("create bal promo", "err", err)
 		return
@@ -90,7 +90,7 @@ func (h *Handler) AdminSubPromoMessageHandler(ctx context.Context, b *bot.Bot, u
 	if err1 != nil || err2 != nil || days <= 0 || limit < 0 {
 		return
 	}
-	if err := h.promotionService.CreateSubscription(ctx, parts[0], days, limit); err != nil {
+	if err := h.promotionService.CreateSubscription(ctx, parts[0], days, limit, update.Message.Chat.ID); err != nil {
 		slog.Error("create admin sub promo", "err", err)
 		return
 	}
@@ -114,7 +114,7 @@ func (h *Handler) AdminBalPromoMessageHandler(ctx context.Context, b *bot.Bot, u
 	if err1 != nil || err2 != nil || amountRub <= 0 || limit < 0 {
 		return
 	}
-	code, err := h.promotionService.CreateBalance(ctx, amountRub*100, limit)
+	code, err := h.promotionService.CreateBalance(ctx, amountRub*100, limit, update.Message.Chat.ID)
 	if err != nil {
 		slog.Error("create admin bal promo", "err", err)
 		return
