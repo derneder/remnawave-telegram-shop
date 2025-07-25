@@ -129,7 +129,11 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 			slog.Error("close body", "err", cerr)
 		}
 	}()
-	data, _ := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Error("read keys", "err", err)
+		return
+	}
 
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
 	chatID, _, ok := callbackChatMessage(update)
@@ -168,7 +172,11 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 			slog.Error("close body", "err", cerr)
 		}
 	}()
-	data, _ := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Error("read qr", "err", err)
+		return
+	}
 	kb := ui.ConnectKeyboard(lang, "back_button", CallbackOther)
 	chatID, _, ok := callbackChatMessage(update)
 	if !ok {
