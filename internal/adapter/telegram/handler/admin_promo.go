@@ -126,7 +126,6 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 				return
 			}
 			if data == uimenu.CallbackPromoAdminSubCodeCustom {
-				// For simplicity, not implemented in tests
 				state.Code = "CUSTOM"
 				state.Step = uimenu.StepDays
 				kb := uimenu.BuildAdminPromoSubWizardStep(lang, uimenu.StepDays)
