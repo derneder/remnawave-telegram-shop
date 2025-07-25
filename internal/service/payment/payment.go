@@ -2,6 +2,7 @@ package payment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"remnawave-tg-shop-bot/internal/adapter/remnawave"
@@ -24,6 +25,12 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 	"github.com/google/uuid"
+)
+
+var (
+	ErrPromocodeNotFound   = errors.New("promocode not found")
+	ErrPromocodeExpired    = errors.New("promocode expired")
+	ErrPromocodeLimitExced = errors.New("promocode limit exceeded")
 )
 
 type PaymentService struct {
@@ -354,18 +361,24 @@ func (s PaymentService) CreatePromocode(ctx context.Context, customer *domaincus
 	return code, nil
 }
 
-func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincustomer.Customer, code string) error {
+func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincustomer.Customer, code string) (*pg.Promocode, error) {
 	promo, err := s.promocodeRepository.GetByCode(ctx, code)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if promo == nil || (!promo.Active) || promo.Deleted || (promo.UsesLeft <= 0 && promo.UsesLeft != 0) {
-		return fmt.Errorf("invalid promocode")
+	if promo == nil {
+		return nil, ErrPromocodeNotFound
+	}
+	if !promo.Active || promo.Deleted {
+		return nil, ErrPromocodeExpired
+	}
+	if promo.UsesLeft <= 0 && promo.UsesLeft != 0 {
+		return nil, ErrPromocodeLimitExced
 	}
 	if promo.Type == 2 {
 		newBal := customer.Balance + float64(promo.Amount)/100
 		if err := s.customerRepository.UpdateFields(ctx, customer.ID, map[string]interface{}{"balance": newBal}); err != nil {
-			return err
+			return nil, err
 		}
 		customer.Balance = newBal
 	} else {
@@ -375,14 +388,14 @@ func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincust
 		}
 		user, err := s.remnawaveClient.CreateOrUpdateUser(ctx, customer.TelegramID, config.TrafficLimit(), days)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		updates := map[string]interface{}{
 			"subscription_link": user.SubscriptionUrl,
 			"expire_at":         user.ExpireAt,
 		}
 		if err := s.customerRepository.UpdateFields(ctx, customer.ID, updates); err != nil {
-			return err
+			return nil, err
 		}
 		customer.SubscriptionLink = &user.SubscriptionUrl
 		customer.ExpireAt = &user.ExpireAt
@@ -390,11 +403,11 @@ func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincust
 
 	if promo.UsesLeft > 0 {
 		if err := s.promocodeRepository.DecrementUses(ctx, promo.ID); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	_ = s.promocodeUsageRepository.Create(ctx, promo.ID, customer.TelegramID)
-	return nil
+	return promo, nil
 }
 
 func (s PaymentService) SetPromocodeStatus(ctx context.Context, id int64, active bool) error {
