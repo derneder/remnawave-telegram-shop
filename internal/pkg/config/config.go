@@ -2,13 +2,15 @@ package config
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"log"
 	"log/slog"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
 type config struct {
@@ -412,6 +414,72 @@ func InitConfig() error {
 			return err
 		}
 		if conf.tributePaymentUrl, err = mustEnv("TRIBUTE_PAYMENT_URL"); err != nil {
+			return err
+		}
+	}
+
+	return ValidateConfig()
+}
+
+// ValidateURL verifies if a string is a valid URL with scheme and host.
+func ValidateURL(value, name string) error {
+	if strings.TrimSpace(value) == "" {
+		return fmt.Errorf("%s is empty", name)
+	}
+	u, err := url.ParseRequestURI(value)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		if err != nil {
+			return fmt.Errorf("%s invalid URL %q: %w", name, value, err)
+		}
+		return fmt.Errorf("%s invalid URL %q", name, value)
+	}
+	return nil
+}
+
+// ValidateToken checks that token is not empty and doesn't contain spaces.
+func ValidateToken(value, name string) error {
+	v := strings.TrimSpace(value)
+	if v == "" {
+		return fmt.Errorf("%s is empty", name)
+	}
+	if strings.ContainsAny(v, " \n\r\t") {
+		return fmt.Errorf("%s contains whitespace", name)
+	}
+	return nil
+}
+
+// ValidateConfig validates URLs and tokens loaded from environment.
+func ValidateConfig() error {
+	if err := ValidateToken(conf.telegramToken, "TELEGRAM_TOKEN"); err != nil {
+		return err
+	}
+	if err := ValidateURL(conf.remnawaveUrl, "REMNAWAVE_URL"); err != nil {
+		return err
+	}
+	if err := ValidateToken(conf.remnawaveToken, "REMNAWAVE_TOKEN"); err != nil {
+		return err
+	}
+	if conf.isCryptoEnabled {
+		if err := ValidateURL(conf.cryptoPayURL, "CRYPTO_PAY_URL"); err != nil {
+			return err
+		}
+		if err := ValidateToken(conf.cryptoPayToken, "CRYPTO_PAY_TOKEN"); err != nil {
+			return err
+		}
+	}
+	if conf.tributeWebhookUrl != "" {
+		if err := ValidateURL(conf.tributeWebhookUrl, "TRIBUTE_WEBHOOK_URL"); err != nil {
+			return err
+		}
+		if err := ValidateURL(conf.tributePaymentUrl, "TRIBUTE_PAYMENT_URL"); err != nil {
+			return err
+		}
+		if err := ValidateToken(conf.tributeAPIKey, "TRIBUTE_API_KEY"); err != nil {
+			return err
+		}
+	}
+	if conf.telegramProxyURL != "" {
+		if err := ValidateURL(conf.telegramProxyURL, "TELEGRAM_PROXY_URL"); err != nil {
 			return err
 		}
 	}
