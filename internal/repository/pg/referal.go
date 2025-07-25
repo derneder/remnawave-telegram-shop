@@ -7,16 +7,10 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"time"
+	domainreferral "remnawave-tg-shop-bot/internal/domain/referral"
 )
 
-type Referral struct {
-	ID           int64     `db:"id"`
-	ReferrerID   int64     `db:"referrer_id"`
-	RefereeID    int64     `db:"referee_id"`
-	UsedAt       time.Time `db:"used_at"`
-	BonusGranted bool      `db:"bonus_granted"`
-}
+type Referral = domainreferral.Referral
 
 type ReferralRepository struct {
 	pool *pgxpool.Pool

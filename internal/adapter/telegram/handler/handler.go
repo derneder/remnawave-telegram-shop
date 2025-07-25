@@ -10,6 +10,7 @@ import (
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
 	custrepo "remnawave-tg-shop-bot/internal/service/customer"
 	"remnawave-tg-shop-bot/internal/service/payment"
+	referralrepo "remnawave-tg-shop-bot/internal/service/referral"
 	syncsvc "remnawave-tg-shop-bot/internal/service/sync"
 )
 
@@ -19,7 +20,7 @@ type Handler struct {
 	translation              *translation.Manager
 	paymentService           *payment.PaymentService
 	syncService              *syncsvc.SyncService
-	referralRepository       *pg.ReferralRepository
+	referralRepository       referralrepo.Repository
 	promocodeRepository      *pg.PromocodeRepository
 	promocodeUsageRepository *pg.PromocodeUsageRepository
 	cache                    *cache.Cache
@@ -40,7 +41,7 @@ func NewHandler(
 	translation *translation.Manager,
 	customerRepository custrepo.Repository,
 	purchaseRepository *pg.PurchaseRepository,
-	referralRepository *pg.ReferralRepository,
+	referralRepository referralrepo.Repository,
 	promocodeRepository *pg.PromocodeRepository,
 	promocodeUsageRepository *pg.PromocodeUsageRepository,
 	cache *cache.Cache) *Handler {
