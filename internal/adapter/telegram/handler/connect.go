@@ -80,7 +80,11 @@ func (h *Handler) ConnectCallbackHandler(ctx context.Context, b *bot.Bot, update
 	markup = append(markup, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "back_to_account_button"), CallbackData: CallbackStart}})
 
 	isDisabled := true
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,

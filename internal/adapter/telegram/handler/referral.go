@@ -44,7 +44,11 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 		},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -97,7 +101,11 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 
 	if err != nil {
-		_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+		var curMsg *models.Message
+		if update.CallbackQuery.Message.Message != nil {
+			curMsg = update.CallbackQuery.Message.Message
+		}
+		_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 			ChatID:      chatID,
 			MessageID:   msgID,
 			ParseMode:   models.ParseModeHTML,
@@ -111,7 +119,11 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 		return
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -149,7 +161,11 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -201,7 +217,11 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 		{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral}},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -239,7 +259,11 @@ func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -329,7 +353,11 @@ func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 
 	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackPromoCodes}})
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -421,10 +449,14 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 		kb := [][]models.InlineKeyboardButton{
 			{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackPromoList}},
 		}
-		_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-			ChatID:    chatID,
-			MessageID: msgID,
-			ParseMode: models.ParseModeHTML,
+		var curMsg *models.Message
+		if update.CallbackQuery.Message.Message != nil {
+			curMsg = update.CallbackQuery.Message.Message
+		}
+		_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+			ChatID:      chatID,
+			MessageID:   msgID,
+			ParseMode:   models.ParseModeHTML,
 			Text:        tm.GetText(langCode, "promo_active_when_delete"),
 			ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 		})
@@ -439,10 +471,14 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 		{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackPromoList}},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:    chatID,
-		MessageID: msgID,
-		ParseMode: models.ParseModeHTML,
+	var curMsg2 *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg2 = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg2, &bot.EditMessageTextParams{
+		ChatID:      chatID,
+		MessageID:   msgID,
+		ParseMode:   models.ParseModeHTML,
 		Text:        tm.GetText(langCode, "promo_confirm_when_delete"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 	})

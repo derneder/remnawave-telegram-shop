@@ -36,7 +36,11 @@ func (h *Handler) TrialCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 	langCode := update.CallbackQuery.From.LanguageCode
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		Text:      h.translation.GetText(langCode, "trial_text"),
@@ -79,7 +83,11 @@ func (h *Handler) ActivateTrialCallbackHandler(ctx context.Context, b *bot.Bot, 
 	}
 
 	langCode := update.CallbackQuery.From.LanguageCode
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg2 *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg2 = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg2, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		Text:        h.translation.GetText(langCode, "trial_activated"),
