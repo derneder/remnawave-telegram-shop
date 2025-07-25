@@ -169,7 +169,17 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 		}
 	}()
 	data, _ := io.ReadAll(resp.Body)
-	kb := ui.ConnectKeyboard(lang, "back_button", CallbackOther)
+	var kb [][]models.InlineKeyboardButton
+	text := fmt.Sprintf(h.translation.GetText(lang, "qr_text"), *customer.SubscriptionLink)
+	if config.GetMiniAppURL() != "" {
+		text = fmt.Sprintf(h.translation.GetText(lang, "qr_text"), "")
+		kb = [][]models.InlineKeyboardButton{
+			{{Text: "Открыть мини-приложение", URL: config.GetMiniAppURL()}},
+		}
+		kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}})
+	} else {
+		kb = ui.ConnectKeyboard(lang, "back_button", CallbackOther)
+	}
 	chatID, _, ok := callbackChatMessage(update)
 	if !ok {
 		slog.Error("callback message missing")
@@ -178,7 +188,7 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 	_, err = b.SendPhoto(ctx, &bot.SendPhotoParams{
 		ChatID:      chatID,
 		Photo:       &models.InputFileUpload{Filename: "qr.png", Data: bytes.NewReader(data)},
-		Caption:     fmt.Sprintf(h.translation.GetText(lang, "qr_text"), *customer.SubscriptionLink),
+		Caption:     text,
 		ParseMode:   models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 	})
