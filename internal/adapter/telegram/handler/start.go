@@ -115,7 +115,11 @@ func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	_, err = b.EditMessageText(ctxWithTime, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctxWithTime, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,

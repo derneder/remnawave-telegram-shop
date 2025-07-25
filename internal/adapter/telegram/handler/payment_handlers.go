@@ -66,7 +66,11 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 	if customer != nil {
 		bal = int(customer.Balance)
 	}
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
@@ -101,7 +105,11 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "selected_months"), month)
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
@@ -227,7 +235,11 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 		{{Text: h.translation.GetText(lang, "back_to_account_button"), CallbackData: CallbackStart}},
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,

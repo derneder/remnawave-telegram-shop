@@ -46,7 +46,11 @@ func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -100,7 +104,11 @@ func (h *Handler) simpleBack(ctx context.Context, b *bot.Bot, update *models.Upd
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -288,7 +296,11 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		return
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -327,7 +339,11 @@ func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -360,7 +376,11 @@ func (h *Handler) ProxyCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
