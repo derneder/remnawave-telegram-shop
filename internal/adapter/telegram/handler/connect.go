@@ -13,7 +13,7 @@ import (
 
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
-	"remnawave-tg-shop-bot/utils"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 )
 
 func (h *Handler) ConnectCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

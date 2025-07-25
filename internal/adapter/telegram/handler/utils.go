@@ -11,7 +11,7 @@ import (
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
-	"remnawave-tg-shop-bot/utils"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 )
 
 func parseCallbackData(data string) map[string]string {

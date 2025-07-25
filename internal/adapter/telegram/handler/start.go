@@ -14,7 +14,7 @@ import (
 
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
 	"remnawave-tg-shop-bot/internal/pkg/config"
-	"remnawave-tg-shop-bot/utils"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 )
 
 func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
