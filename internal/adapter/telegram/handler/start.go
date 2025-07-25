@@ -17,6 +17,7 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/utils"
 	"remnawave-tg-shop-bot/internal/service/payment"
+	"remnawave-tg-shop-bot/internal/ui/menu"
 )
 
 func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -113,7 +114,7 @@ func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	inlineKeyboard := h.buildStartKeyboard(existingCustomer, langCode)
+	inlineKeyboard := menu.BuildMainKeyboard(langCode, existingCustomer, isAdmin(existingCustomer.TelegramID))
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "account_menu_text"), callback.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, existingCustomer, langCode)
 
@@ -137,54 +138,6 @@ func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	if err != nil {
 		slog.Error("Error sending /start message", "err", err)
 	}
-}
-
-func (h *Handler) resolveConnectButton(lang string) []models.InlineKeyboardButton {
-	var inlineKeyboard []models.InlineKeyboardButton
-
-	if config.GetMiniAppURL() != "" {
-		inlineKeyboard = []models.InlineKeyboardButton{
-			{Text: h.translation.GetText(lang, "connect_button"), WebApp: &models.WebAppInfo{
-				URL: config.GetMiniAppURL(),
-			}},
-		}
-	} else {
-		inlineKeyboard = []models.InlineKeyboardButton{
-			{Text: h.translation.GetText(lang, "connect_button"), CallbackData: CallbackConnect},
-		}
-	}
-	return inlineKeyboard
-}
-
-func (h *Handler) buildStartKeyboard(existingCustomer *domaincustomer.Customer, langCode string) [][]models.InlineKeyboardButton {
-	var kb [][]models.InlineKeyboardButton
-
-	if existingCustomer.SubscriptionLink == nil && config.TrialDays() > 0 {
-		kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "trial_button"), CallbackData: CallbackTrial}})
-	}
-
-	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "refresh_button"), CallbackData: CallbackStart}})
-	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "balance_menu_button"), CallbackData: CallbackBalance}})
-
-	if existingCustomer.SubscriptionLink != nil && existingCustomer.ExpireAt.After(time.Now()) {
-		kb = append(kb, h.resolveConnectButton(langCode))
-	}
-
-	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "referral_button"), CallbackData: CallbackReferral}})
-	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "other_button"), CallbackData: CallbackOther}})
-
-	var row []models.InlineKeyboardButton
-	if config.SupportURL() != "" {
-		row = append(row, models.InlineKeyboardButton{Text: h.translation.GetText(langCode, "support_button"), URL: config.SupportURL()})
-	}
-	if config.ChannelURL() != "" {
-		row = append(row, models.InlineKeyboardButton{Text: h.translation.GetText(langCode, "channel_button"), URL: config.ChannelURL()})
-	}
-	if len(row) > 0 {
-		kb = append(kb, row)
-	}
-
-	return kb
 }
 
 func (h *Handler) buildAccountInfo(ctx context.Context, customer *domaincustomer.Customer, lang string) string {
@@ -235,7 +188,7 @@ func (h *Handler) MenuCommandHandler(ctx context.Context, b *bot.Bot, update *mo
 		return
 	}
 
-	kb := h.buildStartKeyboard(customer, lang)
+	kb := menu.BuildMainKeyboard(lang, customer, isAdmin(customer.TelegramID))
 	text := fmt.Sprintf(h.translation.GetText(lang, "account_menu_text"), update.Message.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, customer, lang)
 
 	if _, err := b.SendMessage(ctxWithTime, &bot.SendMessageParams{
