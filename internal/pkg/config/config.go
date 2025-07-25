@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"net/url"
 	"os"
@@ -268,7 +267,7 @@ func envBool(key string) bool {
 func InitConfig() error {
 	if os.Getenv("DISABLE_ENV_FILE") != "true" {
 		if err := godotenv.Load(".env"); err != nil {
-			log.Println("No .env loaded:", err)
+			slog.Warn("No .env loaded", "err", err)
 		}
 	}
 	conf.adminTelegramIds = make(map[int64]struct{})
