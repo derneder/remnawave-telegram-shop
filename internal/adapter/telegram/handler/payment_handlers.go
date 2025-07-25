@@ -18,9 +18,9 @@ import (
 )
 
 func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	langCode := update.CallbackQuery.From.LanguageCode
@@ -70,7 +70,7 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
@@ -86,9 +86,9 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 }
 
 func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	callbackQuery := parseCallbackData(update.CallbackQuery.Data)
@@ -103,13 +103,29 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackBuy},
 	})
 
-	text := fmt.Sprintf(h.translation.GetText(langCode, "selected_months"), month)
+	customer, _ := h.customerRepository.FindByTelegramId(ctx, chatID)
+	bal := 0
+	if customer != nil {
+		bal = int(customer.Balance)
+	}
+
+	var line string
+	switch month {
+	case "1":
+		line = fmt.Sprintf(h.translation.GetText(langCode, "plan_line_1"), h.translation.GetText(langCode, "month_1"), config.Price1())
+	case "3":
+		line = fmt.Sprintf(h.translation.GetText(langCode, "plan_line_3"), h.translation.GetText(langCode, "month_3"), config.Price3())
+	case "6":
+		line = fmt.Sprintf(h.translation.GetText(langCode, "plan_line_6"), h.translation.GetText(langCode, "month_6"), config.Price6())
+	}
+
+	text := fmt.Sprintf(h.translation.GetText(langCode, "selected_plan_text"), bal, line)
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
@@ -125,9 +141,9 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 }
 
 func (h *Handler) PaymentCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	callbackQuery := parseCallbackData(update.CallbackQuery.Data)
@@ -216,9 +232,9 @@ func (h *Handler) SuccessPaymentHandler(ctx context.Context, b *bot.Bot, update 
 }
 
 func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	lang := update.CallbackQuery.From.LanguageCode
@@ -239,7 +255,7 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -252,9 +268,9 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 }
 
 func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	lang := update.CallbackQuery.From.LanguageCode
@@ -291,16 +307,16 @@ func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err := SafeEditMessageText(ctx, b, curMsg, params)
+	_, err = SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		slog.Error("Error sending topup message", "err", err)
 	}
 }
 
 func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	data := parseCallbackData(update.CallbackQuery.Data)
@@ -321,7 +337,7 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 	keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackTopup}})
 
-	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
+	_, err = b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
@@ -331,9 +347,9 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 }
 func (h *Handler) PayFromBalanceCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, _, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, _, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	data := parseCallbackData(update.CallbackQuery.Data)

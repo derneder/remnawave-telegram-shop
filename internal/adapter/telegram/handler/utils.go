@@ -46,6 +46,16 @@ func callbackChatMessage(upd *models.Update) (int64, int, bool) {
 	return 0, 0, false
 }
 
+// getCallbackIDs wraps callbackChatMessage and returns an error when
+// the message is not available.
+func getCallbackIDs(upd *models.Update) (int64, int, error) {
+	chatID, msgID, ok := callbackChatMessage(upd)
+	if !ok {
+		return 0, 0, fmt.Errorf("callback message missing")
+	}
+	return chatID, msgID, nil
+}
+
 func (h *Handler) findOrCreateCustomer(ctx context.Context, telegramID int64, lang string) (*domaincustomer.Customer, error) {
 	customer, err := h.customerRepository.FindByTelegramId(ctx, telegramID)
 	if err != nil {

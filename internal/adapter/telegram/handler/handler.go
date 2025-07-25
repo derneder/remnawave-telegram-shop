@@ -20,7 +20,7 @@ type Handler struct {
 	translation              *translation.Manager
 	paymentService           *payment.PaymentService
 	syncService              *syncsvc.SyncService
-	referralRepository       *pg.ReferralRepository
+	referralRepository       referralrepo.Repository
 	promocodeRepository      *pg.PromocodeRepository
 	promocodeUsageRepository *pg.PromocodeUsageRepository
 	promotionService         promotion.Creator
@@ -44,7 +44,7 @@ func NewHandler(
 	translation *translation.Manager,
 	customerRepository custrepo.Repository,
 	purchaseRepository *pg.PurchaseRepository,
-	referralRepository *pg.ReferralRepository,
+	referralRepository referralrepo.Repository,
 	promocodeRepository *pg.PromocodeRepository,
 	promocodeUsageRepository *pg.PromocodeUsageRepository,
 	promotionService promotion.Creator,

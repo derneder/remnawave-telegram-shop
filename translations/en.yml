@@ -3,7 +3,10 @@ back_button: 🔙 Back
 month_1: 1 month
 month_3: 3 months
 month_6: 6 months
-selected_months: "You selected %s months subscription"
+plan_line_1: "✨ %s — %d rubles"
+plan_line_3: "❤️‍🔥 %s — %d rubles"
+plan_line_6: "🔥 %s — %d rubles"
+selected_plan_text: "📌 Choose subscription period 📌\n\n💎 Current balance: %d rubles\n\n%s\n\n⭐️ Payment will be deducted from your personal account."
 crypto_button: ₿ Cryptocurrency
 pay_button: 💸 Pay
 subscription_active: 'Your subscription is valid until: %s'
@@ -118,6 +121,10 @@ qr_text: "🎉 Your QR code is ready! 🎉\n\nHow to use:\n1. Point your camera 
   code to connect automatically.\n2. Or download the image to a flash drive and open
   it on your TV.\n\n🔗 Extra link:\nIf the QR code is unavailable, use this link:\n\
   %s\n\n💡 Tip:\nSave the QR code or link in a safe place to always have access to
+  your subscription.\n\nChoose an action below 👇"
+qr_text_no_link: "🎉 Your QR code is ready! 🎉\n\nHow to use:\n1. Point your camera at the QR
+  code to connect automatically.\n2. Or download the image to a flash drive and open
+  it on your TV.\n\n💡 Tip:\nSave the QR code or link in a safe place to always have access to
   your subscription.\n\nChoose an action below 👇"
 keys_text: "🔑 Individual keys list ready!\n\nOpen the attached file with any text
   editor.\n\n👉 Choose an action below to continue."
