@@ -25,14 +25,14 @@ func (s *stubPromoRepo) Create(ctx context.Context, p *pg.Promocode) (*pg.Promoc
 func TestCreateBalanceCodeUnique(t *testing.T) {
 	repo := &stubPromoRepo{}
 	svc := promotion.NewService(repo)
-	c1, err := svc.CreateBalance(context.Background(), 10, 1)
+	c1, err := svc.CreateBalance(context.Background(), 10, 1, 1)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
 	if len(c1) != 20 {
 		t.Fatalf("code length %d", len(c1))
 	}
-	c2, err := svc.CreateBalance(context.Background(), 10, 1)
+	c2, err := svc.CreateBalance(context.Background(), 10, 1, 1)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
@@ -44,10 +44,10 @@ func TestCreateBalanceCodeUnique(t *testing.T) {
 func TestCreateSubscriptionDuplicate(t *testing.T) {
 	repo := &stubPromoRepo{}
 	svc := promotion.NewService(repo)
-	if err := svc.CreateSubscription(context.Background(), "CODE", 30, 1); err != nil {
+	if err := svc.CreateSubscription(context.Background(), "CODE", 30, 1, 1); err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if err := svc.CreateSubscription(context.Background(), "CODE", 30, 1); err == nil {
+	if err := svc.CreateSubscription(context.Background(), "CODE", 30, 1, 1); err == nil {
 		t.Fatal("expected error for duplicate code")
 	}
 }
