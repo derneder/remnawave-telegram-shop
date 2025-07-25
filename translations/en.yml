@@ -3,7 +3,8 @@ back_button: 🔙 Back
 month_1: 1 month
 month_3: 3 months
 month_6: 6 months
-selected_months: "You selected %s months subscription"
+plan_line: "%s %s — %d rubles"
+choose_plan_text: "📌 Choose subscription period 📌\n\n💎 Current balance: %d rubles\n\n%s\n\n⭐ Payment will be deducted from your personal account."
 crypto_button: ₿ Cryptocurrency
 pay_button: 💸 Pay
 subscription_active: 'Your subscription is valid until: %s'
@@ -82,9 +83,6 @@ topup_intro_text: "💎 Top up your account 💎\n\n💵 Current balance: %d rub
   top-up is a one-time operation (not a subscription). We do not access your personal
   or payment data, keeping you safe.\n\n⚙️ If you have payment issues, contact support
   using the button below."
-choose_plan_text: "📌 Choose subscription period 📌\n\n💎 Current balance: %d rubles\n\
-  \n✨ 1 month — %d rubles\n❤️‍🔥 3 months — %d rubles\n🔥 6 months — %d rubles\n\n⭐
-  Payment will be deducted from your personal account."
 enter_promocode_button: 🎫 Promo code activation
 enter_promocode_prompt: "⭐️ Enter the promo code you received to activate it!\nExample:
   #hedgehog_promo\n\n💬 You can also send the code here or use /promocode"
