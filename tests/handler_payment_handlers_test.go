@@ -178,6 +178,7 @@ func TestSellCallbackHandler_Text(t *testing.T) {
 		}
 		h.SellCallbackHandler(context.Background(), b, upd)
 		got := parseText(t, client)
+
 		var (
 			emoji string
 			price int

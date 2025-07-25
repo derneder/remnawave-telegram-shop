@@ -137,6 +137,7 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 	if customer != nil {
 		bal = int(customer.Balance)
 	}
+
 	var (
 		line      string
 		price     int
