@@ -58,7 +58,6 @@ Web server start on port defined in .env via HEALTH_CHECK_PORT
 ## Environment Variables
 
 The application requires the following environment variables to be set:
-
 | Variable | Description |
 |----------|-------------|
 | `PRICE_1` | Price for 1 month |
@@ -202,10 +201,10 @@ The bot supports subscription management via the Tribute service. When a user cl
   * Obtain the subscription link (Subscription -> Links -> Telegram Link).
 
 2. Configure environment variables in `.env`
-    * Set the webhook path (e.g., `/tribute/webhook`):
+    * Set the webhook path (e.g., `/tribute`):
 
     ```
-    TRIBUTE_WEBHOOK_URL=/tribute/webhook
+    TRIBUTE_WEBHOOK_URL=/tribute
     ```
 
     * Set the API key from your Tribute settings:
