@@ -8,6 +8,7 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
+	referralrepo "remnawave-tg-shop-bot/internal/repository/referral"
 	custrepo "remnawave-tg-shop-bot/internal/service/customer"
 	"remnawave-tg-shop-bot/internal/service/payment"
 	"remnawave-tg-shop-bot/internal/service/promotion"

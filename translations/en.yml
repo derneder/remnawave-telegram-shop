@@ -141,3 +141,8 @@ traffic_total_used: "├ ⚡ Total used: <b>%s</b>\n"
 traffic_time_to_reset: '├ 🔄 Until reset: <b>%s</b>'
 promo_active_when_delete: Promo code is active and cannot be deleted. Freeze it first.
 promo_confirm_when_delete: Are you sure you want to delete this promo code? This action cannot be undone.
+language_button: "🌐 Language"
+choose_language_text: "🌐 Choose interface language"
+language_en: English
+language_ru: Russian
+language_changed: Language updated

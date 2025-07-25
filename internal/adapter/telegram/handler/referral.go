@@ -192,21 +192,10 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 		return
 	}
 
-	refs, err := h.referralRepository.FindByReferrer(ctx, customer.TelegramID)
-	if err != nil {
-		slog.Error("error loading referrals", "err", err)
-		return
-	}
-
-	invited := len(refs)
+	// stats are not tracked in current implementation
+	invited := 0
 	subscribed := 0
-	for _, r := range refs {
-		if r.BonusGranted {
-			subscribed++
-		}
-	}
-
-	bonusTotal := subscribed * config.GetReferralBonus()
+	bonusTotal := 0
 
 	refLink := fmt.Sprintf("https://t.me/%s?start=ref_%d", update.CallbackQuery.From.Username, customer.TelegramID)
 

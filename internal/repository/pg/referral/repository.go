@@ -1,0 +1,61 @@
+package referralpg
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+
+	referralrepo "remnawave-tg-shop-bot/internal/repository/referral"
+)
+
+type repository struct {
+	pool *pgxpool.Pool
+}
+
+// New creates new referral repository backed by PostgreSQL.
+func New(pool *pgxpool.Pool) referralrepo.Repository { return &repository{pool: pool} }
+
+func (r *repository) Create(ctx context.Context, referrerID, refereeID int64) error {
+	query := sq.Insert("referral").
+		Columns("referrer_id", "referee_id", "used_at", "bonus_granted").
+		Values(referrerID, refereeID, sq.Expr("NOW()"), false).
+		PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return fmt.Errorf("build insert referral: %w", err)
+	}
+
+	_, err = r.pool.Exec(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("exec insert referral: %w", err)
+	}
+	return nil
+}
+
+func (r *repository) FindByReferee(ctx context.Context, refereeID int64) (*referralrepo.Model, error) {
+	query := sq.Select("id", "referrer_id", "referee_id", "used_at").
+		From("referral").
+		Where(sq.Eq{"referee_id": refereeID}).
+		Limit(1).
+		PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("build select referral: %w", err)
+	}
+
+	var m referralrepo.Model
+	err = r.pool.QueryRow(ctx, sql, args...).Scan(&m.ID, &m.ReferrerID, &m.RefereeID, &m.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("query referral: %w", err)
+	}
+	return &m, nil
+}

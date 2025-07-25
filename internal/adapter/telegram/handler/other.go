@@ -34,6 +34,7 @@ func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		{{Text: h.translation.GetText(lang, "locations_button"), CallbackData: CallbackLocations}},
 		{{Text: h.translation.GetText(lang, "regen_key_button"), CallbackData: CallbackRegenKey}},
 		{{Text: h.translation.GetText(lang, "proxy_button"), CallbackData: CallbackProxy}},
+		{{Text: h.translation.GetText(lang, "language_button"), CallbackData: CallbackLanguage}},
 	}
 	if config.ServerStatusURL() != "" {
 		kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "server_status_button"), URL: config.ServerStatusURL()}})
