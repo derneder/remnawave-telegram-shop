@@ -70,6 +70,24 @@ func BuildMainKeyboard(lang string, c *domaincustomer.Customer, isAdmin bool) []
 	return kb
 }
 
+// BuildRefPromoUserMenu returns referral & promo menu for regular users.
+func BuildRefPromoUserMenu(lang string) [][]models.InlineKeyboardButton {
+	tm := translation.GetInstance()
+	return [][]models.InlineKeyboardButton{
+		{{Text: tm.GetText(lang, "referral_system_button"), CallbackData: "referral_stats"}},
+		{{Text: tm.GetText(lang, "enter_promocode_button"), CallbackData: "promo_enter"}},
+		{{Text: tm.GetText(lang, "faq_button"), CallbackData: "faq"}},
+		{{Text: tm.GetText(lang, "back_to_account_button"), CallbackData: "start"}},
+	}
+}
+
+// BuildRefPromoAdminMenu returns referral & promo menu for admins.
+func BuildRefPromoAdminMenu(lang string) [][]models.InlineKeyboardButton {
+	kb := BuildRefPromoUserMenu(lang)
+	tm := translation.GetInstance()
+	return append([][]models.InlineKeyboardButton{{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackAdminMenu}}}, kb...)
+}
+
 // BuildAdminPromoMenu returns root admin promo menu keyboard.
 func BuildAdminPromoMenu(lang string) [][]models.InlineKeyboardButton {
 	tm := translation.GetInstance()

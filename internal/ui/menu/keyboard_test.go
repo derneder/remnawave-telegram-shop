@@ -34,3 +34,21 @@ func TestBuildMainKeyboard_AdminButton(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildRefPromoMenus(t *testing.T) {
+	tm := translation.GetInstance()
+	if err := tm.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+	userKb := BuildRefPromoUserMenu("ru")
+	if userKb[0][0].CallbackData != "referral_stats" {
+		t.Fatalf("unexpected first button %v", userKb[0][0])
+	}
+	adminKb := BuildRefPromoAdminMenu("ru")
+	if adminKb[0][0].CallbackData != CallbackAdminMenu {
+		t.Fatalf("admin panel button missing")
+	}
+	if len(adminKb) != len(userKb)+1 {
+		t.Fatalf("admin menu rows mismatch")
+	}
+}
