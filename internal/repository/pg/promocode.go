@@ -13,6 +13,9 @@ type Promocode struct {
 	ID        int64     `db:"id"`
 	Code      string    `db:"code"`
 	Months    int       `db:"months"`
+	Type      int16     `db:"type"`
+	Days      int       `db:"days"`
+	Amount    int       `db:"amount"`
 	UsesLeft  int       `db:"uses_left"`
 	CreatedBy int64     `db:"created_by"`
 	CreatedAt time.Time `db:"created_at"`
@@ -30,8 +33,8 @@ func NewPromocodeRepository(pool *pgxpool.Pool) *PromocodeRepository {
 
 func (r *PromocodeRepository) Create(ctx context.Context, promo *Promocode) (*Promocode, error) {
 	sql, args, err := sq.Insert("promocode").
-		Columns("code", "months", "uses_left", "created_by", "active").
-		Values(promo.Code, promo.Months, promo.UsesLeft, promo.CreatedBy, promo.Active).
+		Columns("code", "months", "uses_left", "created_by", "active", "type", "days", "amount").
+		Values(promo.Code, promo.Months, promo.UsesLeft, promo.CreatedBy, promo.Active, promo.Type, promo.Days, promo.Amount).
 		Suffix("RETURNING id, created_at, active").
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
@@ -45,7 +48,7 @@ func (r *PromocodeRepository) Create(ctx context.Context, promo *Promocode) (*Pr
 }
 
 func (r *PromocodeRepository) GetByCode(ctx context.Context, code string) (*Promocode, error) {
-	sql, args, err := sq.Select("id", "code", "months", "uses_left", "created_by", "created_at", "active").
+	sql, args, err := sq.Select("id", "code", "months", "type", "days", "amount", "uses_left", "created_by", "created_at", "active").
 		From("promocode").
 		Where(sq.Eq{"code": code, "deleted": false}).
 		PlaceholderFormat(sq.Dollar).ToSql()
@@ -53,7 +56,7 @@ func (r *PromocodeRepository) GetByCode(ctx context.Context, code string) (*Prom
 		return nil, fmt.Errorf("failed to build select promocode by code: %w", err)
 	}
 	promo := &Promocode{}
-	err = r.pool.QueryRow(ctx, sql, args...).Scan(&promo.ID, &promo.Code, &promo.Months, &promo.UsesLeft, &promo.CreatedBy, &promo.CreatedAt, &promo.Active)
+	err = r.pool.QueryRow(ctx, sql, args...).Scan(&promo.ID, &promo.Code, &promo.Months, &promo.Type, &promo.Days, &promo.Amount, &promo.UsesLeft, &promo.CreatedBy, &promo.CreatedAt, &promo.Active)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func (r *PromocodeRepository) GetByCode(ctx context.Context, code string) (*Prom
 }
 
 func (r *PromocodeRepository) GetById(ctx context.Context, id int64) (*Promocode, error) {
-	sql, args, err := sq.Select("id", "code", "months", "uses_left", "created_by", "created_at", "active").
+	sql, args, err := sq.Select("id", "code", "months", "type", "days", "amount", "uses_left", "created_by", "created_at", "active").
 		From("promocode").
 		Where(sq.Eq{"id": id, "deleted": false}).
 		PlaceholderFormat(sq.Dollar).ToSql()
@@ -69,7 +72,7 @@ func (r *PromocodeRepository) GetById(ctx context.Context, id int64) (*Promocode
 		return nil, fmt.Errorf("failed to build select promocode by id: %w", err)
 	}
 	promo := &Promocode{}
-	err = r.pool.QueryRow(ctx, sql, args...).Scan(&promo.ID, &promo.Code, &promo.Months, &promo.UsesLeft, &promo.CreatedBy, &promo.CreatedAt, &promo.Active)
+	err = r.pool.QueryRow(ctx, sql, args...).Scan(&promo.ID, &promo.Code, &promo.Months, &promo.Type, &promo.Days, &promo.Amount, &promo.UsesLeft, &promo.CreatedBy, &promo.CreatedAt, &promo.Active)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +116,7 @@ func (r *PromocodeRepository) UpdateDeleteStatus(ctx context.Context, id int64, 
 }
 
 func (r *PromocodeRepository) FindByCreator(ctx context.Context, createdBy int64) ([]Promocode, error) {
-	sql, args, err := sq.Select("id", "code", "months", "uses_left", "created_by", "created_at", "active").
+	sql, args, err := sq.Select("id", "code", "months", "type", "days", "amount", "uses_left", "created_by", "created_at", "active").
 		From("promocode").
 		Where(sq.Eq{"created_by": createdBy, "deleted": false}).
 		OrderBy("created_at DESC").
@@ -131,7 +134,7 @@ func (r *PromocodeRepository) FindByCreator(ctx context.Context, createdBy int64
 	var list []Promocode
 	for rows.Next() {
 		var p Promocode
-		if err := rows.Scan(&p.ID, &p.Code, &p.Months, &p.UsesLeft, &p.CreatedBy, &p.CreatedAt, &p.Active); err != nil {
+		if err := rows.Scan(&p.ID, &p.Code, &p.Months, &p.Type, &p.Days, &p.Amount, &p.UsesLeft, &p.CreatedBy, &p.CreatedAt, &p.Active); err != nil {
 			return nil, fmt.Errorf("failed to scan promocode: %w", err)
 		}
 		list = append(list, p)

@@ -23,7 +23,7 @@ func TestInitHandlers(t *testing.T) {
 	}
 
 	repo := &StubCustomerRepo{}
-	h := handler.NewHandler(nil, nil, tm, repo, nil, nil, nil, nil, nil)
+       h := handler.NewHandler(nil, nil, tm, repo, nil, nil, nil, nil, nil, nil)
 
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/connect", bot.MatchTypeExact, h.ConnectCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackConnect, bot.MatchTypePrefix, h.ConnectCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)

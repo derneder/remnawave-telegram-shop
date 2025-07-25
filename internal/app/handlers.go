@@ -15,6 +15,8 @@ func (a *App) InitHandlers(h *handler.Handler) {
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/promocode", bot.MatchTypePrefix, h.PromocodeCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/connect", bot.MatchTypeExact, h.ConnectCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/sync", bot.MatchTypeExact, h.SyncUsersCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/addsubpromo", bot.MatchTypePrefix, h.AddSubPromoCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/addbalpromo", bot.MatchTypePrefix, h.AddBalPromoCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackStart, bot.MatchTypePrefix, h.StartCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackConnect, bot.MatchTypePrefix, h.ConnectCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
@@ -31,6 +33,8 @@ func (a *App) InitHandlers(h *handler.Handler) {
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackReferralStats, bot.MatchTypePrefix, h.ReferralStatsCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackPromoCodes, bot.MatchTypePrefix, h.PromoCodesCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackPromoCreate, bot.MatchTypePrefix, h.PromoCreateCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackAdminSubPromo, bot.MatchTypePrefix, h.AdminSubPromoCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackAdminBalPromo, bot.MatchTypePrefix, h.AdminBalPromoCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackPromoEnter, bot.MatchTypePrefix, h.PromoEnterCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackPromoList, bot.MatchTypePrefix, h.PromoListCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackPromoFreeze, bot.MatchTypePrefix, h.PromoFreezeCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
@@ -54,4 +58,18 @@ func (a *App) InitHandlers(h *handler.Handler) {
 		}
 		return h.IsAwaitingPromo(upd.Message.Chat.ID)
 	}, h.PromoCodeMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+
+	b.RegisterHandlerMatchFunc(func(upd *models.Update) bool {
+		if upd.Message == nil {
+			return false
+		}
+		return h.IsAwaitingSubPromo(upd.Message.Chat.ID)
+	}, h.AdminSubPromoMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+
+	b.RegisterHandlerMatchFunc(func(upd *models.Update) bool {
+		if upd.Message == nil {
+			return false
+		}
+		return h.IsAwaitingBalPromo(upd.Message.Chat.ID)
+	}, h.AdminBalPromoMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 }
