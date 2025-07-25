@@ -21,6 +21,8 @@ import (
 	"remnawave-tg-shop-bot/internal/service/notification"
 )
 
+const cronStopTimeout = 5 * time.Second
+
 // App groups dependencies of the bot.
 type App struct {
 	Bot   *bot.Bot
@@ -95,8 +97,12 @@ func (a *App) Shutdown(ctx context.Context) {
 
 	if a.Cron != nil {
 		stopCtx := a.Cron.Stop()
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), cronStopTimeout)
+		defer cancel()
 		select {
 		case <-stopCtx.Done():
+		case <-timeoutCtx.Done():
+			slog.Warn("cron stop timeout")
 		case <-ctx.Done():
 		}
 	}
