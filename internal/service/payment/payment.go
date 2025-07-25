@@ -135,7 +135,9 @@ func (s PaymentService) ProcessPurchaseById(ctx context.Context, purchaseId int6
 			newBal := referrer.Balance + bonus
 			if err := s.customerRepository.UpdateFields(ctx, referrer.ID, map[string]interface{}{"balance": newBal}); err == nil {
 				_ = s.referralRepository.MarkBonusGranted(ctx, referral.ID)
-				_, _ = s.messenger.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: s.translation.GetText(referrer.Language, "referral_bonus_granted")})
+				if _, err := s.messenger.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: s.translation.GetText(referrer.Language, "referral_bonus_granted")}); err != nil {
+					slog.Error("send referral bonus", "err", err)
+				}
 			}
 		}
 	}
@@ -148,7 +150,9 @@ func (s PaymentService) ProcessPurchaseById(ctx context.Context, purchaseId int6
 func (s PaymentService) PurchaseFromBalance(ctx context.Context, customer *domaincustomer.Customer, months int) error {
 	price := config.Price(months)
 	if customer.Balance < float64(price) {
-		_, _ = s.messenger.SendMessage(ctx, &bot.SendMessageParams{ChatID: customer.TelegramID, Text: s.translation.GetText(customer.Language, "insufficient_balance")})
+		if _, err := s.messenger.SendMessage(ctx, &bot.SendMessageParams{ChatID: customer.TelegramID, Text: s.translation.GetText(customer.Language, "insufficient_balance")}); err != nil {
+			slog.Error("send insufficient balance", "err", err)
+		}
 		return nil
 	}
 
