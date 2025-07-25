@@ -91,7 +91,7 @@ func TestPaymentCallbackHandler_ContextPropagation(t *testing.T) {
 	trans := translation.GetInstance()
 	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, messenger, nil, nil, nil, nil, cache)
 
-       h := handlerpkg.NewHandler(nil, paySvc, trans, custRepo, nil, nil, nil, nil, nil, cache)
+	h := handlerpkg.NewHandler(nil, paySvc, trans, custRepo, nil, nil, nil, nil, nil, cache)
 
 	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &httpClient{}), bot.WithSkipGetMe())
 	if err != nil {
@@ -157,7 +157,7 @@ func TestSellCallbackHandler_Text(t *testing.T) {
 	}
 
 	repo := &StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, Balance: 100}}
-	h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, nil, nil, nil, nil)
+	h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, nil, nil, nil, nil, nil)
 
 	cases := []struct {
 		month int

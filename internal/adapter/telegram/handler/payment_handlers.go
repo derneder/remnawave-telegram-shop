@@ -99,7 +99,7 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 		))
 	}
 
-	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
