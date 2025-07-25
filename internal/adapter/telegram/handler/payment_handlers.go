@@ -103,7 +103,23 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackBuy},
 	})
 
-	text := fmt.Sprintf(h.translation.GetText(langCode, "selected_months"), month)
+	customer, _ := h.customerRepository.FindByTelegramId(ctx, chatID)
+	bal := 0
+	if customer != nil {
+		bal = int(customer.Balance)
+	}
+
+	var line string
+	switch month {
+	case "1":
+		line = fmt.Sprintf(h.translation.GetText(langCode, "plan_line_1"), h.translation.GetText(langCode, "month_1"), config.Price1())
+	case "3":
+		line = fmt.Sprintf(h.translation.GetText(langCode, "plan_line_3"), h.translation.GetText(langCode, "month_3"), config.Price3())
+	case "6":
+		line = fmt.Sprintf(h.translation.GetText(langCode, "plan_line_6"), h.translation.GetText(langCode, "month_6"), config.Price6())
+	}
+
+	text := fmt.Sprintf(h.translation.GetText(langCode, "selected_plan_text"), bal, line)
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {

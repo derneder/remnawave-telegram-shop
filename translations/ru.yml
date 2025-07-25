@@ -3,7 +3,10 @@ back_button: 🔙 Назад
 month_1: 1 месяц
 month_3: 3 месяца
 month_6: 6 месяцев
-selected_months: "Вы выбрали %s месяцев подписки"
+plan_line_1: "✨ %s — %d рублей"
+plan_line_3: "❤️‍🔥 %s — %d рублей"
+plan_line_6: "🔥 %s — %d рублей"
+selected_plan_text: "📌 Выберите срок подписки на сервис 📌\n\n💎 Текущий баланс: %d рублей\n\n%s\n\n⭐️ Оплата будет списана с вашего личного счёта в Личном Кабинете."
 crypto_button: ₿ Криптовалютой
 pay_button: 💸 Оплатить
 subscription_active: 'Ваша подписка действует до: %s'
