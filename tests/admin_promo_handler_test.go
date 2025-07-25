@@ -60,19 +60,19 @@ func TestAdminPromoBalanceWizard(t *testing.T) {
 	upd := &models.Update{CallbackQuery: &models.CallbackQuery{ID: "1", From: models.User{ID: 1, LanguageCode: "ru"}, Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}}}}
 
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
-	upd.CallbackQuery.Data = uimenu.CallbackAdminMenu
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackAdminPromoBalanceStart
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceStart
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoBalanceAmount + ":100"
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceAmount + ":100"
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoBalanceLimit + ":1"
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceLimit + ":1"
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoBalanceConfirm
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceConfirm
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
 	if svc.bal.amount != 10000 || svc.bal.limit != 1 {
@@ -92,22 +92,22 @@ func TestAdminPromoSubWizard(t *testing.T) {
 	upd := &models.Update{CallbackQuery: &models.CallbackQuery{ID: "1", From: models.User{ID: 1, LanguageCode: "ru"}, Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}}}}
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
 
-	upd.CallbackQuery.Data = uimenu.CallbackAdminMenu
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackAdminPromoSubStart
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubStart
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoSubCodeRandom
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubCodeRandom
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoSubDays + ":30"
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubDays + ":30"
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoSubLimit + ":2"
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubLimit + ":2"
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoSubConfirm
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubConfirm
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
 	if svc.sub.days != 30 || svc.sub.limit != 2 {

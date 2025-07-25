@@ -10,21 +10,26 @@ import (
 	"remnawave-tg-shop-bot/internal/ui"
 )
 
-// Callback data constants for admin menu and promo wizard.
+// Callback data constants for promo/referral menus and admin promo wizard.
 const (
-	CallbackAdminMenu              = "admin_menu"
-	CallbackAdminPromoBalanceStart = "admin_promo_balance_start"
-	CallbackAdminPromoSubStart     = "admin_promo_sub_start"
-	CallbackPromoBalanceAmount     = "promo_balance_amount"
-	CallbackPromoBalanceLimit      = "promo_balance_limit"
-	CallbackPromoBalanceConfirm    = "promo_balance_confirm"
-	CallbackPromoSubCodeRandom     = "promo_sub_code_random"
-	CallbackPromoSubCodeCustom     = "promo_sub_code_custom"
-	CallbackPromoSubDays           = "promo_sub_days"
-	CallbackPromoSubLimit          = "promo_sub_limit"
-	CallbackPromoSubConfirm        = "promo_sub_confirm"
-	CallbackAdminBack              = "admin_back"
-	CallbackAdminCancel            = "admin_cancel"
+	// user callbacks
+	CallbackPromoUserActivate = "promo_user_activate"
+	CallbackRefUserStats      = "ref_user_stats"
+	CallbackPromoUserPersonal = "promo_user_personal"
+	// admin callbacks
+	CallbackPromoAdminMenu           = "promo_admin_menu"
+	CallbackPromoAdminBalanceStart   = "promo_admin_balance_start"
+	CallbackPromoAdminSubStart       = "promo_admin_sub_start"
+	CallbackPromoAdminBalanceAmount  = "promo_admin_balance_amount"
+	CallbackPromoAdminBalanceLimit   = "promo_admin_balance_limit"
+	CallbackPromoAdminBalanceConfirm = "promo_admin_balance_confirm"
+	CallbackPromoAdminSubCodeRandom  = "promo_admin_sub_code_random"
+	CallbackPromoAdminSubCodeCustom  = "promo_admin_sub_code_custom"
+	CallbackPromoAdminSubDays        = "promo_admin_sub_days"
+	CallbackPromoAdminSubLimit       = "promo_admin_sub_limit"
+	CallbackPromoAdminSubConfirm     = "promo_admin_sub_confirm"
+	CallbackPromoAdminBack           = "promo_admin_back"
+	CallbackPromoAdminCancel         = "promo_admin_cancel"
 )
 
 // StepState represents wizard step identifier.
@@ -55,7 +60,7 @@ func BuildMainKeyboard(lang string, c *domaincustomer.Customer, isAdmin bool) []
 	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "referral_button"), CallbackData: "referral"}})
 	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "other_button"), CallbackData: "other"}})
 	if isAdmin {
-		kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackAdminMenu}})
+		kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackPromoAdminMenu}})
 	}
 	var row []models.InlineKeyboardButton
 	if config.SupportURL() != "" {
@@ -70,12 +75,29 @@ func BuildMainKeyboard(lang string, c *domaincustomer.Customer, isAdmin bool) []
 	return kb
 }
 
+// BuildRefPromoUserMenu returns referral & promo menu for regular users.
+// BuildPromoRefMain builds promo/referral main menu depending on admin flag.
+func BuildPromoRefMain(lang string, isAdmin bool) [][]models.InlineKeyboardButton {
+	tm := translation.GetInstance()
+	kb := [][]models.InlineKeyboardButton{
+		{{Text: tm.GetText(lang, "activate_promocode_button"), CallbackData: CallbackPromoUserActivate}},
+		{{Text: tm.GetText(lang, "referral_system_button"), CallbackData: CallbackRefUserStats}},
+		{{Text: tm.GetText(lang, "personal_promocodes_button"), CallbackData: CallbackPromoUserPersonal}},
+		{{Text: tm.GetText(lang, "faq_button"), CallbackData: "faq"}},
+		{{Text: tm.GetText(lang, "back_to_account_button"), CallbackData: "start"}},
+	}
+	if isAdmin {
+		kb = append([][]models.InlineKeyboardButton{{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackPromoAdminMenu}}}, kb...)
+	}
+	return kb
+}
+
 // BuildAdminPromoMenu returns root admin promo menu keyboard.
 func BuildAdminPromoMenu(lang string) [][]models.InlineKeyboardButton {
 	tm := translation.GetInstance()
 	return [][]models.InlineKeyboardButton{
-		{{Text: tm.GetText(lang, "admin_promo_balance_button"), CallbackData: CallbackAdminPromoBalanceStart}},
-		{{Text: tm.GetText(lang, "admin_promo_sub_button"), CallbackData: CallbackAdminPromoSubStart}},
+		{{Text: tm.GetText(lang, "admin_promo_balance_button"), CallbackData: CallbackPromoAdminBalanceStart}},
+		{{Text: tm.GetText(lang, "admin_promo_sub_button"), CallbackData: CallbackPromoAdminSubStart}},
 		{{Text: tm.GetText(lang, "back_button"), CallbackData: "start"}},
 	}
 }
@@ -86,22 +108,22 @@ func BuildAdminPromoBalanceWizardStep(lang string, step StepState) [][]models.In
 	switch step {
 	case StepAmount:
 		return [][]models.InlineKeyboardButton{
-			{{Text: "100", CallbackData: CallbackPromoBalanceAmount + ":100"}, {Text: "300", CallbackData: CallbackPromoBalanceAmount + ":300"}},
-			{{Text: "500", CallbackData: CallbackPromoBalanceAmount + ":500"}, {Text: "1000", CallbackData: CallbackPromoBalanceAmount + ":1000"}},
-			{{Text: tm.GetText(lang, "manual_input_button"), CallbackData: CallbackPromoBalanceAmount + ":manual"}},
-			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackAdminCancel}},
+			{{Text: "100", CallbackData: CallbackPromoAdminBalanceAmount + ":100"}, {Text: "300", CallbackData: CallbackPromoAdminBalanceAmount + ":300"}},
+			{{Text: "500", CallbackData: CallbackPromoAdminBalanceAmount + ":500"}, {Text: "1000", CallbackData: CallbackPromoAdminBalanceAmount + ":1000"}},
+			{{Text: tm.GetText(lang, "manual_input_button"), CallbackData: CallbackPromoAdminBalanceAmount + ":manual"}},
+			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel}},
 		}
 	case StepLimit:
 		return [][]models.InlineKeyboardButton{
-			{{Text: "1", CallbackData: CallbackPromoBalanceLimit + ":1"}, {Text: "5", CallbackData: CallbackPromoBalanceLimit + ":5"}, {Text: "10", CallbackData: CallbackPromoBalanceLimit + ":10"}},
-			{{Text: "∞", CallbackData: CallbackPromoBalanceLimit + ":0"}, {Text: tm.GetText(lang, "manual_input_button"), CallbackData: CallbackPromoBalanceLimit + ":manual"}},
-			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackAdminBack}},
+			{{Text: "1", CallbackData: CallbackPromoAdminBalanceLimit + ":1"}, {Text: "5", CallbackData: CallbackPromoAdminBalanceLimit + ":5"}, {Text: "10", CallbackData: CallbackPromoAdminBalanceLimit + ":10"}},
+			{{Text: "∞", CallbackData: CallbackPromoAdminBalanceLimit + ":0"}, {Text: tm.GetText(lang, "manual_input_button"), CallbackData: CallbackPromoAdminBalanceLimit + ":manual"}},
+			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
 		}
 	case StepConfirm:
 		return [][]models.InlineKeyboardButton{
-			{{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoBalanceConfirm}},
-			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackAdminBack}},
-			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackAdminCancel}},
+			{{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoAdminBalanceConfirm}},
+			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
+			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel}},
 		}
 	default:
 		return nil
@@ -114,26 +136,26 @@ func BuildAdminPromoSubWizardStep(lang string, step StepState) [][]models.Inline
 	switch step {
 	case StepCode:
 		return [][]models.InlineKeyboardButton{
-			{{Text: "🎲", CallbackData: CallbackPromoSubCodeRandom}, {Text: "✍️", CallbackData: CallbackPromoSubCodeCustom}},
-			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackAdminCancel}},
+			{{Text: "🎲", CallbackData: CallbackPromoAdminSubCodeRandom}, {Text: "✍️", CallbackData: CallbackPromoAdminSubCodeCustom}},
+			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel}},
 		}
 	case StepDays:
 		return [][]models.InlineKeyboardButton{
-			{{Text: "30", CallbackData: CallbackPromoSubDays + ":30"}, {Text: "90", CallbackData: CallbackPromoSubDays + ":90"}},
-			{{Text: "180", CallbackData: CallbackPromoSubDays + ":180"}, {Text: "365", CallbackData: CallbackPromoSubDays + ":365"}},
-			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackAdminBack}},
+			{{Text: "30", CallbackData: CallbackPromoAdminSubDays + ":30"}, {Text: "90", CallbackData: CallbackPromoAdminSubDays + ":90"}},
+			{{Text: "180", CallbackData: CallbackPromoAdminSubDays + ":180"}, {Text: "365", CallbackData: CallbackPromoAdminSubDays + ":365"}},
+			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
 		}
 	case StepLimit:
 		return [][]models.InlineKeyboardButton{
-			{{Text: "1", CallbackData: CallbackPromoSubLimit + ":1"}, {Text: "5", CallbackData: CallbackPromoSubLimit + ":5"}, {Text: "10", CallbackData: CallbackPromoSubLimit + ":10"}},
-			{{Text: "∞", CallbackData: CallbackPromoSubLimit + ":0"}, {Text: tm.GetText(lang, "manual_input_button"), CallbackData: CallbackPromoSubLimit + ":manual"}},
-			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackAdminBack}},
+			{{Text: "1", CallbackData: CallbackPromoAdminSubLimit + ":1"}, {Text: "5", CallbackData: CallbackPromoAdminSubLimit + ":5"}, {Text: "10", CallbackData: CallbackPromoAdminSubLimit + ":10"}},
+			{{Text: "∞", CallbackData: CallbackPromoAdminSubLimit + ":0"}, {Text: tm.GetText(lang, "manual_input_button"), CallbackData: CallbackPromoAdminSubLimit + ":manual"}},
+			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
 		}
 	case StepConfirm:
 		return [][]models.InlineKeyboardButton{
-			{{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoSubConfirm}},
-			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackAdminBack}},
-			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackAdminCancel}},
+			{{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoAdminSubConfirm}},
+			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
+			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel}},
 		}
 	default:
 		return nil
