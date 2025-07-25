@@ -52,6 +52,8 @@ referral_bonus_granted: You have received a referral bonus!
 stars_button: ' ⭐Telegram Stars'
 invite_friend_button: Invite a friend
 create_promocode_button: 🎁 Create new code
+admin_subpromo_button: 🎁 Give sub promo
+admin_balpromo_button: 💎 Balance promo
 promo_list_button: 📜 View all codes
 personal_codes_text: "💌 Create unique subscription codes 💌\n\nIn this section you
   can create codes to share with friends. They can activate them and get a subscription
@@ -65,6 +67,10 @@ promo_delete_button: 🗑️ Delete
 promo_status_frozen: Code frozen
 promo_status_active: Code active
 promocode_created: Promo code %s created
+admin_subpromo_prompt: "Send: CODE DAYS LIMIT"
+admin_subpromo_done: Subscription promo %s created
+admin_balpromo_prompt: "Send: AMOUNT LIMIT"
+admin_balpromo_done: Balance promo %s created
 promo_choose_uses: '🔢 Choose number of uses:'
 promo_choose_plan: "📅 Choose subscription type 📅\n\n💰 Note:\nButtons below show the
   total cost considering the selected activations.\n\n📜 Your current balance: %d rubles"
@@ -110,6 +116,10 @@ qr_text: "🎉 Your QR code is ready! 🎉\n\nHow to use:\n1. Point your camera 
   code to connect automatically.\n2. Or download the image to a flash drive and open
   it on your TV.\n\n🔗 Extra link:\nIf the QR code is unavailable, use this link:\n\
   %s\n\n💡 Tip:\nSave the QR code or link in a safe place to always have access to
+  your subscription.\n\nChoose an action below 👇"
+qr_text_no_link: "🎉 Your QR code is ready! 🎉\n\nHow to use:\n1. Point your camera at the QR
+  code to connect automatically.\n2. Or download the image to a flash drive and open
+  it on your TV.\n\n💡 Tip:\nSave the QR code or link in a safe place to always have access to
   your subscription.\n\nChoose an action below 👇"
 keys_text: "🔑 Individual keys list ready!\n\nOpen the attached file with any text
   editor.\n\n👉 Choose an action below to continue."

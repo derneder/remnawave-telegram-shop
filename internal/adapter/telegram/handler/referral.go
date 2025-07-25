@@ -18,12 +18,12 @@ import (
 func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
-	_, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
+	_, err = h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
 		return
@@ -63,9 +63,9 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
@@ -141,13 +141,13 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
 
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 
-	_, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
+	_, err = h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
 		return
@@ -181,9 +181,9 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
@@ -236,28 +236,30 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
-	_, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
+	_, err = h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
 		return
 	}
 
 	kb := [][]models.InlineKeyboardButton{
-		{
-			{Text: tm.GetText(langCode, "create_promocode_button"), CallbackData: CallbackPromoCreate},
-		},
-		{
-			{Text: tm.GetText(langCode, "promo_list_button"), CallbackData: CallbackPromoList},
-		},
-		{
-			{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral},
-		},
+		{{Text: tm.GetText(langCode, "create_promocode_button"), CallbackData: CallbackPromoCreate}},
 	}
+	if config.IsAdmin(update.CallbackQuery.From.ID) {
+		kb = append(kb,
+			[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "admin_subpromo_button"), CallbackData: CallbackAdminSubPromo}},
+			[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "admin_balpromo_button"), CallbackData: CallbackAdminBalPromo}},
+		)
+	}
+	kb = append(kb,
+		[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "promo_list_button"), CallbackData: CallbackPromoList}},
+		[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral}},
+	)
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {
@@ -313,9 +315,9 @@ func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, updat
 func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
@@ -343,7 +345,15 @@ func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		if !c.Active {
 			status = tm.GetText(langCode, "promo_status_frozen")
 		}
-		textBuilder.WriteString(fmt.Sprintf("\n%s — %d мес. — осталось %d/%d — %s", c.Code, c.Months, c.UsesLeft, total, status))
+		if c.Type == 2 {
+			textBuilder.WriteString(fmt.Sprintf("\n%s — %d ₽ — осталось %d/%d — %s", c.Code, c.Amount/100, c.UsesLeft, total, status))
+		} else {
+			days := c.Days
+			if days == 0 {
+				days = c.Months * 30
+			}
+			textBuilder.WriteString(fmt.Sprintf("\n%s — %d d — осталось %d/%d — %s", c.Code, days, c.UsesLeft, total, status))
+		}
 		if c.Active {
 			kb = append(kb, []models.InlineKeyboardButton{
 				{Text: tm.GetText(langCode, "promo_freeze_button"), CallbackData: fmt.Sprintf("%s:%d", CallbackPromoFreeze, c.ID)},
@@ -436,9 +446,9 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
 
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 
