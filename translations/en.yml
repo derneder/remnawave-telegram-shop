@@ -36,11 +36,8 @@ trial_activated: Trial period activated
 trial_text: Your trial version is active
 activate_trial_button: Activate trial version
 referral_button: 🎉 Referral system & promo
-referral_menu_text: "✨ Welcome to Promo Codes and Referrals ✨\n\n🤝 1. View your referral
-  menu\n🎫 2. Activate a promo code or gift from another user\n🎁 3. Gift a subscription
-  using personal codes\n\n👉 Please select an action below."
+referral_menu_text: "✨ Welcome to Promo Codes and Referrals ✨\n\n🤝 1. View your referral menu\n🎫 2. Activate a promo code\n\n👉 Please select an action below."
 referral_system_button: 🤝 Referral system
-personal_codes_button: 🎁 Personal codes
 referral_system_text: "🎉 Welcome to your referral link management menu!\n\nHere you
   can get all information and your unique referral link for inviting friends.\n\n\
   👑 Summary:\n└ Invited referrals: %d\n└ Purchased subscription: %d\n└ Total bonus
@@ -51,51 +48,29 @@ referral_system_text: "🎉 Welcome to your referral link management menu!\n\nHe
 referral_bonus_granted: You have received a referral bonus!
 stars_button: ' ⭐Telegram Stars'
 invite_friend_button: Invite a friend
-create_promocode_button: 🎁 Create new code
-admin_subpromo_button: 🎁 Give sub promo
-admin_balpromo_button: 💎 Balance promo
-promo_list_button: 📜 View all codes
-personal_codes_text: "💌 Create unique subscription codes 💌\n\nIn this section you
-  can create codes to share with friends. They can activate them and get a subscription
-  for the specified period.\n\n🎛️ Activation settings:\nSet the number of activations
-  for each code. The total cost equals the price of one subscription multiplied by
-  activations.\n\n👉 Choose an action below to continue."
-promo_codes_list_intro: 'Your promo codes:'
-promo_freeze_button: 🧊 Freeze
-promo_unfreeze_button: 🔥 Unfreeze
-promo_delete_button: 🗑️ Delete
-promo_status_frozen: Code frozen
-promo_status_active: Code active
-promocode_created: Promo code %s created
-admin_subpromo_prompt: "Send: CODE DAYS LIMIT"
-admin_subpromo_done: Subscription promo %s created
-admin_balpromo_prompt: "Send: AMOUNT LIMIT"
-admin_balpromo_done: Balance promo %s created
-promo_choose_uses: '🔢 Choose number of uses:'
-promo_choose_plan: "📅 Choose subscription type 📅\n\n💰 Note:\nButtons below show the
-  total cost considering the selected activations.\n\n📜 Your current balance: %d rubles"
-tribute_button: Tribute
-balance_topped_up: Your balance has been topped up by %d
-balance_menu_button: 💳 Subscription & Balance
 topup_button: Top up balance
 buy_sub_balance_button: Buy subscription
 insufficient_balance: Insufficient balance
 balance_info: 'Your balance: %d ₽'
-balance_menu_text: "💎 Account and subscription management 💎\n\n⭐ Current balance:
-  %d rubles\n\n🟣 Subscription payments are charged from your account. You can top
-  up the balance below and use it later.\n\n🟣 If you already have funds, choose a
+balance_menu_button: 💳 Subscription & Balance
+balance_menu_text: "💎 Account and subscription management 💎\n\n⭐ Current balance: %d rubles\n\n🟣 Subscription payments are charged from your account. You can top up the balance below and use it later.\n\n🟣 If you already have funds, choose a plan to purchase a subscription.\n\n📌 Choose an action below to continue."
+balance_topped_up: Your balance has been topped up by %d
+tribute_button: Tribute
   plan to purchase a subscription.\n\n📌 Choose an action below to continue."
 topup_intro_text: "💎 Top up your account 💎\n\n💵 Current balance: %d rubles\n\n✨ Balance
   top-up is a one-time operation (not a subscription). We do not access your personal
   or payment data, keeping you safe.\n\n⚙️ If you have payment issues, contact support
   using the button below."
-enter_promocode_button: 🎫 Promo code activation
+activate_promocode_button: 🎫 Promo code activation
+personal_promocodes_button: "📋 My promo codes"
 enter_promocode_prompt: "⭐️ Enter the promo code you received to activate it!\nExample:
   #hedgehog_promo\n\n💬 You can also send the code here or use /promocode"
 promo_invalid: Invalid promo code
 promo_applied: Promo applied! Subscription until %s
-activation_singular: activation
-activation_plural: activations
+promo_balance_applied: "✅ Promo code activated! %d RUB added to your balance. Current balance: %d RUB"
+promo_not_found: Promo code not found
+promo_expired: Promo code expired
+promo_limit_reached: Promo code usage limit exceeded
 subscription_active_hint: Follow the instructions and press ‘Connect’.
 subscription_inactive_hint: "⚠️ ATTENTION ⚠️\n\nYour subscription is inactive. To
   resume service, open ‘Subscription & Balance’, top up and buy a new subscription.\n\
@@ -139,10 +114,22 @@ traffic_info_header: "<b>🌐 Traffic info:</b>\n\n"
 traffic_limit: "├ 📊 Daily limit: <b>%s / %s</b>\n"
 traffic_total_used: "├ ⚡ Total used: <b>%s</b>\n"
 traffic_time_to_reset: '├ 🔄 Until reset: <b>%s</b>'
-promo_active_when_delete: Promo code is active and cannot be deleted. Freeze it first.
-promo_confirm_when_delete: Are you sure you want to delete this promo code? This action cannot be undone.
 language_button: "🌐 Language"
 choose_language_text: "🌐 Choose interface language"
 language_en: English
 language_ru: Russian
 language_changed: Language updated
+admin_panel_button: "⚙️ Admin panel"
+admin_promo_balance_button: "💰 Balance promo"
+admin_promo_sub_button: "📅 Subscription promo"
+create_button: "✅ Create"
+cancel_button: "❌ Cancel"
+manual_input_button: "Enter manually"
+promo_amount_prompt: "Choose amount"
+promo_limit_prompt: "Choose limit"
+promo_days_prompt: "Choose duration"
+promo_code_prompt: "Enter code"
+promo_confirm_text: "Amount: %d RUB, limit: %d"
+promo_balance_created: "✅ Balance promo `%s` created for %d RUB (limit: %d)"
+promo_sub_created: "✅ Promo SUB_%s created: %d days, limit: %d"
+promo_cancelled: "Promo creation cancelled"
