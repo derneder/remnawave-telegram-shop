@@ -36,7 +36,7 @@ func (h *Handler) TrialCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 	langCode := update.CallbackQuery.From.LanguageCode
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params := &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		Text:      h.translation.GetText(langCode, "trial_text"),
@@ -45,7 +45,12 @@ func (h *Handler) TrialCallbackHandler(ctx context.Context, b *bot.Bot, update *
 			{{Text: h.translation.GetText(langCode, "activate_trial_button"), CallbackData: CallbackActivateTrial}},
 			{{Text: h.translation.GetText(langCode, "back_to_account_button"), CallbackData: CallbackStart}},
 		}},
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		slog.Error("Error sending /trial message", "err", err)
 	}
@@ -79,13 +84,18 @@ func (h *Handler) ActivateTrialCallbackHandler(ctx context.Context, b *bot.Bot, 
 	}
 
 	langCode := update.CallbackQuery.From.LanguageCode
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params2 := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		Text:        h.translation.GetText(langCode, "trial_activated"),
 		ParseMode:   models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: ui.ConnectKeyboard(langCode, "back_to_account_button", CallbackStart)},
-	})
+	}
+	var curMsg2 *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg2 = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg2, params2)
 	if err != nil {
 		slog.Error("Error sending /trial message", "err", err)
 	}

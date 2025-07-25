@@ -84,3 +84,59 @@ func TestSafeEditMessageText_IgnoreError(t *testing.T) {
 		t.Fatalf("expected 1 call, got %d", client.calls)
 	}
 }
+
+func TestSafeEditMessageReplyMarkup_Skip(t *testing.T) {
+	client := &safeRecordClient{status: http.StatusOK, resp: `{"ok":true,"result":{"message_id":1}}`}
+	b, err := newBotSafe(client)
+	if err != nil {
+		t.Fatalf("new bot: %v", err)
+	}
+
+	kb := [][]models.InlineKeyboardButton{{{Text: "a", CallbackData: "1"}}}
+	old := &models.Message{ReplyMarkup: &models.InlineKeyboardMarkup{InlineKeyboard: kb}}
+	params := &bot.EditMessageReplyMarkupParams{ChatID: 1, MessageID: 1, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}}
+
+	if _, err := handlerpkg.SafeEditMessageReplyMarkup(context.Background(), b, old, params); err != nil {
+		t.Fatalf("SafeEditMessageReplyMarkup returned error: %v", err)
+	}
+	if client.calls != 0 {
+		t.Fatalf("expected 0 calls, got %d", client.calls)
+	}
+}
+
+func TestSafeEditMessageReplyMarkup_Call(t *testing.T) {
+	client := &safeRecordClient{status: http.StatusOK, resp: `{"ok":true,"result":{"message_id":1}}`}
+	b, err := newBotSafe(client)
+	if err != nil {
+		t.Fatalf("new bot: %v", err)
+	}
+
+	oldKb := [][]models.InlineKeyboardButton{{{Text: "a", CallbackData: "1"}}}
+	newKb := [][]models.InlineKeyboardButton{{{Text: "b", CallbackData: "2"}}}
+	old := &models.Message{ReplyMarkup: &models.InlineKeyboardMarkup{InlineKeyboard: oldKb}}
+	params := &bot.EditMessageReplyMarkupParams{ChatID: 1, MessageID: 1, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: newKb}}
+
+	if _, err := handlerpkg.SafeEditMessageReplyMarkup(context.Background(), b, old, params); err != nil {
+		t.Fatalf("SafeEditMessageReplyMarkup returned error: %v", err)
+	}
+	if client.calls != 1 {
+		t.Fatalf("expected 1 call, got %d", client.calls)
+	}
+}
+
+func TestSafeEditMessageReplyMarkup_IgnoreError(t *testing.T) {
+	resp := `{"ok":false,"error_code":400,"description":"Bad Request: message is not modified"}`
+	client := &safeRecordClient{status: http.StatusOK, resp: resp}
+	b, err := newBotSafe(client)
+	if err != nil {
+		t.Fatalf("new bot: %v", err)
+	}
+
+	params := &bot.EditMessageReplyMarkupParams{ChatID: 1, MessageID: 1}
+	if _, err := handlerpkg.SafeEditMessageReplyMarkup(context.Background(), b, nil, params); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if client.calls != 1 {
+		t.Fatalf("expected 1 call, got %d", client.calls)
+	}
+}

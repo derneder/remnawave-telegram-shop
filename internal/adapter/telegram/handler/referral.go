@@ -42,13 +42,18 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 		},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(langCode, "referral_menu_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		slog.Error("Error sending referral menu", "err", err)
 	}
@@ -94,13 +99,18 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 
 	if err != nil {
-		_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+		errParams := &bot.EditMessageTextParams{
 			ChatID:      chatID,
 			MessageID:   msgID,
 			ParseMode:   models.ParseModeHTML,
 			Text:        h.translation.GetText(langCode, "insufficient_balance"),
 			ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-		})
+		}
+		var curMsg *models.Message
+		if update.CallbackQuery.Message.Message != nil {
+			curMsg = update.CallbackQuery.Message.Message
+		}
+		_, err = SafeEditMessageText(ctx, b, curMsg, errParams)
 		if err != nil {
 			slog.Error("Error sending insufficient_balance code msg", "err", err)
 		}
@@ -108,13 +118,18 @@ func (h *Handler) PromoCreateCallbackHandler(ctx context.Context, b *bot.Bot, up
 		return
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	okParams := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        fmt.Sprintf(h.translation.GetText(langCode, "promocode_created"), code),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsg2 *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg2 = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg2, okParams)
 	if err != nil {
 		slog.Error("Error sending succesfully_created code msg", "err", err)
 	}
@@ -145,13 +160,18 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	enterParams := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(langCode, "enter_promocode_prompt"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgEnter *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgEnter = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsgEnter, enterParams)
 	if err != nil {
 		slog.Error("Error sending enter_promocode_prompt code msg", "err", err)
 	}
@@ -200,13 +220,18 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 		},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	statsParams := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgStats *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgStats = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsgStats, statsParams)
 	if err != nil {
 		slog.Error("Error sending referral stats", "err", err)
 	}
@@ -237,13 +262,18 @@ func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	codesParams := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(langCode, "personal_codes_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgCodes *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgCodes = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsgCodes, codesParams)
 	if err != nil {
 		slog.Error("Error sending promo codes menu", "err", err)
 	}
@@ -297,13 +327,18 @@ func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 
 	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoCodes}})
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	listParams := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        textBuilder.String(),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgList *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgList = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsgList, listParams)
 	if err != nil {
 		slog.Error("Error sending promocode list", "err", err)
 	}
@@ -387,14 +422,19 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 		kb := [][]models.InlineKeyboardButton{
 			{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoList}},
 		}
-		_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+		activeParams := &bot.EditMessageTextParams{
 			ChatID:    chatID,
 			MessageID: msgID,
 			ParseMode: models.ParseModeHTML,
 			// TODO: Серега, нужен текст. БУКАВЫ
 			Text:        h.translation.GetText(langCode, "promo_active_when_delete"),
 			ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-		})
+		}
+		var curMsgActive *models.Message
+		if update.CallbackQuery.Message.Message != nil {
+			curMsgActive = update.CallbackQuery.Message.Message
+		}
+		_, err = SafeEditMessageText(ctx, b, curMsgActive, activeParams)
 		if err != nil {
 			slog.Error("Error sending promo_active_when_delete code msg", "err", err)
 		}
@@ -406,14 +446,19 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 		{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoList}},
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	confirmParams := &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
 		// TODO: Серега, нужен текст. БУКАВЫ
 		Text:        h.translation.GetText(langCode, "promo_confirm_when_delete"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgConfirm *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgConfirm = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsgConfirm, confirmParams)
 	if err != nil {
 		slog.Error("Error sending promo_confirm_when_delete code msg", "err", err)
 	}

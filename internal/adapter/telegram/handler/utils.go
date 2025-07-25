@@ -90,7 +90,7 @@ func (h *Handler) promptPromoMonths(ctx context.Context, b *bot.Bot, msg *models
 	}
 
 	bal := int(customer.Balance)
-	_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params := &bot.EditMessageTextParams{
 		ChatID:    msg.Chat.ID,
 		MessageID: msg.ID,
 		ParseMode: models.ParseModeHTML,
@@ -98,7 +98,8 @@ func (h *Handler) promptPromoMonths(ctx context.Context, b *bot.Bot, msg *models
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: kb,
 		},
-	})
+	}
+	_, _ = SafeEditMessageText(ctx, b, msg, params)
 }
 
 func (h *Handler) promptPromoUses(ctx context.Context, b *bot.Bot, msg *models.Message, lang string) {
@@ -113,10 +114,11 @@ func (h *Handler) promptPromoUses(ctx context.Context, b *bot.Bot, msg *models.M
 		kb = append(kb, []models.InlineKeyboardButton{{Text: label, CallbackData: fmt.Sprintf("%s?u=%d", CallbackPromoCreate, u)}})
 	}
 	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackReferral}})
-	_, _ = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params2 := &bot.EditMessageTextParams{
 		ChatID:      msg.Chat.ID,
 		MessageID:   msg.ID,
 		Text:        h.translation.GetText(lang, "promo_choose_uses"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	_, _ = SafeEditMessageText(ctx, b, msg, params2)
 }

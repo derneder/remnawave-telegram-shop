@@ -46,13 +46,18 @@ func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(lang, "other_menu_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		errMsg := err.Error()
 		if !strings.Contains(errMsg, "there is no text in the message to edit") {
@@ -100,13 +105,18 @@ func (h *Handler) simpleBack(ctx context.Context, b *bot.Bot, update *models.Upd
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		slog.Error("send simple back", "err", err)
 	}
@@ -252,13 +262,18 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		return
 	}
 
-	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	paramsShort := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        fmt.Sprintf(h.translation.GetText(lang, "short_created_text"), shortURL),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgShort *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgShort = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsgShort, paramsShort)
 	if err != nil {
 		slog.Error("send short", "err", err)
 	}
@@ -291,13 +306,18 @@ func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	paramsList := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgList *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgList = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsgList, paramsList)
 	if err != nil {
 		slog.Error("send short list", "err", err)
 	}
@@ -324,13 +344,18 @@ func (h *Handler) ProxyCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	paramsProxy := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
+	}
+	var curMsgProxy *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgProxy = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsgProxy, paramsProxy)
 	if err != nil {
 		slog.Error("send proxy", "err", err)
 	}

@@ -122,13 +122,18 @@ func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	inlineKeyboard := h.buildStartKeyboard(existingCustomer, langCode)
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "account_menu_text"), callback.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, existingCustomer, langCode)
-	_, err = b.EditMessageText(ctxWithTime, &bot.EditMessageTextParams{
+	params := &bot.EditMessageTextParams{
 		ChatID:      callback.Message.Message.Chat.ID,
 		MessageID:   callback.Message.Message.ID,
 		ParseMode:   models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard},
 		Text:        text,
-	})
+	}
+	var curMsg *models.Message
+	if callback.Message.Message != nil {
+		curMsg = callback.Message.Message
+	}
+	_, err = SafeEditMessageText(ctxWithTime, b, curMsg, params)
 	if err != nil {
 		slog.Error("Error sending /start message", "err", err)
 	}

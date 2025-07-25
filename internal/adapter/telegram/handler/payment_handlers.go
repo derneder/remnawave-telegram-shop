@@ -66,7 +66,7 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 	if customer != nil {
 		bal = int(customer.Balance)
 	}
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	params := &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
@@ -74,7 +74,12 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 			InlineKeyboard: keyboard,
 		},
 		Text: fmt.Sprintf(h.translation.GetText(langCode, "choose_plan_text"), bal, config.Price1(), config.Price3(), config.Price6()),
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsg, params)
 
 	if err != nil {
 		slog.Error("Error sending buy message", "err", err)
@@ -99,13 +104,18 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackBuy},
 	})
 
-	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
+	rmParams := &bot.EditMessageReplyMarkupParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: keyboard,
 		},
-	})
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageReplyMarkup(ctx, b, curMsg, rmParams)
 
 	if err != nil {
 		slog.Error("Error sending sell message", "err", err)
@@ -158,7 +168,7 @@ func (h *Handler) PaymentCallbackHandler(ctx context.Context, b *bot.Bot, update
 
 	langCode := update.CallbackQuery.From.LanguageCode
 
-	message, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
+	rmParams2 := &bot.EditMessageReplyMarkupParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{
@@ -169,7 +179,12 @@ func (h *Handler) PaymentCallbackHandler(ctx context.Context, b *bot.Bot, update
 				},
 			},
 		},
-	})
+	}
+	var curMsg2 *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg2 = update.CallbackQuery.Message.Message
+	}
+	message, err := SafeEditMessageReplyMarkup(ctx, b, curMsg2, rmParams2)
 	if err != nil {
 		slog.Error("Error updating sell message", "err", err)
 		return
@@ -223,13 +238,18 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 		{{Text: h.translation.GetText(lang, "back_to_account_button"), CallbackData: CallbackStart}},
 	}
 
-	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
+	paramsBalance := &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
-	})
+	}
+	var curMsgB *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsgB = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageText(ctx, b, curMsgB, paramsBalance)
 	if err != nil {
 		slog.Error("Error sending balance message", "err", err)
 	}
@@ -305,11 +325,16 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 	keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackTopup}})
 
-	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
+	rmParams3 := &bot.EditMessageReplyMarkupParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
-	})
+	}
+	var curMsg3 *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg3 = update.CallbackQuery.Message.Message
+	}
+	_, err := SafeEditMessageReplyMarkup(ctx, b, curMsg3, rmParams3)
 	if err != nil {
 		slog.Error("Error sending topup methods", "err", err)
 	}

@@ -59,3 +59,30 @@ func SafeEditMessageText(ctx context.Context, b *bot.Bot, current *models.Messag
 	}
 	return msg, nil
 }
+
+// SafeEditMessageReplyMarkup edits a message's reply markup if it differs from the current one.
+// It also ignores the "message is not modified" telegram error.
+func SafeEditMessageReplyMarkup(ctx context.Context, b *bot.Bot, current *models.Message, params *bot.EditMessageReplyMarkupParams) (*models.Message, error) {
+	var newMarkup *models.InlineKeyboardMarkup
+	switch m := params.ReplyMarkup.(type) {
+	case models.InlineKeyboardMarkup:
+		newMarkup = &m
+	case *models.InlineKeyboardMarkup:
+		newMarkup = m
+	}
+
+	if current != nil {
+		if inlineKeyboardEqual(current.ReplyMarkup, newMarkup) {
+			return current, nil
+		}
+	}
+
+	msg, err := b.EditMessageReplyMarkup(ctx, params)
+	if err != nil {
+		if errors.Is(err, bot.ErrorBadRequest) && strings.Contains(err.Error(), "message is not modified") {
+			return current, nil
+		}
+		return nil, err
+	}
+	return msg, nil
+}
