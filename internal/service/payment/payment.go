@@ -15,6 +15,7 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/utils"
 	"remnawave-tg-shop-bot/internal/repository/pg"
 	custrepo "remnawave-tg-shop-bot/internal/service/customer"
+	referralrepo "remnawave-tg-shop-bot/internal/service/referral"
 	"remnawave-tg-shop-bot/internal/ui"
 	"strings"
 	"time"
@@ -32,7 +33,7 @@ type PaymentService struct {
 	messenger                tg.Messenger
 	translation              *translation.Manager
 	providers                map[domainpurchase.InvoiceType]Provider
-	referralRepository       *pg.ReferralRepository
+	referralRepository       referralrepo.Repository
 	promocodeRepository      *pg.PromocodeRepository
 	promocodeUsageRepository *pg.PromocodeUsageRepository
 	cache                    *cache.Cache
@@ -56,7 +57,7 @@ func NewPaymentService(
 	customerRepository custrepo.Repository,
 	messenger tg.Messenger,
 	providers []Provider,
-	referralRepository *pg.ReferralRepository,
+	referralRepository referralrepo.Repository,
 	promocodeRepository *pg.PromocodeRepository,
 	promocodeUsageRepository *pg.PromocodeUsageRepository,
 	cache *cache.Cache,
