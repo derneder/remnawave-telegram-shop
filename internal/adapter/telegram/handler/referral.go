@@ -425,7 +425,6 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 			ChatID:    chatID,
 			MessageID: msgID,
 			ParseMode: models.ParseModeHTML,
-			// TODO: Серега, нужен текст. БУКАВЫ
 			Text:        tm.GetText(langCode, "promo_active_when_delete"),
 			ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 		})
@@ -444,7 +443,6 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
-		// TODO: Серега, нужен текст. БУКАВЫ
 		Text:        tm.GetText(langCode, "promo_confirm_when_delete"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 	})
