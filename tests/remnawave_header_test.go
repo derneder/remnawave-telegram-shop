@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	remnawave "remnawave-tg-shop-bot/internal/adapter/remnawave"
 	"remnawave-tg-shop-bot/internal/pkg/config"
 )
 
@@ -28,7 +29,10 @@ func TestHeaderTransport(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := NewClient(srv.URL, "token", "local")
+	c, err := remnawave.NewClient(srv.URL, "token", "local")
+	if err != nil {
+		t.Fatalf("client: %v", err)
+	}
 	if err := c.Ping(context.Background()); err != nil {
 		t.Fatalf("ping: %v", err)
 	}

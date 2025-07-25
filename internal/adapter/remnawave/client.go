@@ -52,7 +52,7 @@ func (t *headerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return t.base.RoundTrip(r)
 }
 
-func NewClient(baseURL, token, mode string) *Client {
+func NewClient(baseURL, token, mode string) (*Client, error) {
 	xApiKey := config.GetXApiKey()
 	local := mode == "local"
 
@@ -66,9 +66,9 @@ func NewClient(baseURL, token, mode string) *Client {
 
 	api, err := remapi.NewClient(baseURL, remapi.StaticToken{Token: token}, remapi.WithClient(client))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return &Client{client: api}
+	return &Client{client: api}, nil
 }
 
 // NewClientWithAPI is a helper exported for tests.
