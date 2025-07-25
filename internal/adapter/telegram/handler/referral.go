@@ -187,17 +187,13 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 
 	bonusTotal := subscribed * config.GetReferralBonus()
 
-	refLink := fmt.Sprintf("https://telegram.me/share/url?url=https://t.me/%s?start=ref_%d", update.CallbackQuery.From.Username, customer.TelegramID)
+	refLink := fmt.Sprintf("https://t.me/%s?start=ref_%d", update.CallbackQuery.From.Username, customer.TelegramID)
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "referral_system_text"), invited, subscribed, bonusTotal, refLink, config.GetReferralBonus())
 
 	kb := [][]models.InlineKeyboardButton{
-		{
-			{Text: h.translation.GetText(langCode, "share_referral_button"), URL: refLink},
-		},
-		{
-			{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackReferral},
-		},
+		{{Text: h.translation.GetText(langCode, "invite_friend_button"), URL: refLink}},
+		{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackReferral}},
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
@@ -247,6 +243,34 @@ func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 	if err != nil {
 		slog.Error("Error sending promo codes menu", "err", err)
 	}
+}
+
+func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	lang := update.Message.From.LanguageCode
+	customer, err := h.findOrCreateCustomer(ctx, update.Message.Chat.ID, lang)
+	if err != nil {
+		slog.Error("find or create customer", "err", err)
+		return
+	}
+
+	parts := strings.Fields(update.Message.Text)
+	if len(parts) < 2 {
+		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "promo_invalid")})
+		return
+	}
+
+	code := parts[1]
+	if err := h.paymentService.ApplyPromocode(ctx, customer, code); err != nil {
+		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "promo_invalid")})
+		return
+	}
+
+	until := ""
+	if customer.ExpireAt != nil {
+		until = customer.ExpireAt.Format("02.01.2006 15:04")
+	}
+
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf(h.translation.GetText(lang, "promo_applied"), until)})
 }
 
 func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

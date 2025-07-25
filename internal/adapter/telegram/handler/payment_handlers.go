@@ -99,9 +99,13 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackBuy},
 	})
 
-	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
+	text := fmt.Sprintf(h.translation.GetText(langCode, "selected_months"), month)
+
+	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
+		ParseMode: models.ParseModeHTML,
+		Text:      text,
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: keyboard,
 		},
