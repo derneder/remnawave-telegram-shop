@@ -10,7 +10,7 @@ purchase and manage subscriptions through Telegram with multiple payment system 
 - `/sync` - Poll users from remnawave and synchronize them with the database. Remove all users which not present in
   remnawave.
 - `/addsubpromo <CODE> <days> <limit>` - create subscription promo for given days and activation limit (0 for infinite).
-- `/addbalpromo <amount> <limit>` - create balance promo adding amount (in cents) with generated code.
+- `/addbalpromo <amount> <limit>` - create balance promo adding amount (in rubles) with generated code.
 
 ### Payment Systems
 

@@ -364,7 +364,7 @@ func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincust
 		return fmt.Errorf("invalid promocode")
 	}
 	if promo.Type == 2 {
-		newBal := customer.Balance + float64(promo.Amount)
+		newBal := customer.Balance + float64(promo.Amount)/100
 		if err := s.customerRepository.UpdateFields(ctx, customer.ID, map[string]interface{}{"balance": newBal}); err != nil {
 			return err
 		}

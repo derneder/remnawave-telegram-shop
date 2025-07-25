@@ -345,7 +345,15 @@ func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		if !c.Active {
 			status = tm.GetText(langCode, "promo_status_frozen")
 		}
-		textBuilder.WriteString(fmt.Sprintf("\n%s — %d мес. — осталось %d/%d — %s", c.Code, c.Months, c.UsesLeft, total, status))
+		if c.Type == 2 {
+			textBuilder.WriteString(fmt.Sprintf("\n%s — %d ₽ — осталось %d/%d — %s", c.Code, c.Amount/100, c.UsesLeft, total, status))
+		} else {
+			days := c.Days
+			if days == 0 {
+				days = c.Months * 30
+			}
+			textBuilder.WriteString(fmt.Sprintf("\n%s — %d d — осталось %d/%d — %s", c.Code, days, c.UsesLeft, total, status))
+		}
 		if c.Active {
 			kb = append(kb, []models.InlineKeyboardButton{
 				{Text: tm.GetText(langCode, "promo_freeze_button"), CallbackData: fmt.Sprintf("%s:%d", CallbackPromoFreeze, c.ID)},
