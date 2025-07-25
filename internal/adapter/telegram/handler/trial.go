@@ -10,8 +10,8 @@ import (
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/contextkey"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 	"remnawave-tg-shop-bot/internal/ui"
-	"remnawave-tg-shop-bot/utils"
 )
 
 func (h *Handler) TrialCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

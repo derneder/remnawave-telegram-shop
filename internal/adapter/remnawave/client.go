@@ -15,7 +15,7 @@ import (
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/contextkey"
-	"remnawave-tg-shop-bot/utils"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 )
 
 type remAPI interface {

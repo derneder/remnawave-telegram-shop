@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"remnawave-tg-shop-bot/utils"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"

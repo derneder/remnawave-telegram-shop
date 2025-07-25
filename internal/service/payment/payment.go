@@ -12,10 +12,10 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/contextkey"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 	"remnawave-tg-shop-bot/internal/repository/pg"
 	custrepo "remnawave-tg-shop-bot/internal/service/customer"
 	"remnawave-tg-shop-bot/internal/ui"
-	"remnawave-tg-shop-bot/utils"
 	"strings"
 	"time"
 

@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"remnawave-tg-shop-bot/utils"
+	"remnawave-tg-shop-bot/internal/pkg/utils"
 )
 
 func TestMaskHalf(t *testing.T) {
