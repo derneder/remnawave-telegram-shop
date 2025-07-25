@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -119,17 +118,12 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		slog.Error("find customer", "err", err)
 		return
 	}
-	resp, err := http.Get(*customer.SubscriptionLink)
+	client := http.Client{Timeout: 5 * time.Second}
+	data, err := httpGetWithRetry(ctx, &client, *customer.SubscriptionLink)
 	if err != nil {
 		slog.Error("download keys", "err", err)
 		return
 	}
-	defer func() {
-		if cerr := resp.Body.Close(); cerr != nil {
-			slog.Error("close body", "err", cerr)
-		}
-	}()
-	data, _ := io.ReadAll(resp.Body)
 
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
 	chatID, _, ok := callbackChatMessage(update)
@@ -158,17 +152,12 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 	}
 	encoded := url.QueryEscape(*customer.SubscriptionLink)
 	qrURL := "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encoded
-	resp, err := http.Get(qrURL) //nolint:gosec // variable URL is intended
+	client := http.Client{Timeout: 5 * time.Second}
+	data, err := httpGetWithRetry(ctx, &client, qrURL) //nolint:gosec // variable URL is intended
 	if err != nil {
 		slog.Error("fetch qr", "err", err)
 		return
 	}
-	defer func() {
-		if cerr := resp.Body.Close(); cerr != nil {
-			slog.Error("close body", "err", cerr)
-		}
-	}()
-	data, _ := io.ReadAll(resp.Body)
 	kb := ui.ConnectKeyboard(lang, "back_button", CallbackOther)
 	chatID, _, ok := callbackChatMessage(update)
 	if !ok {
@@ -197,42 +186,15 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 	api := "https://tinyurl.com/api-create.php?url=" + url.QueryEscape(*customer.SubscriptionLink)
 	client := http.Client{Timeout: 5 * time.Second}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, api, nil)
+	data, err := httpGetWithRetry(ctx, &client, api)
 	if err != nil {
-		slog.Error("new request", "err", err)
-		return
-	}
-
-	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode >= http.StatusBadRequest {
-		if resp != nil && resp.Body != nil {
-			if cerr := resp.Body.Close(); cerr != nil {
-				slog.Error("close body", "err", cerr)
-			}
-		}
 		alt := "https://is.gd/create.php?format=simple&url=" + url.QueryEscape(*customer.SubscriptionLink)
-		req, err = http.NewRequestWithContext(ctx, http.MethodGet, alt, nil)
+		data, err = httpGetWithRetry(ctx, &client, alt)
 		if err != nil {
-			slog.Error("new alt request", "err", err)
-			return
-		}
-		resp, err = client.Do(req)
-		if err != nil || resp.StatusCode >= http.StatusBadRequest {
-			if resp != nil && resp.Body != nil {
-				if cerr := resp.Body.Close(); cerr != nil {
-					slog.Error("close body", "err", cerr)
-				}
-			}
 			slog.Error("shorten", "err", err)
 			return
 		}
 	}
-	defer func() {
-		if cerr := resp.Body.Close(); cerr != nil {
-			slog.Error("close body", "err", cerr)
-		}
-	}()
-	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		slog.Error("read short url", "err", err)
 		return
