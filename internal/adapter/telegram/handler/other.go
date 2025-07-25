@@ -183,7 +183,7 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		slog.Error("find customer", "err", err)
 		return
 	}
-	api := "https://tinyurl.com/api-create.php?url=" + url.QueryEscape(*customer.SubscriptionLink)
+	api := "https://clck.ru/--?url=" + url.QueryEscape(*customer.SubscriptionLink)
 	client := http.Client{Timeout: 5 * time.Second}
 
 	data, err := httpGetWithRetry(ctx, &client, api)
