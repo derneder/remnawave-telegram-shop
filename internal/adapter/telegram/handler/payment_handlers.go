@@ -99,9 +99,36 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackBuy},
 	})
 
-	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
+	customer, _ := h.customerRepository.FindByTelegramId(ctx, chatID)
+	bal := 0
+	if customer != nil {
+		bal = int(customer.Balance)
+	}
+
+	header := h.translation.GetText(langCode, "choose_plan_header")
+	balanceLine := fmt.Sprintf(h.translation.GetText(langCode, "choose_plan_balance"), bal)
+
+	price := 0
+	monthKey := "month_" + month
+	switch month {
+	case "1":
+		price = config.Price1()
+	case "3":
+		price = config.Price3()
+	case "6":
+		price = config.Price6()
+	}
+
+	planLine := fmt.Sprintf(h.translation.GetText(langCode, "choose_plan_line"), h.translation.GetText(langCode, monthKey), price)
+	footer := h.translation.GetText(langCode, "choose_plan_footer")
+
+	text := header + "\n\n" + balanceLine + "\n\n" + planLine + "\n\n" + footer
+
+	_, err := b.EditMessageText(ctx, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
+		ParseMode: models.ParseModeHTML,
+		Text:      text,
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: keyboard,
 		},

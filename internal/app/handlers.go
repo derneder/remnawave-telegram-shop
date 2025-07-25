@@ -12,6 +12,7 @@ func (a *App) InitHandlers(h *handler.Handler) {
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/menu", bot.MatchTypeExact, h.MenuCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, h.HelpCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/promo", bot.MatchTypeExact, h.PromoCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/promocode", bot.MatchTypePrefix, h.PromocodeCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/connect", bot.MatchTypeExact, h.ConnectCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeMessageText, "/sync", bot.MatchTypeExact, h.SyncUsersCommandHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 

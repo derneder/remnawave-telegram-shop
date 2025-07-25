@@ -3,6 +3,10 @@ back_button: 🔙 Back
 month_1: 1 month
 month_3: 3 months
 month_6: 6 months
+choose_plan_header: "📌 Choose subscription period 📌"
+choose_plan_balance: "💎 Current balance: %d rubles"
+choose_plan_line: "✨ %s — %d rubles"
+choose_plan_footer: "⭐ Payment will be deducted from your personal account."
 crypto_button: ₿ Cryptocurrency
 pay_button: 💸 Pay
 subscription_active: 'Your subscription is valid until: %s'
@@ -48,7 +52,7 @@ referral_system_text: "🎉 Welcome to your referral link management menu!\n\nHe
   invited user will get 100 rubles on their balance."
 referral_bonus_granted: You have received a referral bonus!
 stars_button: ' ⭐Telegram Stars'
-share_referral_button: Share!
+invite_friend_button: Invite a friend
 create_promocode_button: 🎁 Create new code
 promo_list_button: 📜 View all codes
 personal_codes_text: "💌 Create unique subscription codes 💌\n\nIn this section you
@@ -126,7 +130,6 @@ account_info_header: "<b>📰 Account info:</b>\n\n"
 account_info_balance: "├ 💰 Balance: <b>%.0f ₽</b>\n"
 account_info_expire: "├ ⏰ Subscription until: <b>%s</b>\n"
 account_info_status: "├ 🟢 Status: <b>%s</b>\n"
-account_info_last_client: "├ 📶 Last client: <b>%s</b>\n\n"
 traffic_info_header: "<b>🌐 Traffic info:</b>\n\n"
 traffic_limit: "├ 📊 Daily limit: <b>%s / %s</b>\n"
 traffic_total_used: "├ ⚡ Total used: <b>%s</b>\n"

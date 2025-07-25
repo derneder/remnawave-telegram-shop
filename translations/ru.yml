@@ -3,6 +3,10 @@ back_button: 🔙 Назад
 month_1: 1 месяц
 month_3: 3 месяца
 month_6: 6 месяцев
+choose_plan_header: "📌 Выберите срок подписки на сервис 📌"
+choose_plan_balance: "💎 Текущий баланс: %d рублей"
+choose_plan_line: "✨ %s — %d рублей"
+choose_plan_footer: "⭐️ Оплата будет списана с вашего личного счёта в Личном Кабинете."
 crypto_button: ₿ Криптовалютой
 pay_button: 💸 Оплатить
 subscription_active: 'Ваша подписка действует до: %s'
@@ -55,7 +59,7 @@ referral_system_text: "🎉 Добро пожаловать в меню упра
   на свой баланс."
 referral_bonus_granted: Вы получили бонус за реферала!
 stars_button: ' ⭐Telegram Stars'
-share_referral_button: Поделиться!
+invite_friend_button: "Пригласить друга"
 create_promocode_button: 🎁 Создать новый код
 promo_list_button: 📜 Посмотреть список всех кодов
 personal_codes_text: "💌 Создание уникальных кодов для подписок 💌\n\nВ этом разделе
@@ -145,7 +149,6 @@ account_info_header: "<b>📰 Информация об аккаунте:</b>\n\
 account_info_balance: "├ 💰 Баланс: <b>%.0f ₽</b>\n"
 account_info_expire: "├ ⏰ Подписка до: <b>%s</b>\n"
 account_info_status: "├ 🟢 Статус: <b>%s</b>\n"
-account_info_last_client: "├ 📶 Последний клиент: <b>%s</b>\n\n"
 traffic_info_header: "<b>🌐 Информация о трафике:</b>\n\n"
 traffic_limit: "├ 📊 Лимит в сутки: <b>%s / %s</b>\n"
 traffic_total_used: "├ ⚡ Всего использовано: <b>%s</b>\n"

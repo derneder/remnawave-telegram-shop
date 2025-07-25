@@ -46,14 +46,16 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 				slog.Error("error parsing referrer id", "err", err)
 				return
 			}
-			_, err = h.customerRepository.FindByTelegramId(ctx, referrerId)
-			if err == nil {
-				_, err := h.referralRepository.Create(ctx, referrerId, existingCustomer.TelegramID)
-				if err != nil {
-					slog.Error("error creating referral", "err", err)
-					return
+			referrer, err := h.customerRepository.FindByTelegramId(ctx, referrerId)
+			if err == nil && referrer != nil {
+				if _, err := h.referralRepository.Create(ctx, referrerId, existingCustomer.TelegramID); err == nil {
+					bonus := float64(config.GetReferralBonus())
+					_ = h.customerRepository.UpdateFields(ctx, referrer.ID, map[string]interface{}{"balance": referrer.Balance + bonus})
+					_ = h.customerRepository.UpdateFields(ctx, existingCustomer.ID, map[string]interface{}{"balance": bonus})
+					_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: h.translation.GetText(referrer.Language, "referral_bonus_granted")})
+					_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: existingCustomer.TelegramID, Text: h.translation.GetText(langCode, "referral_bonus_granted")})
+					slog.Info("referral created", "referrerId", utils.MaskHalfInt64(referrerId), "refereeId", utils.MaskHalfInt64(existingCustomer.TelegramID))
 				}
-				slog.Info("referral created", "referrerId", utils.MaskHalfInt64(referrerId), "refereeId", utils.MaskHalfInt64(existingCustomer.TelegramID))
 			}
 		}
 	} else {
@@ -73,26 +75,10 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 		startKb = append(startKb, []models.InlineKeyboardButton{{Text: h.translation.GetText(langCode, "channel_button"), URL: config.ChannelURL()}})
 	}
 
-	m, err := b.SendMessage(ctx, &bot.SendMessageParams{
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
-		Text:        "🧹",
 		ReplyMarkup: models.ReplyKeyboardRemove{RemoveKeyboard: true},
 	})
-
-	if err != nil {
-		slog.Error("Error sending removing reply keyboard", "err", err)
-		return
-	}
-
-	_, err = b.DeleteMessage(ctx, &bot.DeleteMessageParams{
-		ChatID:    update.Message.Chat.ID,
-		MessageID: m.ID,
-	})
-
-	if err != nil {
-		slog.Error("Error deleting message", "err", err)
-		return
-	}
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "start_menu_text"), update.Message.From.FirstName)
 	_, err = b.SendMessage(ctx, &bot.SendMessageParams{
@@ -197,10 +183,6 @@ func (h *Handler) buildAccountInfo(ctx context.Context, customer *domaincustomer
 		if user.Status.Set {
 			status = string(user.Status.Value)
 		}
-		lastClient := "-"
-		if !user.LastConnectedNode.Null {
-			lastClient = user.LastConnectedNode.Value.GetNodeName()
-		}
 		start := time.Now().Truncate(24 * time.Hour)
 		usage, _ := h.paymentService.GetUserDailyUsage(ctx, user.UUID.String(), start, time.Now())
 		limit := 0.0
@@ -211,7 +193,6 @@ func (h *Handler) buildAccountInfo(ctx context.Context, customer *domaincustomer
 		info.WriteString(fmt.Sprintf(h.translation.GetText(lang, "account_info_balance"), customer.Balance))
 		info.WriteString(fmt.Sprintf(h.translation.GetText(lang, "account_info_expire"), expire))
 		info.WriteString(fmt.Sprintf(h.translation.GetText(lang, "account_info_status"), status))
-		info.WriteString(fmt.Sprintf(h.translation.GetText(lang, "account_info_last_client"), lastClient))
 		info.WriteString(h.translation.GetText(lang, "traffic_info_header"))
 		info.WriteString(fmt.Sprintf(h.translation.GetText(lang, "traffic_limit"), utils.FormatGB(usage), utils.FormatGB(limit)))
 		info.WriteString(fmt.Sprintf(h.translation.GetText(lang, "traffic_total_used"), utils.FormatGB(user.LifetimeUsedTrafficBytes)))
@@ -238,14 +219,10 @@ func (h *Handler) MenuCommandHandler(ctx context.Context, b *bot.Bot, update *mo
 	kb := h.buildStartKeyboard(customer, lang)
 	text := fmt.Sprintf(h.translation.GetText(lang, "account_menu_text"), update.Message.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, customer, lang)
 
-	m, err := b.SendMessage(ctxWithTime, &bot.SendMessageParams{
+	_, _ = b.SendMessage(ctxWithTime, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
-		Text:        "🧹",
 		ReplyMarkup: models.ReplyKeyboardRemove{RemoveKeyboard: true},
 	})
-	if err == nil {
-		_, _ = b.DeleteMessage(ctxWithTime, &bot.DeleteMessageParams{ChatID: update.Message.Chat.ID, MessageID: m.ID})
-	}
 
 	_, err = b.SendMessage(ctxWithTime, &bot.SendMessageParams{
 		ChatID:      update.Message.Chat.ID,
