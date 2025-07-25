@@ -204,14 +204,15 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 	}()
 	data, _ := io.ReadAll(resp.Body)
 	var kb [][]models.InlineKeyboardButton
-	text := fmt.Sprintf(h.translation.GetText(lang, "qr_text"), *customer.SubscriptionLink)
+	var text string
 	if config.GetMiniAppURL() != "" {
-		text = fmt.Sprintf(h.translation.GetText(lang, "qr_text"), "")
+		text = h.translation.GetText(lang, "qr_text_no_link")
 		kb = [][]models.InlineKeyboardButton{
 			{{Text: "Открыть мини-приложение", URL: config.GetMiniAppURL()}},
 		}
 		kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}})
 	} else {
+		text = fmt.Sprintf(h.translation.GetText(lang, "qr_text"), *customer.SubscriptionLink)
 		kb = ui.ConnectKeyboard(lang, "back_button", CallbackOther)
 	}
 	chatID, _, err := getCallbackIDs(update)
