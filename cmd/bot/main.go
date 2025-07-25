@@ -22,6 +22,7 @@ import (
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
 	custsvc "remnawave-tg-shop-bot/internal/service/customer"
 	"remnawave-tg-shop-bot/internal/service/payment"
+	"remnawave-tg-shop-bot/internal/service/promotion"
 	syncsvc "remnawave-tg-shop-bot/internal/service/sync"
 )
 
@@ -52,6 +53,7 @@ func main() {
 	referralRepo := pg.NewReferralRepository(a.Pool)
 	promoRepo := pg.NewPromocodeRepository(a.Pool)
 	promoUsageRepo := pg.NewPromocodeUsageRepository(a.Pool)
+	promoSvc := promotion.NewService(promoRepo)
 
 	remClient, err := remnawave.NewClient(config.RemnawaveUrl(), config.RemnawaveToken(), config.RemnawaveMode())
 	if err != nil {
@@ -72,7 +74,7 @@ func main() {
 
 	syncSvc := syncsvc.NewSyncService(remClient, customerRepo)
 
-	h := tgHandler.NewHandler(syncSvc, paySvc, tm, customerRepo, purchaseRepo, referralRepo, promoRepo, promoUsageRepo, a.Cache)
+	h := tgHandler.NewHandler(syncSvc, paySvc, tm, customerRepo, purchaseRepo, referralRepo, promoRepo, promoUsageRepo, promoSvc, a.Cache)
 
 	httpMux := http.NewServeMux()
 	httpMux.Handle("/healthcheck", observability.Handler())

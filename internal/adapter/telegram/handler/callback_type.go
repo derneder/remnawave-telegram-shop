@@ -32,4 +32,6 @@ const (
 	CallbackLocations               = "locations"
 	CallbackRegenKey                = "regen_key"
 	CallbackProxy                   = "proxy"
+	CallbackAdminSubPromo           = "admin_subpromo"
+	CallbackAdminBalPromo           = "admin_balpromo"
 )

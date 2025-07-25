@@ -1,0 +1,4 @@
+ALTER TABLE promocode
+    DROP COLUMN IF EXISTS amount,
+    DROP COLUMN IF EXISTS days,
+    DROP COLUMN IF EXISTS type;

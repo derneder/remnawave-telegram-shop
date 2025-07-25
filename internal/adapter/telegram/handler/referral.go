@@ -248,16 +248,18 @@ func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 	}
 
 	kb := [][]models.InlineKeyboardButton{
-		{
-			{Text: tm.GetText(langCode, "create_promocode_button"), CallbackData: CallbackPromoCreate},
-		},
-		{
-			{Text: tm.GetText(langCode, "promo_list_button"), CallbackData: CallbackPromoList},
-		},
-		{
-			{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral},
-		},
+		{{Text: tm.GetText(langCode, "create_promocode_button"), CallbackData: CallbackPromoCreate}},
 	}
+	if config.IsAdmin(update.CallbackQuery.From.ID) {
+		kb = append(kb,
+			[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "admin_subpromo_button"), CallbackData: CallbackAdminSubPromo}},
+			[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "admin_balpromo_button"), CallbackData: CallbackAdminBalPromo}},
+		)
+	}
+	kb = append(kb,
+		[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "promo_list_button"), CallbackData: CallbackPromoList}},
+		[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral}},
+	)
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {
@@ -343,7 +345,15 @@ func (h *Handler) PromoListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		if !c.Active {
 			status = tm.GetText(langCode, "promo_status_frozen")
 		}
-		textBuilder.WriteString(fmt.Sprintf("\n%s — %d мес. — осталось %d/%d — %s", c.Code, c.Months, c.UsesLeft, total, status))
+		if c.Type == 2 {
+			textBuilder.WriteString(fmt.Sprintf("\n%s — %d ₽ — осталось %d/%d — %s", c.Code, c.Amount/100, c.UsesLeft, total, status))
+		} else {
+			days := c.Days
+			if days == 0 {
+				days = c.Months * 30
+			}
+			textBuilder.WriteString(fmt.Sprintf("\n%s — %d d — осталось %d/%d — %s", c.Code, days, c.UsesLeft, total, status))
+		}
 		if c.Active {
 			kb = append(kb, []models.InlineKeyboardButton{
 				{Text: tm.GetText(langCode, "promo_freeze_button"), CallbackData: fmt.Sprintf("%s:%d", CallbackPromoFreeze, c.ID)},
