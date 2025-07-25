@@ -43,6 +43,13 @@ func New(ctx context.Context) (*App, error) {
 		return nil, fmt.Errorf("connect db: %w", err)
 	}
 
+	if err := pg.RunMigrations(ctx, &pg.MigrationConfig{
+		Direction:      "up",
+		MigrationsPath: "./db/migrations",
+	}, pool); err != nil {
+		return nil, fmt.Errorf("run migrations: %w", err)
+	}
+
 	b, err := bot.New(config.TelegramToken(), bot.WithMiddlewares(
 		func(next bot.HandlerFunc) bot.HandlerFunc {
 			return func(ctx context.Context, b *bot.Bot, update *models.Update) {

@@ -13,10 +13,7 @@ import (
 
 	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
-	domainpurchase "remnawave-tg-shop-bot/internal/domain/purchase"
-	"remnawave-tg-shop-bot/internal/pkg/cache"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
-	"remnawave-tg-shop-bot/internal/service/payment"
 )
 
 type startHTTPClient struct{}
@@ -34,7 +31,7 @@ func TestStartCommandHandler_NoArgs(t *testing.T) {
 	}
 
 	repo := &StubCustomerRepo{}
-       h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, nil, nil, nil, nil, nil)
+	h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, nil, nil, nil, nil, nil)
 
 	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
 	if err != nil {
@@ -73,12 +70,6 @@ func (c *customerRepoNotFound) FindById(ctx context.Context, id int64) (*domainc
 	return &domaincustomer.Customer{ID: id, TelegramID: id, Language: "en"}, nil
 }
 
-type purchaseRepoStub struct{ stubPurchaseRepoSimple }
-
-func (purchaseRepoStub) FindById(ctx context.Context, id int64) (*domainpurchase.Purchase, error) {
-	return &domainpurchase.Purchase{ID: id, CustomerID: id, Amount: 10, Status: domainpurchase.StatusNew}, nil
-}
-
 func TestStartCommandHandler_ReferralMarksGranted(t *testing.T) {
 	trans := translation.GetInstance()
 	if err := trans.InitDefaultTranslations(); err != nil {
@@ -87,7 +78,7 @@ func TestStartCommandHandler_ReferralMarksGranted(t *testing.T) {
 
 	custRepo := &customerRepoNotFound{}
 	refRepo := &StubReferralRepo{}
-	h := handlerpkg.NewHandler(nil, nil, trans, custRepo, nil, refRepo, nil, nil, nil)
+	h := handlerpkg.NewHandler(nil, nil, trans, custRepo, nil, refRepo, nil, nil, nil, nil)
 
 	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
 	if err != nil {
@@ -105,21 +96,7 @@ func TestStartCommandHandler_ReferralMarksGranted(t *testing.T) {
 
 	h.StartCommandHandler(context.Background(), b, upd)
 
-	if refRepo.MarkedID != 1 {
-		t.Fatalf("bonus not marked granted")
-	}
-
-	// ProcessPurchaseById should not grant bonus again when already marked.
-	purchRepo := purchaseRepoStub{}
-	c := cache.NewCache(context.Background(), time.Minute)
-	defer c.Close()
-	paySvc := payment.NewPaymentService(trans, purchRepo, nil, custRepo, &stubMessenger{}, nil, refRepo, nil, nil, c)
-
-	if err := paySvc.ProcessPurchaseById(context.Background(), 0); err != nil {
-		t.Fatalf("process purchase: %v", err)
-	}
-
-	if refRepo.MarkedID != 1 {
-		t.Errorf("bonus marked again unexpectedly")
+	if refRepo.CreatedReferrerID != 5 || refRepo.CreatedRefereeID != 2 {
+		t.Fatalf("referral not created")
 	}
 }

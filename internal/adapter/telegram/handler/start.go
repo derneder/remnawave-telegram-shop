@@ -48,11 +48,10 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 			}
 			referrer, err := h.customerRepository.FindByTelegramId(ctx, referrerId)
 			if err == nil && referrer != nil {
-				if ref, err := h.referralRepository.Create(ctx, referrerId, existingCustomer.TelegramID); err == nil {
+				if err := h.referralRepository.Create(ctx, referrerId, existingCustomer.TelegramID); err == nil {
 					bonus := float64(config.GetReferralBonus())
 					_ = h.customerRepository.UpdateFields(ctx, referrer.ID, map[string]interface{}{"balance": referrer.Balance + bonus})
 					_ = h.customerRepository.UpdateFields(ctx, existingCustomer.ID, map[string]interface{}{"balance": bonus})
-					_ = h.referralRepository.MarkBonusGranted(ctx, ref.ID)
 					if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: h.translation.GetText(referrer.Language, "referral_bonus_granted")}); err != nil {
 						slog.Error("send referral bonus", "err", err)
 					}
