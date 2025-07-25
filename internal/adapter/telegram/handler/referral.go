@@ -251,10 +251,10 @@ func (h *Handler) PromoCodesCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		{{Text: tm.GetText(langCode, "create_promocode_button"), CallbackData: CallbackPromoCreate}},
 	}
 	if config.IsAdmin(update.CallbackQuery.From.ID) {
-		kb = append(kb, []models.InlineKeyboardButton{
-			{Text: tm.GetText(langCode, "admin_subpromo_button"), CallbackData: CallbackAdminSubPromo},
-			{Text: tm.GetText(langCode, "admin_balpromo_button"), CallbackData: CallbackAdminBalPromo},
-		})
+		kb = append(kb,
+			[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "admin_subpromo_button"), CallbackData: CallbackAdminSubPromo}},
+			[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "admin_balpromo_button"), CallbackData: CallbackAdminBalPromo}},
+		)
 	}
 	kb = append(kb,
 		[]models.InlineKeyboardButton{{Text: tm.GetText(langCode, "promo_list_button"), CallbackData: CallbackPromoList}},
