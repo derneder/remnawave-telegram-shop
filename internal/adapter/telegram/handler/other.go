@@ -119,7 +119,18 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		slog.Error("find customer", "err", err)
 		return
 	}
-	resp, err := http.Get(*customer.SubscriptionLink)
+	subURL, err := url.Parse(*customer.SubscriptionLink)
+	if err != nil || subURL.Scheme != "https" {
+		slog.Error("invalid subscription url", "err", err)
+		return
+	}
+	client := http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, subURL.String(), nil)
+	if err != nil {
+		slog.Error("new request", "err", err)
+		return
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		slog.Error("download keys", "err", err)
 		return
@@ -162,7 +173,18 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 	}
 	encoded := url.QueryEscape(*customer.SubscriptionLink)
 	qrURL := "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encoded
-	resp, err := http.Get(qrURL) //nolint:gosec // variable URL is intended
+	parsed, err := url.Parse(qrURL)
+	if err != nil || parsed.Scheme != "https" {
+		slog.Error("invalid qr url", "err", err)
+		return
+	}
+	client := http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parsed.String(), nil)
+	if err != nil {
+		slog.Error("new request", "err", err)
+		return
+	}
+	resp, err := client.Do(req) //nolint:gosec // variable URL is intended
 	if err != nil {
 		slog.Error("fetch qr", "err", err)
 		return
