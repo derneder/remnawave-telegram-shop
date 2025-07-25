@@ -9,7 +9,9 @@ import (
 )
 
 func (h *Handler) SyncUsersCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	h.syncService.Sync(ctx)
+	if err := h.syncService.Sync(ctx); err != nil {
+		slog.Error("Error syncing users", "err", err)
+	}
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
 		Text:   "Users synced",
