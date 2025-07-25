@@ -112,6 +112,23 @@ func (h *Handler) simpleBack(ctx context.Context, b *bot.Bot, update *models.Upd
 	}
 }
 
+func allowedSubscriptionURL(link string) bool {
+	u, err := url.Parse(link)
+	if err != nil {
+		return false
+	}
+	if u.Scheme != "https" {
+		return false
+	}
+	host := strings.ToLower(u.Hostname())
+	hosts := config.SubscriptionAllowedHosts()
+	if len(hosts) == 0 {
+		return true
+	}
+	_, ok := hosts[host]
+	return ok
+}
+
 func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	lang := update.CallbackQuery.From.LanguageCode
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, lang)
@@ -119,7 +136,19 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		slog.Error("find customer", "err", err)
 		return
 	}
-	resp, err := http.Get(*customer.SubscriptionLink)
+	if !allowedSubscriptionURL(*customer.SubscriptionLink) {
+		slog.Error("subscription link not allowed")
+		return
+	}
+
+	client := http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, *customer.SubscriptionLink, nil)
+	if err != nil {
+		slog.Error("new request", "err", err)
+		return
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		slog.Error("download keys", "err", err)
 		return
@@ -158,7 +187,14 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 	}
 	encoded := url.QueryEscape(*customer.SubscriptionLink)
 	qrURL := "https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=" + encoded
-	resp, err := http.Get(qrURL) //nolint:gosec // variable URL is intended
+	client := http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, qrURL, nil)
+	if err != nil {
+		slog.Error("new request", "err", err)
+		return
+	}
+
+	resp, err := client.Do(req) //nolint:gosec // variable URL is intended
 	if err != nil {
 		slog.Error("fetch qr", "err", err)
 		return

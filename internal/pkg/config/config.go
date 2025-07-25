@@ -42,6 +42,7 @@ type config struct {
 	telegramProxyPort                                   int
 	telegramProxyKey                                    string
 	telegramProxyChannel                                string
+	subscriptionAllowedHosts                            map[string]struct{}
 }
 
 var conf config
@@ -224,6 +225,10 @@ func GetXApiKey() string {
 	return conf.xApiKey
 }
 
+func SubscriptionAllowedHosts() map[string]struct{} {
+	return conf.subscriptionAllowedHosts
+}
+
 const bytesInGigabyte = 1073741824
 
 func mustEnv(key string) string {
@@ -351,6 +356,18 @@ func InitConfig() {
 	conf.telegramProxyPort = envIntDefault("TELEGRAM_PROXY_PORT", 0)
 	conf.telegramProxyKey = os.Getenv("TELEGRAM_PROXY_KEY")
 	conf.telegramProxyChannel = os.Getenv("TELEGRAM_PROXY_CHANNEL")
+
+	conf.subscriptionAllowedHosts = func() map[string]struct{} {
+		v := os.Getenv("SUBSCRIPTION_ALLOWED_HOSTS")
+		hosts := make(map[string]struct{})
+		for _, h := range strings.Split(v, ",") {
+			h = strings.ToLower(strings.TrimSpace(h))
+			if h != "" {
+				hosts[h] = struct{}{}
+			}
+		}
+		return hosts
+	}()
 
 	conf.inboundUUIDs = func() map[uuid.UUID]uuid.UUID {
 		v := os.Getenv("INBOUND_UUIDS")

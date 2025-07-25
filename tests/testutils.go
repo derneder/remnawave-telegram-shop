@@ -31,6 +31,7 @@ func SetTestEnv(t *testing.T) {
 	t.Setenv("REFERRAL_BONUS", "0")
 	t.Setenv("CRYPTO_PAY_ENABLED", "false")
 	t.Setenv("TELEGRAM_STARS_ENABLED", "false")
+	t.Setenv("SUBSCRIPTION_ALLOWED_HOSTS", "example.com")
 }
 
 // MustGetEnvForTest fails the test if the environment variable is not set.

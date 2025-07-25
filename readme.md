@@ -97,6 +97,7 @@ The application requires the following environment variables to be set:
 | `TRIBUTE_WEBHOOK_URL`    | Path for webhook handler. Example: /example (https://www.uuidgenerator.net/version4)                                                         |
 | `TRIBUTE_API_KEY`        | Api key, which can be obtained via settings in Tribute app.                                                                                  |
 | `TRIBUTE_PAYMENT_URL`    | You payment url for Tribute. (Subscription telegram link)                                                                                    |
+| `SUBSCRIPTION_ALLOWED_HOSTS` | Comma-separated list of allowed domains for downloading subscription links |
 
 ## User Interface
 
