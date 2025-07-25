@@ -18,9 +18,9 @@ import (
 )
 
 func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	langCode := update.CallbackQuery.From.LanguageCode
@@ -115,9 +115,9 @@ func (h *Handler) BuyCallbackHandler(ctx context.Context, b *bot.Bot, update *mo
 }
 
 func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	callbackQuery := parseCallbackData(update.CallbackQuery.Data)
@@ -137,7 +137,6 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 	if customer != nil {
 		bal = int(customer.Balance)
 	}
-
 	var (
 		line      string
 		price     int
@@ -173,7 +172,7 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:    chatID,
 		MessageID: msgID,
 		ParseMode: models.ParseModeHTML,
@@ -189,9 +188,9 @@ func (h *Handler) SellCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 }
 
 func (h *Handler) PaymentCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	callbackQuery := parseCallbackData(update.CallbackQuery.Data)
@@ -280,9 +279,9 @@ func (h *Handler) SuccessPaymentHandler(ctx context.Context, b *bot.Bot, update 
 }
 
 func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	lang := update.CallbackQuery.From.LanguageCode
@@ -303,7 +302,7 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err := SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
@@ -316,9 +315,9 @@ func (h *Handler) BalanceCallbackHandler(ctx context.Context, b *bot.Bot, update
 }
 
 func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	lang := update.CallbackQuery.From.LanguageCode
@@ -355,16 +354,16 @@ func (h *Handler) TopupCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err := SafeEditMessageText(ctx, b, curMsg, params)
+	_, err = SafeEditMessageText(ctx, b, curMsg, params)
 	if err != nil {
 		slog.Error("Error sending topup message", "err", err)
 	}
 }
 
 func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, msgID, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	data := parseCallbackData(update.CallbackQuery.Data)
@@ -385,7 +384,7 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 	keyboard = append(keyboard, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackTopup}})
 
-	_, err := b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
+	_, err = b.EditMessageReplyMarkup(ctx, &bot.EditMessageReplyMarkupParams{
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
@@ -395,9 +394,9 @@ func (h *Handler) TopupMethodCallbackHandler(ctx context.Context, b *bot.Bot, up
 	}
 }
 func (h *Handler) PayFromBalanceCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	chatID, _, ok := callbackChatMessage(update)
-	if !ok {
-		slog.Error("callback message missing")
+	chatID, _, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
 		return
 	}
 	data := parseCallbackData(update.CallbackQuery.Data)
