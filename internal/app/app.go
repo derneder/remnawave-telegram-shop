@@ -30,7 +30,6 @@ type App struct {
 }
 
 func New(ctx context.Context) (*App, error) {
-	config.InitConfig()
 
 	tm := translation.GetInstance()
 	if err := tm.InitDefaultTranslations(); err != nil {
