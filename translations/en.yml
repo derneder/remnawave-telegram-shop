@@ -51,6 +51,8 @@ referral_bonus_granted: You have received a referral bonus!
 stars_button: ' ⭐Telegram Stars'
 invite_friend_button: Invite a friend
 create_promocode_button: 🎁 Create new code
+admin_subpromo_button: 🎁 Give sub promo
+admin_balpromo_button: 💎 Balance promo
 promo_list_button: 📜 View all codes
 personal_codes_text: "💌 Create unique subscription codes 💌\n\nIn this section you
   can create codes to share with friends. They can activate them and get a subscription
@@ -64,6 +66,10 @@ promo_delete_button: 🗑️ Delete
 promo_status_frozen: Code frozen
 promo_status_active: Code active
 promocode_created: Promo code %s created
+admin_subpromo_prompt: "Send: CODE DAYS LIMIT"
+admin_subpromo_done: Subscription promo %s created
+admin_balpromo_prompt: "Send: AMOUNT LIMIT"
+admin_balpromo_done: Balance promo %s created
 promo_choose_uses: '🔢 Choose number of uses:'
 promo_choose_plan: "📅 Choose subscription type 📅\n\n💰 Note:\nButtons below show the
   total cost considering the selected activations.\n\n📜 Your current balance: %d rubles"

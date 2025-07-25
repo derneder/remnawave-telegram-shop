@@ -9,12 +9,21 @@ purchase and manage subscriptions through Telegram with multiple payment system 
 
 - `/sync` - Poll users from remnawave and synchronize them with the database. Remove all users which not present in
   remnawave.
+- `/addsubpromo <CODE> <days> <limit>` - create subscription promo for given days and activation limit (0 for infinite).
+- `/addbalpromo <amount> <limit>` - create balance promo adding amount (in cents) with generated code.
 
 ### Payment Systems
 
 - [CryptoPay API](https://help.crypt.bot/crypto-pay-api)
 - Telegram Stars
 - Tribute
+
+### Админские промокоды: подписка и баланс
+
+Администраторы могут выдавать пользователям промокоды двух типов. Кнопки для их создания доступны в разделе «Мои промокоды» только админам.
+
+- **Подписка** — `/addsubpromo <CODE> <days> <limit>` продлевает подписку на указанное количество дней.
+- **Баланс** — `/addbalpromo <amount> <limit>` начисляет сумму в рублях и автоматически генерирует код.
 
 #### Telegram Stars pricing
 
