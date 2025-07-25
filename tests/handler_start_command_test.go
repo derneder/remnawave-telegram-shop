@@ -30,7 +30,7 @@ func TestStartCommandHandler_NoArgs(t *testing.T) {
 	}
 
 	repo := &StubCustomerRepo{}
-	h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, nil, nil, nil, nil)
+       h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, nil, nil, nil, nil, nil)
 
 	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
 	if err != nil {

@@ -66,7 +66,7 @@ func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 	}
 
 	link := "https://example.com"
-	h := handlerpkg.NewHandler(nil, nil, &translation.Manager{}, &StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}}, nil, nil, nil, nil, nil)
+       h := handlerpkg.NewHandler(nil, nil, &translation.Manager{}, &StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}}, nil, nil, nil, nil, nil, nil)
 
 	upd := &models.Update{CallbackQuery: &models.CallbackQuery{From: models.User{ID: 1, LanguageCode: "en"}}}
 

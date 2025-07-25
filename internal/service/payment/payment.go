@@ -342,6 +342,8 @@ func (s PaymentService) CreatePromocode(ctx context.Context, customer *domaincus
 	_, err := s.promocodeRepository.Create(ctx, &pg.Promocode{
 		Code:      code,
 		Months:    months,
+		Type:      1,
+		Days:      months * 30,
 		UsesLeft:  uses,
 		CreatedBy: customer.TelegramID,
 		Active:    true,
@@ -357,28 +359,39 @@ func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincust
 	if err != nil {
 		return err
 	}
-	if promo == nil || promo.UsesLeft <= 0 || !promo.Active || promo.Deleted {
+	if promo == nil || (!promo.Active) || promo.Deleted || (promo.UsesLeft <= 0 && promo.UsesLeft != 0) {
 		return fmt.Errorf("invalid promocode")
 	}
-
-	user, err := s.remnawaveClient.CreateOrUpdateUser(ctx, customer.TelegramID, config.TrafficLimit(), promo.Months*30)
-	if err != nil {
-		return err
+	if promo.Type == 2 {
+		newBal := customer.Balance + float64(promo.Amount)
+		if err := s.customerRepository.UpdateFields(ctx, customer.ID, map[string]interface{}{"balance": newBal}); err != nil {
+			return err
+		}
+		customer.Balance = newBal
+	} else {
+		days := promo.Days
+		if days == 0 {
+			days = promo.Months * 30
+		}
+		user, err := s.remnawaveClient.CreateOrUpdateUser(ctx, customer.TelegramID, config.TrafficLimit(), days)
+		if err != nil {
+			return err
+		}
+		updates := map[string]interface{}{
+			"subscription_link": user.SubscriptionUrl,
+			"expire_at":         user.ExpireAt,
+		}
+		if err := s.customerRepository.UpdateFields(ctx, customer.ID, updates); err != nil {
+			return err
+		}
+		customer.SubscriptionLink = &user.SubscriptionUrl
+		customer.ExpireAt = &user.ExpireAt
 	}
 
-	updates := map[string]interface{}{
-		"subscription_link": user.SubscriptionUrl,
-		"expire_at":         user.ExpireAt,
-	}
-
-	if err := s.customerRepository.UpdateFields(ctx, customer.ID, updates); err != nil {
-		return err
-	}
-	customer.SubscriptionLink = &user.SubscriptionUrl
-	customer.ExpireAt = &user.ExpireAt
-
-	if err := s.promocodeRepository.DecrementUses(ctx, promo.ID); err != nil {
-		return err
+	if promo.UsesLeft > 0 {
+		if err := s.promocodeRepository.DecrementUses(ctx, promo.ID); err != nil {
+			return err
+		}
 	}
 	_ = s.promocodeUsageRepository.Create(ctx, promo.ID, customer.TelegramID)
 	return nil
