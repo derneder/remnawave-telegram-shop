@@ -25,12 +25,15 @@ type promoServiceStub struct {
 	}
 }
 
-func (s *promoServiceStub) CreateSubscription(ctx context.Context, code string, days, limit int, by int64) error {
+func (s *promoServiceStub) CreateSubscription(ctx context.Context, code string, days, limit int, by int64) (string, error) {
 	s.sub = struct {
 		code        string
 		days, limit int
 	}{code, days, limit}
-	return nil
+	if code == "" {
+		code = "RANDOM"
+	}
+	return code, nil
 }
 
 func (s *promoServiceStub) CreateBalance(ctx context.Context, amount, limit int, by int64) (string, error) {
@@ -112,5 +115,37 @@ func TestAdminPromoSubWizard(t *testing.T) {
 
 	if svc.sub.days != 30 || svc.sub.limit != 2 {
 		t.Fatalf("unexpected sub args %#v", svc.sub)
+	}
+}
+
+func TestAdminPromoBalanceManualAmount(t *testing.T) {
+	SetTestEnv(t)
+	tm := translation.GetInstance()
+	_ = tm.InitDefaultTranslations()
+	svc := &promoServiceStub{}
+	httpc := &stubHTTP{}
+	b, _ := bot.New("t", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
+	h := handlerpkg.NewHandler(nil, nil, tm, &StubCustomerRepo{}, nil, nil, nil, nil, svc, nil)
+
+	upd := &models.Update{CallbackQuery: &models.CallbackQuery{ID: "1", From: models.User{ID: 1, LanguageCode: "ru"}, Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}}}}
+	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceStart
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceAmount + ":manual"
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	msgUpd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 1}, From: &models.User{ID: 1, LanguageCode: "ru"}, Text: "250"}}
+	h.AdminPromoAmountMessageHandler(ctx, b, msgUpd)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceLimit + ":1"
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceConfirm
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	if svc.bal.amount != 25000 {
+		t.Fatalf("manual amount not applied: %#v", svc.bal)
 	}
 }

@@ -16,6 +16,7 @@ const (
 	CallbackPromoUserActivate = "promo_user_activate"
 	CallbackRefUserStats      = "ref_user_stats"
 	CallbackPromoUserPersonal = "promo_user_personal"
+	CallbackPromoMyList       = "promo_my_list"
 	// admin callbacks
 	CallbackPromoAdminMenu           = "promo_admin_menu"
 	CallbackPromoAdminBalanceStart   = "promo_admin_balance_start"
@@ -83,7 +84,7 @@ func BuildPromoRefMain(lang string, isAdmin bool) [][]models.InlineKeyboardButto
 	kb := [][]models.InlineKeyboardButton{
 		{{Text: tm.GetText(lang, "activate_promocode_button"), CallbackData: CallbackPromoUserActivate}},
 		{{Text: tm.GetText(lang, "referral_system_button"), CallbackData: CallbackRefUserStats}},
-		{{Text: tm.GetText(lang, "personal_promocodes_button"), CallbackData: CallbackPromoUserPersonal}},
+		{{Text: tm.GetText(lang, "personal_promocodes_button"), CallbackData: CallbackPromoMyList}},
 	}
 	if isAdmin {
 		kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackPromoAdminMenu}})

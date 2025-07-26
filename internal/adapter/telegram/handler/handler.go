@@ -27,6 +27,7 @@ type Handler struct {
 	promotionService         promotion.Creator
 	cache                    *cache.Cache
 	awaitingPromo            map[int64]bool
+	awaitingAmount           map[int64]bool
 	promoMu                  sync.RWMutex
 	adminStates              map[int64]*adminPromoState
 	shortLinks               map[int64][]ShortLink
@@ -61,6 +62,7 @@ func NewHandler(
 		promotionService:         promotionService,
 		cache:                    cache,
 		awaitingPromo:            make(map[int64]bool),
+		awaitingAmount:           make(map[int64]bool),
 		adminStates:              make(map[int64]*adminPromoState),
 		shortLinks:               make(map[int64][]ShortLink),
 	}
@@ -69,6 +71,12 @@ func NewHandler(
 func (h *Handler) expectPromo(id int64) {
 	h.promoMu.Lock()
 	h.awaitingPromo[id] = true
+	h.promoMu.Unlock()
+}
+
+func (h *Handler) expectAmount(id int64) {
+	h.promoMu.Lock()
+	h.awaitingAmount[id] = true
 	h.promoMu.Unlock()
 }
 
@@ -82,10 +90,26 @@ func (h *Handler) consumePromo(id int64) bool {
 	return false
 }
 
+func (h *Handler) consumeAmount(id int64) bool {
+	h.promoMu.Lock()
+	defer h.promoMu.Unlock()
+	if h.awaitingAmount[id] {
+		delete(h.awaitingAmount, id)
+		return true
+	}
+	return false
+}
+
 func (h *Handler) IsAwaitingPromo(id int64) bool {
 	h.promoMu.RLock()
 	defer h.promoMu.RUnlock()
 	return h.awaitingPromo[id]
+}
+
+func (h *Handler) IsAwaitingAmount(id int64) bool {
+	h.promoMu.RLock()
+	defer h.promoMu.RUnlock()
+	return h.awaitingAmount[id]
 }
 
 const (

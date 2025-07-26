@@ -111,9 +111,10 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 	subscribed := 0
 	bonusTotal := 0
 
-	refLink := fmt.Sprintf("https://t.me/%s?start=ref_%d", update.CallbackQuery.From.Username, customer.TelegramID)
+	refLink := fmt.Sprintf("%s?start=ref_%d", config.BotURL(), customer.TelegramID)
 
 	text := fmt.Sprintf(tm.GetText(langCode, "referral_system_text"), invited, subscribed, bonusTotal, refLink, config.GetReferralBonus())
+	text += "\n" + fmt.Sprintf(tm.GetText(langCode, "ref.link.text"), refLink)
 
 	kb := [][]models.InlineKeyboardButton{
 		{{Text: tm.GetText(langCode, "invite_friend_button"), URL: refLink}},
@@ -133,6 +134,44 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 	})
 	if err != nil {
 		slog.Error("Error sending referral stats", "err", err)
+	}
+}
+
+func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	lang := update.CallbackQuery.From.LanguageCode
+	tm := translation.GetInstance()
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+	promos, err := h.promocodeRepository.FindByCreator(ctx, update.CallbackQuery.From.ID)
+	if err != nil {
+		slog.Error("list promos", "err", err)
+		return
+	}
+	var text string
+	var kb [][]models.InlineKeyboardButton
+	if len(promos) == 0 {
+		text = tm.GetText(lang, "promo.list.empty")
+	} else {
+		text = tm.GetText(lang, "promo.list.title") + "\n"
+		for _, p := range promos {
+			status := "✅"
+			if !p.Active {
+				status = "⏸"
+			}
+			text += fmt.Sprintf("%s %s\n", status, p.Code)
+		}
+	}
+	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackReferral}})
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, ParseMode: models.ParseModeHTML, Text: text, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}})
+	if err != nil {
+		slog.Error("send promo list", "err", err)
 	}
 }
 
