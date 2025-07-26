@@ -16,6 +16,8 @@ const (
 	CallbackPromoUserActivate    = "promo_user_activate"
 	CallbackRefUserStats         = "ref_user_stats"
 	CallbackPromoUserPersonal    = "promo_user_personal"
+	CallbackPersonalCodes        = "personal_codes"
+	CallbackPersonalCreate       = "personal_create"
 	CallbackPromoMyList          = "promo_my_list"
 	CallbackPromoMyFreeze        = "promo_my_freeze"
 	CallbackPromoMyUnfreeze      = "promo_my_unfreeze"
@@ -88,7 +90,7 @@ func BuildPromoRefMain(lang string, isAdmin bool) [][]models.InlineKeyboardButto
 	kb := [][]models.InlineKeyboardButton{
 		{{Text: tm.GetText(lang, "activate_promocode_button"), CallbackData: CallbackPromoUserActivate}},
 		{{Text: tm.GetText(lang, "referral_system_button"), CallbackData: CallbackRefUserStats}},
-		{{Text: tm.GetText(lang, "personal_promocodes_button"), CallbackData: CallbackPromoMyList}},
+		{{Text: tm.GetText(lang, "personal_codes_button"), CallbackData: CallbackPersonalCodes}},
 	}
 	if isAdmin {
 		kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackPromoAdminMenu}})
@@ -100,6 +102,16 @@ func BuildPromoRefMain(lang string, isAdmin bool) [][]models.InlineKeyboardButto
 // BuildPromoRefMenu is kept for backward compatibility.
 func BuildPromoRefMenu(lang string) [][]models.InlineKeyboardButton {
 	return BuildPromoRefMain(lang, false)
+}
+
+// BuildPersonalCodesMenu returns keyboard for personal promocodes menu.
+func BuildPersonalCodesMenu(lang string) [][]models.InlineKeyboardButton {
+	tm := translation.GetInstance()
+	return [][]models.InlineKeyboardButton{
+		{{Text: tm.GetText(lang, "personal_create_button"), CallbackData: CallbackPersonalCreate}},
+		{{Text: tm.GetText(lang, "personal_codes_list_button"), CallbackData: CallbackPromoMyList}},
+		{{Text: tm.GetText(lang, "back_button"), CallbackData: "referral"}},
+	}
 }
 
 // BuildAdminPromoMenu returns root admin promo menu keyboard.

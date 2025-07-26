@@ -53,7 +53,12 @@ topup_intro_text: "💎 Top up your account 💎\n\n💵 Current balance: %d rub
   or payment data, keeping you safe.\n\n⚙️ If you have payment issues, contact support
   using the button below."
 activate_promocode_button: 🎫 Promo code activation
-personal_promocodes_button: "📋 My promo codes"
+personal_codes_button: "Personal codes"
+personal_create_button: "🎁 Create code"
+personal_codes_list_button: "📋 My codes list"
+personal_months_prompt: "Enter duration in months"
+personal_uses_prompt: "Enter activation limit"
+personal_created_text: "✅ Your code: %s"
 promo.activate.prompt: "⭐️ Enter the promo code you received to activate it!\nExample:
   #hedgehog_promo\n\n💬 You can also send the code here or use /promocode"
 promo_invalid: Invalid promo code

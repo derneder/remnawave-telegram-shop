@@ -36,6 +36,8 @@ func (a *App) InitHandlers(h *handler.Handler) {
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "promo_admin_sub_", bot.MatchTypePrefix, h.AdminPromoCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackPromoEnter, bot.MatchTypePrefix, h.PromoEnterCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, uimenu.CallbackPromoUserActivate, bot.MatchTypePrefix, h.PromoEnterCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, uimenu.CallbackPersonalCodes, bot.MatchTypePrefix, h.PersonalCodesCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, uimenu.CallbackPersonalCreate, bot.MatchTypePrefix, h.PersonalCreateCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, uimenu.CallbackPromoMyList, bot.MatchTypePrefix, h.PromoMyListCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackOther, bot.MatchTypePrefix, h.OtherCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackFAQ, bot.MatchTypePrefix, h.FAQCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
@@ -78,5 +80,12 @@ func (a *App) InitHandlers(h *handler.Handler) {
 		}
 		return h.IsAwaitingLimit(upd.Message.Chat.ID)
 	}, h.AdminPromoLimitMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+
+	b.RegisterHandlerMatchFunc(func(upd *models.Update) bool {
+		if upd.Message == nil {
+			return false
+		}
+		return h.IsAwaitingPersonalMonths(upd.Message.Chat.ID) || h.IsAwaitingPersonalUses(upd.Message.Chat.ID)
+	}, h.PersonalMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 
 }

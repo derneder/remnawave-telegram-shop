@@ -39,6 +39,7 @@ type Handler struct {
 	adminStates              map[int64]*adminPromoState
 	shortLinks               map[int64][]ShortLink
 	shortMu                  sync.RWMutex
+	personalStates           map[int64]*personalState
 }
 
 type ShortLink struct {
@@ -82,6 +83,7 @@ func NewHandler(
 		fsm:                      make(map[int64]FSMState),
 		adminStates:              make(map[int64]*adminPromoState),
 		shortLinks:               make(map[int64][]ShortLink),
+		personalStates:           make(map[int64]*personalState),
 	}
 }
 
