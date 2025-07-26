@@ -25,27 +25,20 @@ func (c *closeRecorder) Read(p []byte) (int, error) { return 0, io.EOF }
 func (c *closeRecorder) Close() error               { *c.closed = true; return nil }
 
 type testRoundTripper struct {
-	mu                 sync.Mutex
-	call               int
-	firstClosed        bool
-	closedBeforeSecond bool
+	mu     sync.Mutex
+	call   int
+	closed bool
 }
 
 func (t *testRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.call++
-	switch t.call {
-	case 1:
-		body := &closeRecorder{closed: &t.firstClosed}
+	if t.call == 1 {
+		body := &closeRecorder{closed: &t.closed}
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: body, Header: make(http.Header), Request: req}, nil
-	case 2:
-		t.closedBeforeSecond = t.firstClosed
-		body := io.NopCloser(strings.NewReader("http://s.io/ok"))
-		return &http.Response{StatusCode: http.StatusOK, Body: body, Header: make(http.Header), Request: req}, nil
-	default:
-		return nil, io.EOF
 	}
+	return nil, io.EOF
 }
 
 type dummyRoundTripper struct{}
@@ -54,7 +47,7 @@ func (dummyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header), Request: req}, nil
 }
 
-func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
+func TestShortLinkCallbackHandler_BodyClosedOnError(t *testing.T) {
 	rt := &testRoundTripper{}
 	oldTransport := http.DefaultTransport
 	http.DefaultTransport = rt
@@ -73,10 +66,10 @@ func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 
 	h.ShortLinkCallbackHandler(context.Background(), b, upd)
 
-	if !rt.firstClosed {
+	if !rt.closed {
 		t.Fatal("first response body not closed")
 	}
-	if !rt.closedBeforeSecond {
-		t.Fatal("response body closed after retry request")
+	if rt.call != 1 {
+		t.Fatalf("unexpected number of requests: %d", rt.call)
 	}
 }
