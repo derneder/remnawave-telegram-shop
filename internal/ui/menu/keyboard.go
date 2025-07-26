@@ -15,7 +15,6 @@ const (
 	// user callbacks
 	CallbackPromoUserActivate    = "promo_user_activate"
 	CallbackRefUserStats         = "ref_user_stats"
-	CallbackPromoUserPersonal    = "promo_user_personal"
 	CallbackPersonalCodes        = "personal_codes"
 	CallbackPersonalCreate       = "personal_create"
 	CallbackPromoMyList          = "promo_my_list"
