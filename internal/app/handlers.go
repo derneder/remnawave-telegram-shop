@@ -45,7 +45,6 @@ func (a *App) InitHandlers(h *handler.Handler) {
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackShortList, bot.MatchTypePrefix, h.ShortListCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackLocations, bot.MatchTypePrefix, h.LocationsCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackRegenKey, bot.MatchTypePrefix, h.RegenKeyCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
-	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackProxy, bot.MatchTypePrefix, h.ProxyCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 
 	b.RegisterHandlerMatchFunc(func(upd *models.Update) bool {
 		if upd.Message == nil {

@@ -31,5 +31,4 @@ const (
 	CallbackShortList               = "short_list"
 	CallbackLocations               = "locations"
 	CallbackRegenKey                = "regen_key"
-	CallbackProxy                   = "proxy"
 )
