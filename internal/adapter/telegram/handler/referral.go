@@ -402,8 +402,13 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 	}
 
 	kb := [][]models.InlineKeyboardButton{
-		{{Text: h.translation.GetText(langCode, "promo_delete_button"), CallbackData: fmt.Sprintf("%s:%d", CallbackPromoDelete, promo.ID)}},
-		{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoList}},
+		{
+			{Text: h.translation.GetText(langCode, "promo_delete_button"), CallbackData: fmt.Sprintf("%s:%d", CallbackPromoDelete, promo.ID)},
+			{Text: h.translation.GetText(langCode, "cancel_button"), CallbackData: CallbackPromoList},
+		},
+		{
+			{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoList},
+		},
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
