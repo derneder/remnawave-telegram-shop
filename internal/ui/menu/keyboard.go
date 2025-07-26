@@ -152,9 +152,11 @@ func BuildAdminPromoBalanceWizardStep(lang string, step StepState) [][]models.In
 		}
 	case StepConfirm:
 		return [][]models.InlineKeyboardButton{
-			{{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoAdminBalanceConfirm}},
+			{
+				{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoAdminBalanceConfirm},
+				{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel},
+			},
 			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
-			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel}},
 		}
 	default:
 		return nil
@@ -184,9 +186,11 @@ func BuildAdminPromoSubWizardStep(lang string, step StepState) [][]models.Inline
 		}
 	case StepConfirm:
 		return [][]models.InlineKeyboardButton{
-			{{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoAdminSubConfirm}},
+			{
+				{Text: tm.GetText(lang, "create_button"), CallbackData: CallbackPromoAdminSubConfirm},
+				{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel},
+			},
 			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
-			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel}},
 		}
 	default:
 		return nil
