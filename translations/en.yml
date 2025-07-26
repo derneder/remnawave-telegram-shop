@@ -106,11 +106,6 @@ traffic_info_header: "<b>🌐 Traffic info:</b>\n\n"
 traffic_limit: "├ 📊 Daily limit: <b>%s / %s</b>\n"
 traffic_total_used: "├ ⚡ Total used: <b>%s</b>\n"
 traffic_time_to_reset: '├ 🔄 Until reset: <b>%s</b>'
-language_button: "🌐 Language"
-choose_language_text: "🌐 Choose interface language"
-language_en: English
-language_ru: Russian
-language_changed: Language updated
 admin_panel_button: "⚙️ Admin panel"
 admin_promo_balance_button: "💰 Balance promo"
 admin_promo_sub_button: "📅 Subscription promo"
