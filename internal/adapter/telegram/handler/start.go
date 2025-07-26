@@ -165,26 +165,11 @@ func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "account_menu_text"), callback.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, existingCustomer, langCode)
 
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctxWithTime, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctxWithTime, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: inlineKeyboard},
 		Text:        text,
-	})
-	if err != nil {
-		slog.Error("Error sending /start message", "err", err)
-	}
+	}, "Error sending /start message")
 }
 
 func (h *Handler) buildAccountInfo(ctx context.Context, customer *domaincustomer.Customer, lang string) string {
