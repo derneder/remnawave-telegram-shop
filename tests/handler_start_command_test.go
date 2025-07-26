@@ -14,6 +14,7 @@ import (
 	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	referralrepo "remnawave-tg-shop-bot/internal/repository/referral"
 )
 
 type startHTTPClient struct{}
@@ -70,7 +71,7 @@ func (c *customerRepoNotFound) FindById(ctx context.Context, id int64) (*domainc
 	return &domaincustomer.Customer{ID: id, TelegramID: id, Language: "en"}, nil
 }
 
-func TestStartCommandHandler_ReferralMarksGranted(t *testing.T) {
+func TestStartCommandHandler_ReferralSaved(t *testing.T) {
 	trans := translation.GetInstance()
 	if err := trans.InitDefaultTranslations(); err != nil {
 		t.Fatalf("init translations: %v", err)
@@ -98,5 +99,47 @@ func TestStartCommandHandler_ReferralMarksGranted(t *testing.T) {
 
 	if refRepo.CreatedReferrerID != 5 || refRepo.CreatedRefereeID != 2 {
 		t.Fatalf("referral not created")
+	}
+}
+
+func TestStartCommandHandler_ReferralSelf(t *testing.T) {
+	trans := translation.GetInstance()
+	if err := trans.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+
+	custRepo := &customerRepoNotFound{}
+	refRepo := &StubReferralRepo{}
+	h := handlerpkg.NewHandler(nil, nil, trans, custRepo, nil, refRepo, nil, nil, nil, nil)
+
+	b, _ := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
+
+	upd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 2}, From: &models.User{ID: 2, LanguageCode: "en", FirstName: "u"}, Text: "/start ref_2", Entities: []models.MessageEntity{{Type: models.MessageEntityTypeBotCommand, Offset: 0, Length: len("/start")}}}}
+
+	h.StartCommandHandler(context.Background(), b, upd)
+
+	if refRepo.CreatedReferrerID != 0 {
+		t.Fatalf("self referral should not be saved")
+	}
+}
+
+func TestStartCommandHandler_ReferralDuplicate(t *testing.T) {
+	trans := translation.GetInstance()
+	if err := trans.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+
+	repo := &StubCustomerRepo{}
+	refRepo := &StubReferralRepo{Model: &referralrepo.Model{RefereeID: 3}}
+	h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, refRepo, nil, nil, nil, nil)
+
+	b, _ := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
+
+	upd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 3}, From: &models.User{ID: 3, LanguageCode: "en", FirstName: "u"}, Text: "/start ref_5", Entities: []models.MessageEntity{{Type: models.MessageEntityTypeBotCommand, Offset: 0, Length: len("/start")}}}}
+
+	h.StartCommandHandler(context.Background(), b, upd)
+
+	if refRepo.CreatedReferrerID != 0 {
+		t.Fatalf("duplicate referral saved")
 	}
 }

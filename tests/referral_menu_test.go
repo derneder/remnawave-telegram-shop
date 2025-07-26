@@ -48,4 +48,7 @@ func TestReferralCallbackHandler_UserAdmin(t *testing.T) {
 	if strings.Contains(httpc.body, string(uimenu.CallbackPromoAdminMenu)) {
 		t.Fatalf("unexpected admin button")
 	}
+	if strings.Contains(httpc.body, string(handlerpkg.CallbackFAQ)) {
+		t.Fatalf("unexpected FAQ button")
+	}
 }
