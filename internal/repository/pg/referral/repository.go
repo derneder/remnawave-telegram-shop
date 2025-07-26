@@ -38,7 +38,7 @@ func (r *repository) Create(ctx context.Context, referrerID, refereeID int64) er
 }
 
 func (r *repository) FindByReferee(ctx context.Context, refereeID int64) (*referralrepo.Model, error) {
-	query := sq.Select("id", "referrer_id", "referee_id", "used_at").
+	query := sq.Select("id", "referrer_id", "referee_id", "used_at", "bonus_granted").
 		From("referral").
 		Where(sq.Eq{"referee_id": refereeID}).
 		Limit(1).
@@ -50,7 +50,7 @@ func (r *repository) FindByReferee(ctx context.Context, refereeID int64) (*refer
 	}
 
 	var m referralrepo.Model
-	err = r.pool.QueryRow(ctx, sql, args...).Scan(&m.ID, &m.ReferrerID, &m.RefereeID, &m.CreatedAt)
+	err = r.pool.QueryRow(ctx, sql, args...).Scan(&m.ID, &m.ReferrerID, &m.RefereeID, &m.CreatedAt, &m.BonusGranted)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -58,4 +58,22 @@ func (r *repository) FindByReferee(ctx context.Context, refereeID int64) (*refer
 		return nil, fmt.Errorf("query referral: %w", err)
 	}
 	return &m, nil
+}
+
+func (r *repository) MarkBonusGranted(ctx context.Context, referralID int64) error {
+	query := sq.Update("referral").
+		Set("bonus_granted", true).
+		Where(sq.Eq{"id": referralID}).
+		PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return fmt.Errorf("build update referral: %w", err)
+	}
+
+	_, err = r.pool.Exec(ctx, sql, args...)
+	if err != nil {
+		return fmt.Errorf("exec update referral: %w", err)
+	}
+	return nil
 }

@@ -136,7 +136,7 @@ func (s PaymentService) ProcessPurchaseById(ctx context.Context, purchaseId int6
 		return err
 	}
 
-	if referral, err := s.referralRepository.FindByReferee(ctx, customer.TelegramID); err == nil && referral != nil {
+	if referral, err := s.referralRepository.FindByReferee(ctx, customer.TelegramID); err == nil && referral != nil && !referral.BonusGranted {
 		referrer, err := s.customerRepository.FindByTelegramId(ctx, referral.ReferrerID)
 		if err == nil && referrer != nil {
 			bonus := float64(config.GetReferralBonus())
@@ -144,6 +144,9 @@ func (s PaymentService) ProcessPurchaseById(ctx context.Context, purchaseId int6
 			if err := s.customerRepository.UpdateFields(ctx, referrer.ID, map[string]interface{}{"balance": newBal}); err == nil {
 				if _, err := s.messenger.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: s.translation.GetText(referrer.Language, "referral_bonus_granted")}); err != nil {
 					slog.Error("send referral bonus", "err", err)
+				}
+				if err := s.referralRepository.MarkBonusGranted(ctx, referral.ID); err != nil {
+					slog.Error("mark bonus granted", "err", err)
 				}
 			}
 		}
