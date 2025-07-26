@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
@@ -128,7 +129,8 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 			slog.Error("close body", "err", cerr)
 		}
 	}()
-	data, _ := io.ReadAll(resp.Body)
+	rawData, _ := io.ReadAll(resp.Body)
+	data := decodeSubscriptionData(rawData)
 
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
 	chatID, _, ok := callbackChatMessage(update)
@@ -286,4 +288,22 @@ func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 	if err != nil {
 		slog.Error("send short list", "err", err)
 	}
+}
+
+func decodeSubscriptionData(data []byte) []byte {
+	trimmed := strings.TrimSpace(string(data))
+	if trimmed == "" {
+		return []byte{}
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(trimmed)
+	if err != nil {
+		decoded, err = base64.RawStdEncoding.DecodeString(trimmed)
+	}
+	if err == nil {
+		trimmed = string(decoded)
+	}
+
+	links := strings.Fields(trimmed)
+	return []byte(strings.Join(links, "\n"))
 }
