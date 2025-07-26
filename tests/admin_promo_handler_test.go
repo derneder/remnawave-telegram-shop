@@ -20,16 +20,16 @@ import (
 type promoServiceStub struct {
 	bal struct{ amount, limit int }
 	sub struct {
-		code        string
-		days, limit int
+		code          string
+		months, limit int
 	}
 }
 
-func (s *promoServiceStub) CreateSubscription(ctx context.Context, code string, days, limit int, by int64) (string, error) {
+func (s *promoServiceStub) CreateSubscription(ctx context.Context, code string, months, limit int, by int64) (string, error) {
 	s.sub = struct {
-		code        string
-		days, limit int
-	}{code, days, limit}
+		code          string
+		months, limit int
+	}{code, months, limit}
 	if code == "" {
 		code = "RANDOM"
 	}
@@ -108,7 +108,7 @@ func TestAdminPromoSubWizard(t *testing.T) {
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubCodeRandom
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubDays + ":30"
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubMonths + ":1"
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubLimit + ":2"
@@ -117,7 +117,7 @@ func TestAdminPromoSubWizard(t *testing.T) {
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubConfirm
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
-	if svc.sub.days != 30 || svc.sub.limit != 2 {
+	if svc.sub.months != 1 || svc.sub.limit != 2 {
 		t.Fatalf("unexpected sub args %#v", svc.sub)
 	}
 }
@@ -211,7 +211,7 @@ func TestAdminPromoSubCustomCodeManualLimit(t *testing.T) {
 		t.Fatal("state not advanced after valid code")
 	}
 
-	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubDays + ":30"
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubMonths + ":1"
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubLimit + ":manual"
 	h.AdminPromoCallbackHandler(ctx, b, upd)

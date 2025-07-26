@@ -30,7 +30,7 @@ const (
 	CallbackPromoAdminBalanceConfirm = "promo_admin_balance_confirm"
 	CallbackPromoAdminSubCodeRandom  = "promo_admin_sub_code_random"
 	CallbackPromoAdminSubCodeCustom  = "promo_admin_sub_code_custom"
-	CallbackPromoAdminSubDays        = "promo_admin_sub_days"
+	CallbackPromoAdminSubMonths      = "promo_admin_sub_months"
 	CallbackPromoAdminSubLimit       = "promo_admin_sub_limit"
 	CallbackPromoAdminSubConfirm     = "promo_admin_sub_confirm"
 	CallbackPromoAdminBack           = "promo_admin_back"
@@ -39,7 +39,7 @@ const (
 
 // StepState represents wizard step identifier.
 // For balance promo: Amount -> Limit -> Confirm.
-// For subscription promo: Code -> Days -> Limit -> Confirm.
+// For subscription promo: Code -> Months -> Limit -> Confirm.
 type StepState int
 
 const (
@@ -47,7 +47,7 @@ const (
 	StepLimit
 	StepConfirm
 	StepCode
-	StepDays
+	StepMonths
 )
 
 // BuildLKMenu creates personal account main menu.
@@ -149,10 +149,10 @@ func BuildAdminPromoSubWizardStep(lang string, step StepState) [][]models.Inline
 			{{Text: "🎲", CallbackData: CallbackPromoAdminSubCodeRandom}, {Text: "✍️", CallbackData: CallbackPromoAdminSubCodeCustom}},
 			{{Text: tm.GetText(lang, "cancel_button"), CallbackData: CallbackPromoAdminCancel}},
 		}
-	case StepDays:
+	case StepMonths:
 		return [][]models.InlineKeyboardButton{
-			{{Text: "30", CallbackData: CallbackPromoAdminSubDays + ":30"}, {Text: "90", CallbackData: CallbackPromoAdminSubDays + ":90"}},
-			{{Text: "180", CallbackData: CallbackPromoAdminSubDays + ":180"}, {Text: "365", CallbackData: CallbackPromoAdminSubDays + ":365"}},
+			{{Text: "1", CallbackData: CallbackPromoAdminSubMonths + ":1"}, {Text: "3", CallbackData: CallbackPromoAdminSubMonths + ":3"}},
+			{{Text: "6", CallbackData: CallbackPromoAdminSubMonths + ":6"}, {Text: "12", CallbackData: CallbackPromoAdminSubMonths + ":12"}},
 			{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminBack}},
 		}
 	case StepLimit:
