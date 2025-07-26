@@ -59,6 +59,7 @@ personal_codes_list_button: "📋 My codes list"
 personal_months_prompt: "Enter duration in months"
 personal_uses_prompt: "Enter activation limit"
 personal_created_text: "✅ Your code: %s"
+promo_ref_menu_text: "Welcome to the promo and referral section. Choose an option below."
 promo.activate.prompt: "⭐️ Enter the promo code you received to activate it!\nExample:
   #hedgehog_promo\n\n💬 You can also send the code here or use /promocode"
 promo_invalid: Invalid promo code
@@ -145,6 +146,3 @@ promo.item.compact_bal: "%s %s — %d RUB (%d left)"
 promo.item.status_icon.active: "🟢"
 promo.item.status_icon.inactive: "⏸"
 
-referral_text: "You have invited %d friends"
-referral_share_text: "Join using my link!"
-share_referral_button: "🔗 Share"
