@@ -285,7 +285,7 @@ func (h *Handler) PromoCommandHandler(ctx context.Context, b *bot.Bot, update *m
 	}
 
 	h.expectPromo(update.Message.Chat.ID)
-	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "enter_promocode_prompt")}); err != nil {
-		slog.Error("send enter promocode prompt", "err", err)
+	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(lang, "promo.activate.prompt")}); err != nil {
+		slog.Error("send promo activate prompt", "err", err)
 	}
 }
