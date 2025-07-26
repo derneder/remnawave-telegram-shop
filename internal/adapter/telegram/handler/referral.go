@@ -12,6 +12,7 @@ import (
 	"github.com/go-telegram/bot/models"
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
+	"remnawave-tg-shop-bot/internal/pkg/contextkey"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	"remnawave-tg-shop-bot/internal/service/payment"
 	menu "remnawave-tg-shop-bot/internal/ui/menu"
@@ -31,7 +32,8 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 		return
 	}
 
-	kb := menu.BuildPromoRefMenu(langCode)
+	admin := contextkey.IsAdminFromContext(ctx)
+	kb := menu.BuildPromoRefMain(langCode, admin)
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {

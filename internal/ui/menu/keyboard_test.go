@@ -35,17 +35,30 @@ func TestBuildLKMenu_AdminButton(t *testing.T) {
 	}
 }
 
-func TestBuildPromoRefMenu(t *testing.T) {
+func TestBuildPromoRefMain(t *testing.T) {
 	tm := translation.GetInstance()
 	if err := tm.InitDefaultTranslations(); err != nil {
 		t.Fatalf("init translations: %v", err)
 	}
-	kb := BuildPromoRefMenu("ru")
+	kb := BuildPromoRefMain("ru", false)
 	for _, row := range kb {
 		for _, b := range row {
 			if b.CallbackData == CallbackPromoAdminMenu || b.Text == tm.GetText("ru", "faq_button") {
 				t.Fatalf("unexpected button %v", b)
 			}
 		}
+	}
+	// ensure admin button is present when requested
+	kb = BuildPromoRefMain("ru", true)
+	found := false
+	for _, row := range kb {
+		for _, b := range row {
+			if b.CallbackData == CallbackPromoAdminMenu {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("admin button missing")
 	}
 }
