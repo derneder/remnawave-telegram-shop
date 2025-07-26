@@ -177,11 +177,7 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 					slog.Error("create sub promo", "err", err)
 					return
 				}
-				fullCode := createdCode
-				if !strings.HasPrefix(fullCode, "SUB_") {
-					fullCode = "SUB_" + fullCode
-				}
-				text := fmt.Sprintf(tm.GetText(lang, "promo_sub_created"), fullCode, state.Months, state.Limit)
+				text := fmt.Sprintf(tm.GetText(lang, "promo_sub_created"), createdCode, state.Months, state.Limit)
 				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: text})
 				delete(h.adminStates, update.CallbackQuery.From.ID)
 				h.clearAdminInputs(update.CallbackQuery.From.ID)
