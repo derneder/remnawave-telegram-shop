@@ -244,56 +244,7 @@ func (h *Handler) PromoMyDeleteConfirmCallbackHandler(ctx context.Context, b *bo
 }
 
 func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	lang := update.Message.From.LanguageCode
-	tm := translation.GetInstance()
-	customer, err := h.findOrCreateCustomer(ctx, update.Message.Chat.ID, lang)
-	if err != nil {
-		slog.Error("find or create customer", "err", err)
-		return
-	}
-
-	parts := strings.Fields(update.Message.Text)
-	if len(parts) < 2 {
-		h.expectPromo(update.Message.Chat.ID)
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo.activate.prompt")}); err != nil {
-			slog.Error("send promo activate prompt", "err", err)
-		}
-		return
-	}
-
-	code := parts[1]
-	promo, err := h.paymentService.ApplyPromocode(ctx, customer, code)
-	if err != nil {
-		var text string
-		if errors.Is(err, payment.ErrPromocodeNotFound) {
-			text = tm.GetText(lang, "promo_not_found")
-		} else if errors.Is(err, payment.ErrPromocodeExpired) {
-			text = tm.GetText(lang, "promo_expired")
-		} else if errors.Is(err, payment.ErrPromocodeLimitExced) {
-			text = tm.GetText(lang, "promo_limit_reached")
-		} else {
-			text = tm.GetText(lang, "promo_invalid")
-		}
-		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: text}); serr != nil {
-			slog.Error("send promo invalid", "err", serr)
-		}
-		return
-	}
-	if promo.Type == 2 {
-		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ParseMode: models.ParseModeHTML, Text: fmt.Sprintf(tm.GetText(lang, "promo_balance_applied"), promo.Amount/100, int(customer.Balance))}); serr != nil {
-			slog.Error("send balance promo", "err", serr)
-		}
-		return
-	}
-
-	until := ""
-	if customer.ExpireAt != nil {
-		until = customer.ExpireAt.Format("02.01.2006 15:04")
-	}
-
-	if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf(tm.GetText(lang, "promo_applied"), until)}); err != nil {
-		slog.Error("send promo applied", "err", err)
-	}
+	h.handlePromoCommand(ctx, b, update, false)
 }
 
 func (h *Handler) PromoCodeMessageHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
