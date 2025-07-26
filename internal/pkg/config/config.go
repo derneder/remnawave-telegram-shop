@@ -45,11 +45,6 @@ type config struct {
 	tributeWebhookUrl, tributeAPIKey, tributePaymentUrl string
 	isWebAppLinkEnabled                                 bool
 	xApiKey                                             string
-	telegramProxyURL                                    string
-	telegramProxyHost                                   string
-	telegramProxyPort                                   int
-	telegramProxyKey                                    string
-	telegramProxyChannel                                string
 }
 
 var conf config
@@ -71,26 +66,6 @@ func Tribute() Config {
 
 func GetTributePaymentUrl() string {
 	return conf.tributePaymentUrl
-}
-
-func TelegramProxyURL() string {
-	return conf.telegramProxyURL
-}
-
-func TelegramProxyHost() string {
-	return conf.telegramProxyHost
-}
-
-func TelegramProxyPort() int {
-	return conf.telegramProxyPort
-}
-
-func TelegramProxyKey() string {
-	return conf.telegramProxyKey
-}
-
-func TelegramProxyChannel() string {
-	return conf.telegramProxyChannel
 }
 
 func GetReferralDays() int {
@@ -398,13 +373,6 @@ func InitConfig() error {
 	conf.feedbackURL = os.Getenv("FEEDBACK_URL")
 	conf.channelURL = os.Getenv("CHANNEL_URL")
 	conf.tosURL = os.Getenv("TOS_URL")
-	conf.telegramProxyURL = os.Getenv("TELEGRAM_PROXY_URL")
-	conf.telegramProxyHost = os.Getenv("TELEGRAM_PROXY_HOST")
-	if conf.telegramProxyPort, err = envIntDefault("TELEGRAM_PROXY_PORT", 0); err != nil {
-		return err
-	}
-	conf.telegramProxyKey = os.Getenv("TELEGRAM_PROXY_KEY")
-	conf.telegramProxyChannel = os.Getenv("TELEGRAM_PROXY_CHANNEL")
 
 	conf.inboundUUIDs = map[uuid.UUID]uuid.UUID{}
 	if v := os.Getenv("INBOUND_UUIDS"); v != "" {
@@ -500,11 +468,6 @@ func ValidateConfig() error {
 	}
 	if err := ValidateToken(conf.tributeAPIKey, "TRIBUTE_API_KEY"); err != nil {
 		return err
-	}
-	if conf.telegramProxyURL != "" {
-		if err := ValidateURL(conf.telegramProxyURL, "TELEGRAM_PROXY_URL"); err != nil {
-			return err
-		}
 	}
 	return nil
 }

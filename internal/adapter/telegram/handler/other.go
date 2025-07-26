@@ -33,7 +33,6 @@ func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		{{Text: h.translation.GetText(lang, "short_button"), CallbackData: CallbackShortLink}},
 		{{Text: h.translation.GetText(lang, "locations_button"), CallbackData: CallbackLocations}},
 		{{Text: h.translation.GetText(lang, "regen_key_button"), CallbackData: CallbackRegenKey}},
-		{{Text: h.translation.GetText(lang, "proxy_button"), CallbackData: CallbackProxy}},
 		{{Text: h.translation.GetText(lang, "language_button"), CallbackData: CallbackLanguage}},
 	}
 	if config.ServerStatusURL() != "" {
@@ -354,42 +353,5 @@ func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 	})
 	if err != nil {
 		slog.Error("send short list", "err", err)
-	}
-}
-
-func (h *Handler) ProxyCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	lang := update.CallbackQuery.From.LanguageCode
-	kb := [][]models.InlineKeyboardButton{}
-	if config.TelegramProxyURL() != "" {
-		kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "proxy_button"), URL: config.TelegramProxyURL()}})
-	}
-	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}})
-	text := fmt.Sprintf(
-		h.translation.GetText(lang, "proxy_details_text"),
-		config.TelegramProxyChannel(),
-		config.TelegramProxyChannel(),
-		config.TelegramProxyHost(),
-		config.TelegramProxyPort(),
-		config.TelegramProxyKey(),
-	)
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
-		ParseMode:   models.ParseModeHTML,
-		Text:        text,
-		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("send proxy", "err", err)
 	}
 }

@@ -80,7 +80,6 @@ qr_button: 💾 QR code
 short_button: ✂️ Short link
 locations_button: 🌐 Location settings
 regen_key_button: 🔑 Regenerate key
-proxy_button: 🌐 Telegram Proxy
 short_list_button: ✂️ Link list
 open_short_link_button: 🔗 Open link
 qr_text: "🎉 Your QR code is ready! 🎉\n\nHow to use:\n1. Point your camera at the QR
@@ -98,9 +97,6 @@ short_created_text: "✨ Your short link is ready! It will be available for 5 mi
   then removed.\n\n🔗 Info:\nUse this link for easy TV setup.\n\nShort link: %s\n\n\
   👉 Choose an action below:"
 short_list_text: "📋 Your short links:\n\n%s"
-proxy_details_text: "🌐 <b>MTProto proxy settings</b>\n\nThis proxy may show our sponsor
-  channel in your chats: <a href=\"%s\">%s</a>.\n\n<b>Socket address:</b>\n• Host:
-  <code>%s</code>\n• Port: <code>%d</code>\n\n<b>Credentials:</b>\n• Key: <code>%s</code>"
 coming_soon_text: Coming soon
 account_info_header: "<b>📰 Account info:</b>\n\n"
 account_info_balance: "├ 💰 Balance: <b>%.0f ₽</b>\n"
