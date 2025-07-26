@@ -388,10 +388,9 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 			{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackPromoList}},
 		}
 		_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-			ChatID:    chatID,
-			MessageID: msgID,
-			ParseMode: models.ParseModeHTML,
-			// TODO: Серега, нужен текст. БУКАВЫ
+			ChatID:      chatID,
+			MessageID:   msgID,
+			ParseMode:   models.ParseModeHTML,
 			Text:        h.translation.GetText(langCode, "promo_active_when_delete"),
 			ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 		})
@@ -407,10 +406,9 @@ func (h *Handler) PromoDeleteConfirmationCallbackHandler(ctx context.Context, b 
 	}
 
 	_, err = b.EditMessageText(ctx, &bot.EditMessageTextParams{
-		ChatID:    chatID,
-		MessageID: msgID,
-		ParseMode: models.ParseModeHTML,
-		// TODO: Серега, нужен текст. БУКАВЫ
+		ChatID:      chatID,
+		MessageID:   msgID,
+		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(langCode, "promo_confirm_when_delete"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 	})
