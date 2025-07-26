@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -59,7 +60,11 @@ func TestPromoMyListCallbackHandler_Filter(t *testing.T) {
 	if strings.Contains(httpc.body, "C1") || strings.Contains(httpc.body, "B1") {
 		t.Fatalf("unexpected promo codes in list: %s", httpc.body)
 	}
-	if !strings.Contains(httpc.body, "A1") || !strings.Contains(httpc.body, "D1") {
+
+	wantA := fmt.Sprintf(tm.GetText("en", "promo.item.compact_sub"), tm.GetText("en", "promo.item.status_icon.active"), "A1", 1, 1)
+	wantD := fmt.Sprintf(tm.GetText("en", "promo.item.compact_sub"), tm.GetText("en", "promo.item.status_icon.active"), "D1", 1, -1)
+
+	if !strings.Contains(httpc.body, wantA) || !strings.Contains(httpc.body, wantD) {
 		t.Fatalf("expected promo codes missing: %s", httpc.body)
 	}
 }
