@@ -15,6 +15,7 @@ func (stubReferralRepo) Create(ctx context.Context, referrerID, refereeID int64)
 func (stubReferralRepo) FindByReferee(ctx context.Context, refereeID int64) (*referralrepo.Model, error) {
 	return nil, nil
 }
+func (stubReferralRepo) MarkBonusGranted(ctx context.Context, referralID int64) error { return nil }
 
 func TestNewHandlerReferral(t *testing.T) {
 	tm := translation.GetInstance()

@@ -105,7 +105,7 @@ type StubReferralRepo struct {
 func (s *StubReferralRepo) Create(ctx context.Context, referrerID, refereeID int64) error {
 	s.CreatedReferrerID = referrerID
 	s.CreatedRefereeID = refereeID
-	s.Model = &referralrepo.Model{ID: 1, ReferrerID: referrerID, RefereeID: refereeID, CreatedAt: time.Now()}
+	s.Model = &referralrepo.Model{ID: 1, ReferrerID: referrerID, RefereeID: refereeID, CreatedAt: time.Now(), BonusGranted: false}
 	return nil
 }
 
@@ -114,4 +114,11 @@ func (s *StubReferralRepo) FindByReferee(ctx context.Context, refereeID int64) (
 		return s.Model, nil
 	}
 	return nil, nil
+}
+
+func (s *StubReferralRepo) MarkBonusGranted(ctx context.Context, referralID int64) error {
+	if s.Model != nil && s.Model.ID == referralID {
+		s.Model.BonusGranted = true
+	}
+	return nil
 }
