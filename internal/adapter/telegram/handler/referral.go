@@ -12,6 +12,7 @@ import (
 	"github.com/go-telegram/bot/models"
 
 	"remnawave-tg-shop-bot/internal/pkg/config"
+	"remnawave-tg-shop-bot/internal/pkg/contextkey"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	"remnawave-tg-shop-bot/internal/service/payment"
 	menu "remnawave-tg-shop-bot/internal/ui/menu"
