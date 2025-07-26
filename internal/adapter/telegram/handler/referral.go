@@ -111,13 +111,37 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 	subscribed := 0
 	bonusTotal := 0
 
-	refLink := fmt.Sprintf("%s?start=ref_%d", config.BotURL(), customer.TelegramID)
+	botURL := strings.TrimPrefix(config.BotURL(), "https://t.me/")
+	botURL = strings.TrimPrefix(botURL, "http://t.me/")
+	refLink := menu.BuildReferralLink(botURL, fmt.Sprintf("ref_%d", customer.TelegramID))
 
-	text := fmt.Sprintf(tm.GetText(langCode, "referral_system_text"), invited, subscribed, bonusTotal, refLink, config.GetReferralBonus())
-	text += "\n" + fmt.Sprintf(tm.GetText(langCode, "ref.link.text"), refLink)
+	var sb strings.Builder
+	sb.WriteString(tm.GetText(langCode, "ref.msg.welcome"))
+	sb.WriteString("\n\n")
+	sb.WriteString(tm.GetText(langCode, "ref.msg.stats_title"))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.stats_invited"), invited))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.stats_paid"), subscribed))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.stats_sum"), bonusTotal))
+	sb.WriteString("\n\n")
+	sb.WriteString(tm.GetText(langCode, "ref.msg.link_title"))
+	sb.WriteString("\n")
+	sb.WriteString(tm.GetText(langCode, "ref.msg.link_note"))
+	sb.WriteString("\n")
+	sb.WriteString(tm.GetText(langCode, "ref.msg.copy_hint"))
+	sb.WriteString(" ")
+	sb.WriteString(refLink)
+	sb.WriteString("\n\n")
+	sb.WriteString(tm.GetText(langCode, "ref.msg.bonus_info_title"))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.bonus_info_text"), config.GetReferralBonus(), config.GetReferralBonus()))
+
+	text := sb.String()
 
 	kb := [][]models.InlineKeyboardButton{
-		{{Text: tm.GetText(langCode, "invite_friend_button"), URL: refLink}},
+		{{Text: tm.GetText(langCode, "ref.button.invite"), URL: refLink}},
 		{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral}},
 	}
 

@@ -23,6 +23,17 @@ import (
 func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	ctxWithTime, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
+	parts := strings.SplitN(update.Message.Text, " ", 2)
+	if len(parts) == 2 && strings.HasPrefix(parts[1], "ref_") {
+		h.handleReferralStart(ctxWithTime, b, update, strings.TrimPrefix(parts[1], "ref_"))
+		return
+	}
+
+	h.handlePlainStart(ctxWithTime, b, update)
+}
+
+func (h *Handler) handlePlainStart(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.Message.From.LanguageCode
 	existingCustomer, err := h.customerRepository.FindByTelegramId(ctx, update.Message.Chat.ID)
 	if err != nil {
@@ -31,7 +42,7 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 	}
 
 	if existingCustomer == nil {
-		existingCustomer, err = h.customerRepository.Create(ctxWithTime, &domaincustomer.Customer{
+		_, err = h.customerRepository.Create(ctx, &domaincustomer.Customer{
 			TelegramID: update.Message.Chat.ID,
 			Language:   langCode,
 			Balance:    0,
@@ -41,30 +52,6 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 			return
 		}
 
-		parts := strings.Fields(update.Message.Text)
-		if len(parts) > 1 && strings.HasPrefix(parts[1], "ref_") {
-			code := strings.TrimPrefix(parts[1], "ref_")
-			referrerId, err := strconv.ParseInt(code, 10, 64)
-			if err != nil {
-				slog.Error("error parsing referrer id", "err", err)
-				return
-			}
-			referrer, err := h.customerRepository.FindByTelegramId(ctx, referrerId)
-			if err == nil && referrer != nil {
-				if err := h.referralRepository.Create(ctx, referrerId, existingCustomer.TelegramID); err == nil {
-					bonus := float64(config.GetReferralBonus())
-					_ = h.customerRepository.UpdateFields(ctx, referrer.ID, map[string]interface{}{"balance": referrer.Balance + bonus})
-					_ = h.customerRepository.UpdateFields(ctx, existingCustomer.ID, map[string]interface{}{"balance": bonus})
-					if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: referrer.TelegramID, Text: h.translation.GetText(referrer.Language, "referral_bonus_granted")}); err != nil {
-						slog.Error("send referral bonus", "err", err)
-					}
-					if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: existingCustomer.TelegramID, Text: h.translation.GetText(langCode, "referral_bonus_granted")}); err != nil {
-						slog.Error("send referral bonus", "err", err)
-					}
-					slog.Info("referral created", "referrerId", utils.MaskHalfInt64(referrerId), "refereeId", utils.MaskHalfInt64(existingCustomer.TelegramID))
-				}
-			}
-		}
 	} else {
 		updates := map[string]interface{}{
 			"language": langCode,
@@ -99,6 +86,46 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 	if err != nil {
 		slog.Error("Error sending /start message", "err", err)
 	}
+}
+
+func (h *Handler) handleReferralStart(ctx context.Context, b *bot.Bot, update *models.Update, payload string) {
+	langCode := update.Message.From.LanguageCode
+	referrerID, err := strconv.ParseInt(payload, 10, 64)
+	if err != nil {
+		slog.Error("parse referrer id", "err", err)
+		h.handlePlainStart(ctx, b, update)
+		return
+	}
+
+	customer, err := h.customerRepository.FindByTelegramId(ctx, update.Message.Chat.ID)
+	if err != nil {
+		slog.Error("find customer", "err", err)
+		return
+	}
+
+	if customer == nil {
+		customer, err = h.customerRepository.Create(ctx, &domaincustomer.Customer{
+			TelegramID: update.Message.Chat.ID,
+			Language:   langCode,
+			Balance:    0,
+		})
+		if err != nil {
+			slog.Error("create customer", "err", err)
+			return
+		}
+	}
+
+	if referrerID == customer.TelegramID {
+		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(langCode, "ref.msg.self_ref")})
+	} else if existing, _ := h.referralRepository.FindByReferee(ctx, customer.TelegramID); existing != nil {
+		_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(langCode, "ref.msg.already_registered")})
+	} else {
+		if err := h.referralRepository.Create(ctx, referrerID, customer.TelegramID); err == nil {
+			_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: h.translation.GetText(langCode, "ref.msg.saved")})
+		}
+	}
+
+	h.handlePlainStart(ctx, b, update)
 }
 
 func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
