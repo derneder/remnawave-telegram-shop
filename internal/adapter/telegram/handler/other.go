@@ -127,29 +127,39 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 		return
 	}
 	subURL, err := url.Parse(*customer.SubscriptionLink)
-	if err != nil || subURL.Scheme != "https" {
+	if err != nil {
 		slog.Error("invalid subscription url", "err", err)
 		return
 	}
-	client := http.Client{Timeout: 5 * time.Second}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, subURL.String(), nil)
-	if err != nil {
-		slog.Error("new request", "err", err)
-		return
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		slog.Error("download keys", "err", err)
-		return
-	}
-	defer func() {
-		if cerr := resp.Body.Close(); cerr != nil {
-			slog.Error("close body", "err", cerr)
+
+	var data []byte
+	switch subURL.Scheme {
+	case "https", "http":
+		client := http.Client{Timeout: 5 * time.Second}
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, subURL.String(), nil)
+		if err != nil {
+			slog.Error("new request", "err", err)
+			return
 		}
-	}()
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		slog.Error("read keys", "err", err)
+		resp, err := client.Do(req)
+		if err != nil {
+			slog.Error("download keys", "err", err)
+			return
+		}
+		defer func() {
+			if cerr := resp.Body.Close(); cerr != nil {
+				slog.Error("close body", "err", cerr)
+			}
+		}()
+		data, err = io.ReadAll(resp.Body)
+		if err != nil {
+			slog.Error("read keys", "err", err)
+			return
+		}
+	case "vless":
+		data = []byte(subURL.String())
+	default:
+		slog.Error("unsupported subscription scheme", "scheme", subURL.Scheme)
 		return
 	}
 
