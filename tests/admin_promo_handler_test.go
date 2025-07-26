@@ -41,6 +41,10 @@ func (s *promoServiceStub) CreateBalance(ctx context.Context, amount, limit int,
 	return "CODE", nil
 }
 
+func (s *promoServiceStub) Freeze(ctx context.Context, id int64) error   { return nil }
+func (s *promoServiceStub) Unfreeze(ctx context.Context, id int64) error { return nil }
+func (s *promoServiceStub) Delete(ctx context.Context, id int64) error   { return nil }
+
 type stubHTTP struct{ body string }
 
 func (h *stubHTTP) Do(r *http.Request) (*http.Response, error) {

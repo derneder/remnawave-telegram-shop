@@ -13,6 +13,9 @@ const codeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 type Creator interface {
 	CreateSubscription(ctx context.Context, code string, days, limit int, createdBy int64) (string, error)
 	CreateBalance(ctx context.Context, amount, limit int, createdBy int64) (string, error)
+	Freeze(ctx context.Context, id int64) error
+	Unfreeze(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type Service struct {
@@ -66,6 +69,21 @@ func (s *Service) CreateBalance(ctx context.Context, amount, limit int, createdB
 		return "", err
 	}
 	return code, nil
+}
+
+// Freeze sets promocode status to inactive.
+func (s *Service) Freeze(ctx context.Context, id int64) error {
+	return s.repo.UpdateStatus(ctx, id, false)
+}
+
+// Unfreeze sets promocode status to active.
+func (s *Service) Unfreeze(ctx context.Context, id int64) error {
+	return s.repo.UpdateStatus(ctx, id, true)
+}
+
+// Delete marks promocode as deleted.
+func (s *Service) Delete(ctx context.Context, id int64) error {
+	return s.repo.UpdateDeleteStatus(ctx, id, true)
 }
 
 func generateCode() (string, error) {
