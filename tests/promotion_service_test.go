@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"remnawave-tg-shop-bot/internal/repository/pg"
@@ -60,6 +61,19 @@ func TestCreateBalanceCodeUnique(t *testing.T) {
 	}
 	if c1 == c2 {
 		t.Fatal("codes not unique")
+	}
+}
+
+func TestCreateSubscriptionRandomCodeFormat(t *testing.T) {
+	repo := &stubPromoRepo{}
+	svc := promotion.NewService(repo)
+	code, err := svc.CreateSubscription(context.Background(), "", 30, 1, 1)
+	if err != nil {
+		t.Fatalf("unexpected err: %v", err)
+	}
+	want := regexp.MustCompile(`^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$`)
+	if !want.MatchString(code) {
+		t.Fatalf("code format invalid: %s", code)
 	}
 }
 

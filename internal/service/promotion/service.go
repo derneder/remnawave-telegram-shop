@@ -3,6 +3,7 @@ package promotion
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
 
 	"remnawave-tg-shop-bot/internal/repository/pg"
 )
@@ -30,7 +31,7 @@ func NewService(repo Repository) *Service {
 func (s *Service) CreateSubscription(ctx context.Context, code string, days, limit int, createdBy int64) (string, error) {
 	if code == "" {
 		var err error
-		code, err = generateCode()
+		code, err = generateSubscriptionCode()
 		if err != nil {
 			return "", err
 		}
@@ -101,4 +102,15 @@ func generateCode() (string, error) {
 		b[i] = codeAlphabet[int(b[i])%len(codeAlphabet)]
 	}
 	return string(b), nil
+}
+
+func generateSubscriptionCode() (string, error) {
+	b := make([]byte, 15)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	for i := range b {
+		b[i] = codeAlphabet[int(b[i])%len(codeAlphabet)]
+	}
+	return fmt.Sprintf("%s-%s-%s", string(b[:5]), string(b[5:10]), string(b[10:])), nil
 }
