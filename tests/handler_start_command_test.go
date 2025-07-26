@@ -175,3 +175,67 @@ func TestStartCommandHandler_ReferralDuplicate(t *testing.T) {
 		t.Fatalf("referral info missing")
 	}
 }
+
+func TestStartCommandHandler_ReferralFormatSpace(t *testing.T) {
+	trans := translation.GetInstance()
+	if err := trans.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+
+	custRepo := &customerRepoNotFound{}
+	refRepo := &StubReferralRepo{}
+	httpc := &startHTTPClient{}
+	h := handlerpkg.NewHandler(nil, nil, trans, custRepo, nil, refRepo, nil, nil, nil, nil)
+
+	b, err := bot.New("token", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
+	if err != nil {
+		t.Fatalf("bot init: %v", err)
+	}
+
+	upd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 4}, From: &models.User{ID: 4, LanguageCode: "en", FirstName: "u"}, Text: "/start ref_123", Entities: []models.MessageEntity{{Type: models.MessageEntityTypeBotCommand, Offset: 0, Length: len("/start")}}}}
+
+	h.StartCommandHandler(context.Background(), b, upd)
+
+	if refRepo.CreatedReferrerID != 123 || refRepo.CreatedRefereeID != 4 {
+		t.Fatalf("referral not created via space format")
+	}
+	if len(httpc.bodies) < 2 {
+		t.Fatalf("expected at least 2 requests")
+	}
+	body := httpc.bodies[len(httpc.bodies)-1]
+	if !strings.Contains(body, "Invite a friend") || !strings.Contains(body, "ref_4") {
+		t.Fatalf("referral info missing")
+	}
+}
+
+func TestStartCommandHandler_ReferralFormatEqual(t *testing.T) {
+	trans := translation.GetInstance()
+	if err := trans.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+
+	custRepo := &customerRepoNotFound{}
+	refRepo := &StubReferralRepo{}
+	httpc := &startHTTPClient{}
+	h := handlerpkg.NewHandler(nil, nil, trans, custRepo, nil, refRepo, nil, nil, nil, nil)
+
+	b, err := bot.New("token", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
+	if err != nil {
+		t.Fatalf("bot init: %v", err)
+	}
+
+	upd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 5}, From: &models.User{ID: 5, LanguageCode: "en", FirstName: "u"}, Text: "/start=ref_123", Entities: []models.MessageEntity{{Type: models.MessageEntityTypeBotCommand, Offset: 0, Length: len("/start")}}}}
+
+	h.StartCommandHandler(context.Background(), b, upd)
+
+	if refRepo.CreatedReferrerID != 123 || refRepo.CreatedRefereeID != 5 {
+		t.Fatalf("referral not created via equal format")
+	}
+	if len(httpc.bodies) < 2 {
+		t.Fatalf("expected at least 2 requests")
+	}
+	body := httpc.bodies[len(httpc.bodies)-1]
+	if !strings.Contains(body, "Invite a friend") || !strings.Contains(body, "ref_5") {
+		t.Fatalf("referral info missing")
+	}
+}

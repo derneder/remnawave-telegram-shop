@@ -25,6 +25,9 @@ func (h *Handler) StartCommandHandler(ctx context.Context, b *bot.Bot, update *m
 	defer cancel()
 
 	parts := strings.SplitN(update.Message.Text, " ", 2)
+	if len(parts) == 1 {
+		parts = strings.SplitN(update.Message.Text, "=", 2)
+	}
 	if len(parts) == 2 && strings.HasPrefix(parts[1], "ref_") {
 		h.handleReferralStart(ctxWithTime, b, update, strings.TrimPrefix(parts[1], "ref_"))
 		return
