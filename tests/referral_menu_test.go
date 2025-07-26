@@ -16,11 +16,11 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 )
 
-type stubHTTP2 struct{ body string }
+type stubHTTP2 struct{ bodies []string }
 
 func (h *stubHTTP2) Do(r *http.Request) (*http.Response, error) {
 	b, _ := io.ReadAll(r.Body)
-	h.body = string(b)
+	h.bodies = append(h.bodies, string(b))
 	resp := &http.Response{StatusCode: http.StatusOK}
 	resp.Body = io.NopCloser(strings.NewReader(`{"ok":true,"result":{"message_id":1}}`))
 	return resp, nil
@@ -38,7 +38,13 @@ func TestReferralCallbackHandler_UserAdmin(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, false)
 	h.ReferralCallbackHandler(ctx, b, upd)
-	if !strings.Contains(httpc.body, "callback_query_id") {
+	if len(httpc.bodies) < 2 {
+		t.Fatalf("expected 2 requests, got %d", len(httpc.bodies))
+	}
+	if !strings.Contains(httpc.bodies[0], tm.GetText("ru", "promo_ref_menu_text")) {
+		t.Fatalf("menu not sent")
+	}
+	if !strings.Contains(httpc.bodies[1], "callback_query_id") {
 		t.Fatalf("callback not answered")
 	}
 }
