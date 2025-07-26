@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -14,6 +15,8 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	uimenu "remnawave-tg-shop-bot/internal/ui/menu"
 )
+
+var promoCodeRe = regexp.MustCompile(`^[A-Z0-9-]+$`)
 
 // adminPromoState keeps wizard data for one admin.
 type adminPromoState struct {
@@ -239,9 +242,9 @@ func (h *Handler) AdminPromoCodeMessageHandler(ctx context.Context, b *bot.Bot, 
 		return
 	}
 	code := strings.TrimSpace(update.Message.Text)
-	if code == "" {
+	if !promoCodeRe.MatchString(code) {
 		h.expectCode(update.Message.From.ID)
-		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_code_prompt")}); serr != nil {
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo.code.invalid")}); serr != nil {
 			slog.Error("send invalid code", "err", serr)
 		}
 		return

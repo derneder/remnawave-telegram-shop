@@ -207,6 +207,9 @@ func TestAdminPromoSubCustomCodeManualLimit(t *testing.T) {
 
 	msgUpd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 1}, From: &models.User{ID: 1, LanguageCode: "ru"}, Text: "FOO"}}
 	h.AdminPromoCodeMessageHandler(ctx, b, msgUpd)
+	if h.IsAwaitingCode(1) {
+		t.Fatal("state not advanced after valid code")
+	}
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubDays + ":30"
 	h.AdminPromoCallbackHandler(ctx, b, upd)
@@ -221,5 +224,32 @@ func TestAdminPromoSubCustomCodeManualLimit(t *testing.T) {
 
 	if svc.sub.code != "FOO" || svc.sub.limit != 5 {
 		t.Fatalf("custom code/manual limit not applied: %#v", svc.sub)
+	}
+}
+
+func TestAdminPromoSubCustomCodeInvalid(t *testing.T) {
+	SetTestEnv(t)
+	tm := translation.GetInstance()
+	_ = tm.InitDefaultTranslations()
+	svc := &promoServiceStub{}
+	httpc := &stubHTTP{}
+	b, _ := bot.New("t", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
+	h := handlerpkg.NewHandler(nil, nil, tm, &StubCustomerRepo{}, nil, nil, nil, nil, svc, nil)
+
+	upd := &models.Update{CallbackQuery: &models.CallbackQuery{ID: "1", From: models.User{ID: 1, LanguageCode: "ru"}, Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}}}}
+	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubStart
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubCodeCustom
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	msgUpd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 1}, From: &models.User{ID: 1, LanguageCode: "ru"}, Text: "foo"}}
+	h.AdminPromoCodeMessageHandler(ctx, b, msgUpd)
+
+	if !h.IsAwaitingCode(1) {
+		t.Fatal("state should still await code")
 	}
 }
