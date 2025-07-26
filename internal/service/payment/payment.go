@@ -346,6 +346,9 @@ func (s PaymentService) CreatePromocode(ctx context.Context, customer *domaincus
 
 	code = code[1:24]
 
+	if uses == 0 {
+		uses = -1
+	}
 	_, err := s.promocodeRepository.Create(ctx, &pg.Promocode{
 		Code:      code,
 		Months:    months,
@@ -372,7 +375,7 @@ func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincust
 	if !promo.Active || promo.Deleted {
 		return nil, ErrPromocodeExpired
 	}
-	if promo.UsesLeft <= 0 && promo.UsesLeft != 0 {
+	if promo.UsesLeft == 0 {
 		return nil, ErrPromocodeLimitExced
 	}
 	if promo.Type == 2 {
@@ -401,7 +404,7 @@ func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincust
 		customer.ExpireAt = &user.ExpireAt
 	}
 
-	if promo.UsesLeft > 0 {
+	if promo.UsesLeft != -1 {
 		if err := s.promocodeRepository.DecrementUses(ctx, promo.ID); err != nil {
 			return nil, err
 		}

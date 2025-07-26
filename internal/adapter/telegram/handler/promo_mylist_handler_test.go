@@ -42,7 +42,7 @@ func TestPromoMyListCallbackHandler_Filter(t *testing.T) {
 	repo := &stubPromoRepo{promos: []pg.Promocode{
 		{ID: 1, Code: "A1", UsesLeft: 1, CreatedBy: 1, Active: true},
 		{ID: 2, Code: "B1", UsesLeft: 0, CreatedBy: 1, Active: false},
-		{ID: 3, Code: "C1", UsesLeft: 0, CreatedBy: 1, Active: true, Deleted: true},
+		{ID: 3, Code: "C1", UsesLeft: 1, CreatedBy: 1, Active: true, Deleted: true},
 		{ID: 4, Code: "D1", UsesLeft: -1, CreatedBy: 1, Active: true},
 	}}
 
@@ -56,10 +56,10 @@ func TestPromoMyListCallbackHandler_Filter(t *testing.T) {
 
 	h.PromoMyListCallbackHandler(context.Background(), b, upd)
 
-	if strings.Contains(httpc.body, "C1") || strings.Contains(httpc.body, "D1") {
+	if strings.Contains(httpc.body, "C1") || strings.Contains(httpc.body, "B1") {
 		t.Fatalf("unexpected promo codes in list: %s", httpc.body)
 	}
-	if !strings.Contains(httpc.body, "A1") || !strings.Contains(httpc.body, "B1") {
+	if !strings.Contains(httpc.body, "A1") || !strings.Contains(httpc.body, "D1") {
 		t.Fatalf("expected promo codes missing: %s", httpc.body)
 	}
 }
