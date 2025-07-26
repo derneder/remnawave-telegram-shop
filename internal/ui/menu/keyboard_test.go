@@ -119,3 +119,41 @@ func TestBuildAdminPromoMenus(t *testing.T) {
 		t.Fatalf("unexpected admin promo codes menu: %#v", kb)
 	}
 }
+
+func TestBuildAdminPromoBalanceWizardStepConfirm(t *testing.T) {
+	tm := translation.GetInstance()
+	if err := tm.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+	kb := BuildAdminPromoBalanceWizardStep("en", StepConfirm)
+	if len(kb) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(kb))
+	}
+	if len(kb[0]) != 2 ||
+		kb[0][0].CallbackData != CallbackPromoAdminBalanceConfirm ||
+		kb[0][1].CallbackData != CallbackPromoAdminCancel {
+		t.Fatalf("unexpected first row: %#v", kb[0])
+	}
+	if len(kb[1]) != 1 || kb[1][0].CallbackData != CallbackPromoAdminBack {
+		t.Fatalf("unexpected second row: %#v", kb[1])
+	}
+}
+
+func TestBuildAdminPromoSubWizardStepConfirm(t *testing.T) {
+	tm := translation.GetInstance()
+	if err := tm.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+	kb := BuildAdminPromoSubWizardStep("en", StepConfirm)
+	if len(kb) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(kb))
+	}
+	if len(kb[0]) != 2 ||
+		kb[0][0].CallbackData != CallbackPromoAdminSubConfirm ||
+		kb[0][1].CallbackData != CallbackPromoAdminCancel {
+		t.Fatalf("unexpected first row: %#v", kb[0])
+	}
+	if len(kb[1]) != 1 || kb[1][0].CallbackData != CallbackPromoAdminBack {
+		t.Fatalf("unexpected second row: %#v", kb[1])
+	}
+}
