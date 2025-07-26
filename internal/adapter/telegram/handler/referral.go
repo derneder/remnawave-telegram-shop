@@ -162,6 +162,7 @@ func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, up
 		text.WriteString("\n\n")
 		for _, p := range promos {
 			text.WriteString(buildPromoItemText(lang, p))
+			text.WriteString("\n")
 			kb = append(kb, buildPromoItemButtons(lang, p))
 		}
 	}
@@ -347,34 +348,36 @@ func (h *Handler) PromoCodeMessageHandler(ctx context.Context, b *bot.Bot, updat
 
 func buildPromoItemText(lang string, p pg.Promocode) string {
 	tm := translation.GetInstance()
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.code"), p.Code))
-	sb.WriteString("\n")
-	t := tm.GetText(lang, "promo.item.type.subscription")
-	term := ""
-	if p.Type == 2 {
-		t = tm.GetText(lang, "promo.item.type.balance")
-		term = fmt.Sprintf(tm.GetText(lang, "promo.item.term.amount"), p.Amount/100)
-	} else {
-		days := p.Days
-		if days == 0 {
-			days = p.Months * 30
-		}
-		term = fmt.Sprintf(tm.GetText(lang, "promo.item.term.days"), days)
-	}
-	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.type"), t))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.term"), term))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.uses"), p.UsesLeft))
-	sb.WriteString("\n")
-	status := tm.GetText(lang, "promo.item.status.active")
+	icon := tm.GetText(lang, "promo.item.status_icon.active")
 	if !p.Active {
-		status = tm.GetText(lang, "promo.item.status.inactive")
+		icon = tm.GetText(lang, "promo.item.status_icon.inactive")
 	}
-	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.status"), status))
-	sb.WriteString("\n\n")
-	return sb.String()
+
+	if p.Type == 2 {
+		return fmt.Sprintf(
+			tm.GetText(lang, "promo.item.compact_bal"),
+			icon,
+			p.Code,
+			p.Amount/100,
+			p.UsesLeft,
+		)
+	}
+
+	months := p.Months
+	if months == 0 && p.Days > 0 {
+		months = p.Days / 30
+	}
+	if months == 0 {
+		months = 1
+	}
+
+	return fmt.Sprintf(
+		tm.GetText(lang, "promo.item.compact_sub"),
+		icon,
+		p.Code,
+		months,
+		p.UsesLeft,
+	)
 }
 
 func buildPromoItemButtons(lang string, p pg.Promocode) []models.InlineKeyboardButton {
