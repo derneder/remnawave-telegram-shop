@@ -238,7 +238,7 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		slog.Error("find customer", "err", err)
 		return
 	}
-	api := "https://tinyurl.com/api-create.php?url=" + url.QueryEscape(*customer.SubscriptionLink)
+	api := "https://clck.ru/--?url=" + url.QueryEscape(*customer.SubscriptionLink)
 	client := http.Client{Timeout: 5 * time.Second}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, api, nil)
@@ -254,22 +254,8 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 				slog.Error("close body", "err", cerr)
 			}
 		}
-		alt := "https://is.gd/create.php?format=simple&url=" + url.QueryEscape(*customer.SubscriptionLink)
-		req, err = http.NewRequestWithContext(ctx, http.MethodGet, alt, nil)
-		if err != nil {
-			slog.Error("new alt request", "err", err)
-			return
-		}
-		resp, err = client.Do(req)
-		if err != nil || resp.StatusCode >= http.StatusBadRequest {
-			if resp != nil && resp.Body != nil {
-				if cerr := resp.Body.Close(); cerr != nil {
-					slog.Error("close body", "err", cerr)
-				}
-			}
-			slog.Error("shorten", "err", err)
-			return
-		}
+		slog.Error("shorten", "err", err)
+		return
 	}
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil {

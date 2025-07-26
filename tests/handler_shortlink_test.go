@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -16,35 +15,11 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 )
 
-type closeRecorder struct {
-	closed *bool
-}
+type recordRoundTripper struct{ req *http.Request }
 
-func (c *closeRecorder) Read(p []byte) (int, error) { return 0, io.EOF }
-func (c *closeRecorder) Close() error               { *c.closed = true; return nil }
-
-type testRoundTripper struct {
-	mu                 sync.Mutex
-	call               int
-	firstClosed        bool
-	closedBeforeSecond bool
-}
-
-func (t *testRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.call++
-	switch t.call {
-	case 1:
-		body := &closeRecorder{closed: &t.firstClosed}
-		return &http.Response{StatusCode: http.StatusInternalServerError, Body: body, Header: make(http.Header), Request: req}, nil
-	case 2:
-		t.closedBeforeSecond = t.firstClosed
-		body := io.NopCloser(strings.NewReader("http://s.io/ok"))
-		return &http.Response{StatusCode: http.StatusOK, Body: body, Header: make(http.Header), Request: req}, nil
-	default:
-		return nil, io.EOF
-	}
+func (r *recordRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	r.req = req
+	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("http://s.io/ok")), Header: make(http.Header), Request: req}, nil
 }
 
 type dummyRoundTripper struct{}
@@ -53,8 +28,8 @@ func (dummyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("{}")), Header: make(http.Header), Request: req}, nil
 }
 
-func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
-	rt := &testRoundTripper{}
+func TestShortLinkCallbackHandler_RequestToClck(t *testing.T) {
+	rt := &recordRoundTripper{}
 	oldTransport := http.DefaultTransport
 	http.DefaultTransport = rt
 	defer func() { http.DefaultTransport = oldTransport }()
@@ -66,16 +41,16 @@ func TestShortLinkCallbackHandler_BodyClosedOnRetry(t *testing.T) {
 	}
 
 	link := "https://example.com"
-       h := handlerpkg.NewHandler(nil, nil, &translation.Manager{}, &StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}}, nil, nil, nil, nil, nil, nil)
+	h := handlerpkg.NewHandler(nil, nil, &translation.Manager{}, &StubCustomerRepo{CustomerByTelegramID: &domaincustomer.Customer{TelegramID: 1, SubscriptionLink: &link}}, nil, nil, nil, nil, nil, nil)
 
 	upd := &models.Update{CallbackQuery: &models.CallbackQuery{From: models.User{ID: 1, LanguageCode: "en"}}}
 
 	h.ShortLinkCallbackHandler(context.Background(), b, upd)
 
-	if !rt.firstClosed {
-		t.Fatal("first response body not closed")
+	if rt.req == nil {
+		t.Fatal("no request recorded")
 	}
-	if !rt.closedBeforeSecond {
-		t.Fatal("response body closed after retry request")
+	if !strings.Contains(rt.req.URL.Host, "clck.ru") {
+		t.Fatalf("unexpected shortener host %s", rt.req.URL.Host)
 	}
 }
