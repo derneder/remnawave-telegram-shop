@@ -76,14 +76,25 @@ func BuildLKMenu(lang string, c *domaincustomer.Customer, isAdmin bool) [][]mode
 }
 
 // BuildPromoRefMenu builds promo/referral menu for regular users.
-func BuildPromoRefMenu(lang string) [][]models.InlineKeyboardButton {
+// BuildPromoRefMain builds promo/referral menu for regular users.
+// If isAdmin is true the admin promo menu button is also added.
+func BuildPromoRefMain(lang string, isAdmin bool) [][]models.InlineKeyboardButton {
 	tm := translation.GetInstance()
-	return [][]models.InlineKeyboardButton{
+	kb := [][]models.InlineKeyboardButton{
 		{{Text: tm.GetText(lang, "activate_promocode_button"), CallbackData: CallbackPromoUserActivate}},
 		{{Text: tm.GetText(lang, "referral_system_button"), CallbackData: CallbackRefUserStats}},
 		{{Text: tm.GetText(lang, "personal_promocodes_button"), CallbackData: CallbackPromoUserPersonal}},
-		{{Text: tm.GetText(lang, "back_to_account_button"), CallbackData: "start"}},
 	}
+	if isAdmin {
+		kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackPromoAdminMenu}})
+	}
+	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "back_to_account_button"), CallbackData: "start"}})
+	return kb
+}
+
+// BuildPromoRefMenu is kept for backward compatibility.
+func BuildPromoRefMenu(lang string) [][]models.InlineKeyboardButton {
+	return BuildPromoRefMain(lang, false)
 }
 
 // BuildAdminPromoMenu returns root admin promo menu keyboard.
