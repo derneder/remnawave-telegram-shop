@@ -62,6 +62,9 @@ func New(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create bot: %w", err)
 	}
+	if u, err := b.GetMe(ctx); err == nil {
+		config.SetBotURL("https://t.me/" + u.Username)
+	}
 	customerRepo := pg.NewCustomerRepository(pool)
 	subSvc := notification.NewSubscriptionService(customerRepo, b, tm)
 

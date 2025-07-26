@@ -44,10 +44,10 @@ func TestCreateBalanceCodeUnique(t *testing.T) {
 func TestCreateSubscriptionDuplicate(t *testing.T) {
 	repo := &stubPromoRepo{}
 	svc := promotion.NewService(repo)
-	if err := svc.CreateSubscription(context.Background(), "CODE", 30, 1, 1); err != nil {
+	if _, err := svc.CreateSubscription(context.Background(), "CODE", 30, 1, 1); err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}
-	if err := svc.CreateSubscription(context.Background(), "CODE", 30, 1, 1); err == nil {
+	if _, err := svc.CreateSubscription(context.Background(), "CODE", 30, 1, 1); err == nil {
 		t.Fatal("expected error for duplicate code")
 	}
 }

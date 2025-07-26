@@ -70,7 +70,10 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		case uimenu.StepAmount:
 			if strings.HasPrefix(data, uimenu.CallbackPromoAdminBalanceAmount) {
 				val := strings.TrimPrefix(data, uimenu.CallbackPromoAdminBalanceAmount+":")
-				if val != "manual" {
+				if val == "manual" {
+					h.expectAmount(update.CallbackQuery.From.ID)
+					_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: tm.GetText(lang, "promo.balance.amount.manual_prompt")})
+				} else {
 					a, _ := strconv.Atoi(val)
 					state.Amount = a
 					state.Step = uimenu.StepLimit
@@ -158,15 +161,12 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 			switch data {
 			case uimenu.CallbackPromoAdminSubConfirm:
 				code := state.Code
-				if code == "" {
-					code = "RND" // stub
-				}
-				err := h.promotionService.CreateSubscription(ctx, code, state.Days, state.Limit, update.CallbackQuery.From.ID)
+				createdCode, err := h.promotionService.CreateSubscription(ctx, code, state.Days, state.Limit, update.CallbackQuery.From.ID)
 				if err != nil {
 					slog.Error("create sub promo", "err", err)
 					return
 				}
-				text := fmt.Sprintf(tm.GetText(lang, "promo_sub_created"), code, state.Days, state.Limit)
+				text := fmt.Sprintf(tm.GetText(lang, "promo_sub_created"), createdCode, state.Days, state.Limit)
 				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: text})
 				delete(h.adminStates, update.CallbackQuery.From.ID)
 				return
@@ -182,4 +182,31 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 			}
 		}
 	}
+}
+
+func (h *Handler) AdminPromoAmountMessageHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if !contextkey.IsAdminFromContext(ctx) {
+		return
+	}
+	if !h.consumeAmount(update.Message.Chat.ID) {
+		return
+	}
+	lang := update.Message.From.LanguageCode
+	tm := translation.GetInstance()
+	state := h.adminStates[update.Message.From.ID]
+	if state == nil {
+		return
+	}
+	val, err := strconv.Atoi(strings.TrimSpace(update.Message.Text))
+	if err != nil || val <= 0 {
+		h.expectAmount(update.Message.From.ID)
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo.balance.amount.invalid")}); serr != nil {
+			slog.Error("send invalid amount", "err", serr)
+		}
+		return
+	}
+	state.Amount = val
+	state.Step = uimenu.StepLimit
+	kb := uimenu.BuildAdminPromoBalanceWizardStep(lang, uimenu.StepLimit)
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: tm.GetText(lang, "promo_limit_prompt")})
 }

@@ -48,6 +48,17 @@ func TestBuildPromoRefMain(t *testing.T) {
 			}
 		}
 	}
+	foundList := false
+	for _, row := range kb {
+		for _, b := range row {
+			if b.CallbackData == CallbackPromoMyList {
+				foundList = true
+			}
+		}
+	}
+	if !foundList {
+		t.Fatalf("promo list button missing")
+	}
 	// ensure admin button is present when requested
 	kb = BuildPromoRefMain("ru", true)
 	found := false
