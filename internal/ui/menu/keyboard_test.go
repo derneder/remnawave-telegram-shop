@@ -48,16 +48,16 @@ func TestBuildPromoRefMain(t *testing.T) {
 			}
 		}
 	}
-	foundList := false
+	foundPersonal := false
 	for _, row := range kb {
 		for _, b := range row {
-			if b.CallbackData == CallbackPromoMyList {
-				foundList = true
+			if b.CallbackData == CallbackPersonalCodes {
+				foundPersonal = true
 			}
 		}
 	}
-	if !foundList {
-		t.Fatalf("promo list button missing")
+	if !foundPersonal {
+		t.Fatalf("personal codes button missing")
 	}
 	// ensure admin button is present when requested
 	kb = BuildPromoRefMain("ru", true)
@@ -71,5 +71,31 @@ func TestBuildPromoRefMain(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("admin button missing")
+	}
+}
+
+func TestBuildPersonalCodesMenu(t *testing.T) {
+	tm := translation.GetInstance()
+	if err := tm.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+	kb := BuildPersonalCodesMenu("en")
+	haveCreate := false
+	haveList := false
+	haveBack := false
+	for _, row := range kb {
+		for _, b := range row {
+			switch b.CallbackData {
+			case CallbackPersonalCreate:
+				haveCreate = true
+			case CallbackPromoMyList:
+				haveList = true
+			case "referral":
+				haveBack = true
+			}
+		}
+	}
+	if !(haveCreate && haveList && haveBack) {
+		t.Fatalf("buttons missing")
 	}
 }
