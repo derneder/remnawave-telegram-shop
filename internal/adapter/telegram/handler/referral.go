@@ -145,7 +145,7 @@ func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, up
 		if p.Deleted {
 			continue
 		}
-		if p.UsesLeft <= 0 && p.UsesLeft != 0 {
+		if p.UsesLeft == 0 {
 			continue
 		}
 		filtered = append(filtered, p)

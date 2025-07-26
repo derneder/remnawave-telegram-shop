@@ -35,6 +35,9 @@ func (s *Service) CreateSubscription(ctx context.Context, code string, days, lim
 			return "", err
 		}
 	}
+	if limit == 0 {
+		limit = -1
+	}
 	_, err := s.repo.Create(ctx, &pg.Promocode{
 		Code:      code,
 		Months:    0,
@@ -56,6 +59,9 @@ func (s *Service) CreateBalance(ctx context.Context, amount, limit int, createdB
 	code, err := generateCode()
 	if err != nil {
 		return "", err
+	}
+	if limit == 0 {
+		limit = -1
 	}
 	_, err = s.repo.Create(ctx, &pg.Promocode{
 		Code:      code,
