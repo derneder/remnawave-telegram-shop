@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"log/slog"
@@ -14,6 +15,7 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/contextkey"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
+	pg "remnawave-tg-shop-bot/internal/repository/pg"
 	"remnawave-tg-shop-bot/internal/service/payment"
 	menu "remnawave-tg-shop-bot/internal/ui/menu"
 )
@@ -174,29 +176,93 @@ func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, up
 		slog.Error("list promos", "err", err)
 		return
 	}
-	var text string
+
+	var text strings.Builder
 	var kb [][]models.InlineKeyboardButton
+
 	if len(promos) == 0 {
-		text = tm.GetText(lang, "promo.list.empty")
+		text.WriteString(tm.GetText(lang, "promo.list.empty"))
 	} else {
-		text = tm.GetText(lang, "promo.list.title") + "\n"
+		text.WriteString(tm.GetText(lang, "promo.list.title"))
+		text.WriteString("\n\n")
 		for _, p := range promos {
-			status := "✅"
-			if !p.Active {
-				status = "⏸"
-			}
-			text += fmt.Sprintf("%s %s\n", status, p.Code)
+			text.WriteString(buildPromoItemText(lang, p))
+			kb = append(kb, buildPromoItemButtons(lang, p))
 		}
 	}
+
 	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackReferral}})
+
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {
 		curMsg = update.CallbackQuery.Message.Message
 	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, ParseMode: models.ParseModeHTML, Text: text, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}})
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+		ChatID:      chatID,
+		MessageID:   msgID,
+		ParseMode:   models.ParseModeHTML,
+		Text:        text.String(),
+		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
+	})
 	if err != nil {
 		slog.Error("send promo list", "err", err)
 	}
+}
+
+func (h *Handler) PromoMyFreezeCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyFreeze+":")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if err := h.promocodeRepository.UpdateStatus(ctx, id, false); err != nil {
+		slog.Error("freeze promo", "err", err)
+	}
+	h.PromoMyListCallbackHandler(ctx, b, update)
+}
+
+func (h *Handler) PromoMyUnfreezeCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyUnfreeze+":")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if err := h.promocodeRepository.UpdateStatus(ctx, id, true); err != nil {
+		slog.Error("unfreeze promo", "err", err)
+	}
+	h.PromoMyListCallbackHandler(ctx, b, update)
+}
+
+func (h *Handler) PromoMyDeleteCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	lang := update.CallbackQuery.From.LanguageCode
+	tm := translation.GetInstance()
+	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyDelete+":")
+	chatID, msgID, err := getCallbackIDs(update)
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+	kb := [][]models.InlineKeyboardButton{
+		{{Text: tm.GetText(lang, "confirm_button"), CallbackData: menu.CallbackPromoMyDeleteConfirm + ":" + idStr}},
+		{{Text: tm.GetText(lang, "cancel_button"), CallbackData: menu.CallbackPromoMyList}},
+	}
+	var curMsg *models.Message
+	if update.CallbackQuery.Message.Message != nil {
+		curMsg = update.CallbackQuery.Message.Message
+	}
+	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
+		ChatID:      chatID,
+		MessageID:   msgID,
+		ParseMode:   models.ParseModeHTML,
+		Text:        tm.GetText(lang, "promo.delete.confirm"),
+		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
+	})
+	if err != nil {
+		slog.Error("send delete confirm", "err", err)
+	}
+}
+
+func (h *Handler) PromoMyDeleteConfirmCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyDeleteConfirm+":")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if err := h.promocodeRepository.UpdateDeleteStatus(ctx, id, true); err != nil {
+		slog.Error("delete promo", "err", err)
+	}
+	h.PromoMyListCallbackHandler(ctx, b, update)
 }
 
 func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -300,4 +366,49 @@ func (h *Handler) PromoCodeMessageHandler(ctx context.Context, b *bot.Bot, updat
 		Text:   fmt.Sprintf(tm.GetText(lang, "promo_applied"), until)}); err != nil {
 		slog.Error("send promo applied", "err", err)
 	}
+}
+
+func buildPromoItemText(lang string, p pg.Promocode) string {
+	tm := translation.GetInstance()
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.code"), p.Code))
+	sb.WriteString("\n")
+	t := tm.GetText(lang, "promo.item.type.subscription")
+	term := ""
+	if p.Type == 2 {
+		t = tm.GetText(lang, "promo.item.type.balance")
+		term = fmt.Sprintf(tm.GetText(lang, "promo.item.term.amount"), p.Amount/100)
+	} else {
+		days := p.Days
+		if days == 0 {
+			days = p.Months * 30
+		}
+		term = fmt.Sprintf(tm.GetText(lang, "promo.item.term.days"), days)
+	}
+	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.type"), t))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.term"), term))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.uses"), p.UsesLeft))
+	sb.WriteString("\n")
+	status := tm.GetText(lang, "promo.item.status.active")
+	if !p.Active {
+		status = tm.GetText(lang, "promo.item.status.inactive")
+	}
+	sb.WriteString(fmt.Sprintf(tm.GetText(lang, "promo.item.status"), status))
+	sb.WriteString("\n\n")
+	return sb.String()
+}
+
+func buildPromoItemButtons(lang string, p pg.Promocode) []models.InlineKeyboardButton {
+	tm := translation.GetInstance()
+	idStr := strconv.FormatInt(p.ID, 10)
+	var row []models.InlineKeyboardButton
+	if p.Active {
+		row = append(row, models.InlineKeyboardButton{Text: tm.GetText(lang, "freeze_button"), CallbackData: menu.CallbackPromoMyFreeze + ":" + idStr})
+	} else {
+		row = append(row, models.InlineKeyboardButton{Text: tm.GetText(lang, "unfreeze_button"), CallbackData: menu.CallbackPromoMyUnfreeze + ":" + idStr})
+	}
+	row = append(row, models.InlineKeyboardButton{Text: tm.GetText(lang, "delete_button"), CallbackData: menu.CallbackPromoMyDelete + ":" + idStr})
+	return row
 }
