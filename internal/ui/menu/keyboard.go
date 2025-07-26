@@ -13,10 +13,14 @@ import (
 // Callback data constants for promo/referral menus and admin promo wizard.
 const (
 	// user callbacks
-	CallbackPromoUserActivate = "promo_user_activate"
-	CallbackRefUserStats      = "ref_user_stats"
-	CallbackPromoUserPersonal = "promo_user_personal"
-	CallbackPromoMyList       = "promo_my_list"
+	CallbackPromoUserActivate    = "promo_user_activate"
+	CallbackRefUserStats         = "ref_user_stats"
+	CallbackPromoUserPersonal    = "promo_user_personal"
+	CallbackPromoMyList          = "promo_my_list"
+	CallbackPromoMyFreeze        = "promo_my_freeze"
+	CallbackPromoMyUnfreeze      = "promo_my_unfreeze"
+	CallbackPromoMyDelete        = "promo_my_delete"
+	CallbackPromoMyDeleteConfirm = "promo_my_delete_confirm"
 	// admin callbacks
 	CallbackPromoAdminMenu           = "promo_admin_menu"
 	CallbackPromoAdminBalanceStart   = "promo_admin_balance_start"
