@@ -125,7 +125,43 @@ func (h *Handler) handleReferralStart(ctx context.Context, b *bot.Bot, update *m
 		}
 	}
 
-	h.handlePlainStart(ctx, b, update)
+	text, kb := h.buildReferralInfo(customer, langCode)
+	_, err = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ParseMode: models.ParseModeHTML, Text: text, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}})
+	if err != nil {
+		slog.Error("send referral info", "err", err)
+	}
+}
+
+func (h *Handler) buildReferralInfo(customer *domaincustomer.Customer, lang string) (string, [][]models.InlineKeyboardButton) {
+	botURL := strings.TrimPrefix(config.BotURL(), "https://t.me/")
+	botURL = strings.TrimPrefix(botURL, "http://t.me/")
+	refLink := menu.BuildReferralLink(botURL, fmt.Sprintf("ref_%d", customer.TelegramID))
+
+	var sb strings.Builder
+	sb.WriteString(h.translation.GetText(lang, "ref.msg.welcome"))
+	sb.WriteString("\n\n")
+	sb.WriteString(h.translation.GetText(lang, "ref.msg.stats_title"))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.stats_invited"), 0))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.stats_paid"), 0))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.stats_sum"), 0))
+	sb.WriteString("\n\n")
+	sb.WriteString(h.translation.GetText(lang, "ref.msg.link_title"))
+	sb.WriteString("\n")
+	sb.WriteString(h.translation.GetText(lang, "ref.msg.link_note"))
+	sb.WriteString("\n")
+	sb.WriteString(h.translation.GetText(lang, "ref.msg.copy_hint"))
+	sb.WriteString(" ")
+	sb.WriteString(refLink)
+	sb.WriteString("\n\n")
+	sb.WriteString(h.translation.GetText(lang, "ref.msg.bonus_info_title"))
+	sb.WriteString("\n")
+	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.bonus_info_text"), config.GetReferralBonus(), config.GetReferralBonus()))
+
+	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "ref.button.invite"), URL: refLink}}}
+	return sb.String(), kb
 }
 
 func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

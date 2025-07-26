@@ -17,9 +17,14 @@ import (
 	referralrepo "remnawave-tg-shop-bot/internal/repository/referral"
 )
 
-type startHTTPClient struct{}
+type startHTTPClient struct{ bodies []string }
 
 func (c *startHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	var b []byte
+	if req.Body != nil {
+		b, _ = io.ReadAll(req.Body)
+	}
+	c.bodies = append(c.bodies, string(b))
 	resp := &http.Response{StatusCode: http.StatusOK}
 	resp.Body = io.NopCloser(strings.NewReader(`{"ok":true,"result":{"message_id":1}}`))
 	return resp, nil
@@ -79,9 +84,10 @@ func TestStartCommandHandler_ReferralSaved(t *testing.T) {
 
 	custRepo := &customerRepoNotFound{}
 	refRepo := &StubReferralRepo{}
+	httpc := &startHTTPClient{}
 	h := handlerpkg.NewHandler(nil, nil, trans, custRepo, nil, refRepo, nil, nil, nil, nil)
 
-	b, err := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
+	b, err := bot.New("token", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
 	if err != nil {
 		t.Fatalf("bot init: %v", err)
 	}
@@ -100,6 +106,16 @@ func TestStartCommandHandler_ReferralSaved(t *testing.T) {
 	if refRepo.CreatedReferrerID != 5 || refRepo.CreatedRefereeID != 2 {
 		t.Fatalf("referral not created")
 	}
+	if len(httpc.bodies) < 2 {
+		t.Fatalf("expected at least 2 requests")
+	}
+	body := httpc.bodies[len(httpc.bodies)-1]
+	if !strings.Contains(body, "Invite a friend") || !strings.Contains(body, "ref_2") {
+		t.Fatalf("referral info missing: %s", body)
+	}
+	if strings.Contains(body, trans.GetText("en", "start_menu_text")) {
+		t.Fatalf("unexpected start menu text")
+	}
 }
 
 func TestStartCommandHandler_ReferralSelf(t *testing.T) {
@@ -110,9 +126,10 @@ func TestStartCommandHandler_ReferralSelf(t *testing.T) {
 
 	custRepo := &customerRepoNotFound{}
 	refRepo := &StubReferralRepo{}
+	httpc := &startHTTPClient{}
 	h := handlerpkg.NewHandler(nil, nil, trans, custRepo, nil, refRepo, nil, nil, nil, nil)
 
-	b, _ := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
+	b, _ := bot.New("token", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
 
 	upd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 2}, From: &models.User{ID: 2, LanguageCode: "en", FirstName: "u"}, Text: "/start ref_2", Entities: []models.MessageEntity{{Type: models.MessageEntityTypeBotCommand, Offset: 0, Length: len("/start")}}}}
 
@@ -120,6 +137,13 @@ func TestStartCommandHandler_ReferralSelf(t *testing.T) {
 
 	if refRepo.CreatedReferrerID != 0 {
 		t.Fatalf("self referral should not be saved")
+	}
+	if len(httpc.bodies) < 2 {
+		t.Fatalf("expected at least 2 requests")
+	}
+	body := httpc.bodies[len(httpc.bodies)-1]
+	if !strings.Contains(body, "Invite a friend") || !strings.Contains(body, "ref_2") {
+		t.Fatalf("referral info missing")
 	}
 }
 
@@ -131,9 +155,10 @@ func TestStartCommandHandler_ReferralDuplicate(t *testing.T) {
 
 	repo := &StubCustomerRepo{}
 	refRepo := &StubReferralRepo{Model: &referralrepo.Model{RefereeID: 3}}
+	httpc := &startHTTPClient{}
 	h := handlerpkg.NewHandler(nil, nil, trans, repo, nil, refRepo, nil, nil, nil, nil)
 
-	b, _ := bot.New("token", bot.WithHTTPClient(time.Second, &startHTTPClient{}), bot.WithSkipGetMe())
+	b, _ := bot.New("token", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
 
 	upd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 3}, From: &models.User{ID: 3, LanguageCode: "en", FirstName: "u"}, Text: "/start ref_5", Entities: []models.MessageEntity{{Type: models.MessageEntityTypeBotCommand, Offset: 0, Length: len("/start")}}}}
 
@@ -141,5 +166,12 @@ func TestStartCommandHandler_ReferralDuplicate(t *testing.T) {
 
 	if refRepo.CreatedReferrerID != 0 {
 		t.Fatalf("duplicate referral saved")
+	}
+	if len(httpc.bodies) < 2 {
+		t.Fatalf("expected at least 2 requests")
+	}
+	body := httpc.bodies[len(httpc.bodies)-1]
+	if !strings.Contains(body, "Invite a friend") || !strings.Contains(body, "ref_3") {
+		t.Fatalf("referral info missing")
 	}
 }
