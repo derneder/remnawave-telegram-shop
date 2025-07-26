@@ -42,6 +42,7 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 	state := h.adminStates[update.CallbackQuery.From.ID]
 	if strings.HasPrefix(data, uimenu.CallbackPromoAdminMenu) {
 		h.adminStates[update.CallbackQuery.From.ID] = &adminPromoState{}
+		h.clearAdminInputs(update.CallbackQuery.From.ID)
 		kb := uimenu.BuildAdminPromoMenu(lang)
 		_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: tm.GetText(lang, "admin_panel_button")})
 		return
@@ -85,7 +86,10 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		case uimenu.StepLimit:
 			if strings.HasPrefix(data, uimenu.CallbackPromoAdminBalanceLimit) {
 				val := strings.TrimPrefix(data, uimenu.CallbackPromoAdminBalanceLimit+":")
-				if val != "manual" {
+				if val == "manual" {
+					h.expectLimit(update.CallbackQuery.From.ID)
+					_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: tm.GetText(lang, "promo.limit.manual_prompt")})
+				} else {
 					l, _ := strconv.Atoi(val)
 					state.Limit = l
 					state.Step = uimenu.StepConfirm
@@ -106,6 +110,7 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 				text := fmt.Sprintf(tm.GetText(lang, "promo_balance_created"), code, state.Amount, state.Limit)
 				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: text})
 				delete(h.adminStates, update.CallbackQuery.From.ID)
+				h.clearAdminInputs(update.CallbackQuery.From.ID)
 				return
 			case uimenu.CallbackPromoAdminBack:
 				state.Step = uimenu.StepLimit
@@ -114,6 +119,7 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 				return
 			case uimenu.CallbackPromoAdminCancel:
 				delete(h.adminStates, update.CallbackQuery.From.ID)
+				h.clearAdminInputs(update.CallbackQuery.From.ID)
 				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: tm.GetText(lang, "promo_cancelled")})
 				return
 			}
@@ -129,11 +135,8 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 				return
 			}
 			if data == uimenu.CallbackPromoAdminSubCodeCustom {
-				// For simplicity, not implemented in tests
-				state.Code = "CUSTOM"
-				state.Step = uimenu.StepDays
-				kb := uimenu.BuildAdminPromoSubWizardStep(lang, uimenu.StepDays)
-				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: tm.GetText(lang, "promo_days_prompt")})
+				h.expectCode(update.CallbackQuery.From.ID)
+				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: tm.GetText(lang, "promo_code_prompt")})
 				return
 			}
 		case uimenu.StepDays:
@@ -149,12 +152,17 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		case uimenu.StepLimit:
 			if strings.HasPrefix(data, uimenu.CallbackPromoAdminSubLimit) {
 				val := strings.TrimPrefix(data, uimenu.CallbackPromoAdminSubLimit+":")
-				l, _ := strconv.Atoi(val)
-				state.Limit = l
-				state.Step = uimenu.StepConfirm
-				kb := uimenu.BuildAdminPromoSubWizardStep(lang, uimenu.StepConfirm)
-				txt := fmt.Sprintf(tm.GetText(lang, "promo_confirm_text"), state.Days, state.Limit)
-				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: txt})
+				if val == "manual" {
+					h.expectLimit(update.CallbackQuery.From.ID)
+					_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: tm.GetText(lang, "promo.limit.manual_prompt")})
+				} else {
+					l, _ := strconv.Atoi(val)
+					state.Limit = l
+					state.Step = uimenu.StepConfirm
+					kb := uimenu.BuildAdminPromoSubWizardStep(lang, uimenu.StepConfirm)
+					txt := fmt.Sprintf(tm.GetText(lang, "promo_confirm_text"), state.Days, state.Limit)
+					_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: txt})
+				}
 				return
 			}
 		case uimenu.StepConfirm:
@@ -169,6 +177,7 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 				text := fmt.Sprintf(tm.GetText(lang, "promo_sub_created"), createdCode, state.Days, state.Limit)
 				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: text})
 				delete(h.adminStates, update.CallbackQuery.From.ID)
+				h.clearAdminInputs(update.CallbackQuery.From.ID)
 				return
 			case uimenu.CallbackPromoAdminBack:
 				state.Step = uimenu.StepLimit
@@ -177,6 +186,7 @@ func (h *Handler) AdminPromoCallbackHandler(ctx context.Context, b *bot.Bot, upd
 				return
 			case uimenu.CallbackPromoAdminCancel:
 				delete(h.adminStates, update.CallbackQuery.From.ID)
+				h.clearAdminInputs(update.CallbackQuery.From.ID)
 				_, _ = SafeEditMessageText(ctx, b, update.CallbackQuery.Message.Message, &bot.EditMessageTextParams{ChatID: chatID, MessageID: msgID, Text: tm.GetText(lang, "promo_cancelled")})
 				return
 			}
@@ -209,4 +219,66 @@ func (h *Handler) AdminPromoAmountMessageHandler(ctx context.Context, b *bot.Bot
 	state.Step = uimenu.StepLimit
 	kb := uimenu.BuildAdminPromoBalanceWizardStep(lang, uimenu.StepLimit)
 	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: tm.GetText(lang, "promo_limit_prompt")})
+}
+
+func (h *Handler) AdminPromoCodeMessageHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if !contextkey.IsAdminFromContext(ctx) {
+		return
+	}
+	if !h.consumeCode(update.Message.Chat.ID) {
+		return
+	}
+	lang := update.Message.From.LanguageCode
+	tm := translation.GetInstance()
+	state := h.adminStates[update.Message.From.ID]
+	if state == nil {
+		return
+	}
+	code := strings.TrimSpace(update.Message.Text)
+	if code == "" {
+		h.expectCode(update.Message.From.ID)
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_code_prompt")}); serr != nil {
+			slog.Error("send invalid code", "err", serr)
+		}
+		return
+	}
+	state.Code = code
+	state.Step = uimenu.StepDays
+	kb := uimenu.BuildAdminPromoSubWizardStep(lang, uimenu.StepDays)
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: tm.GetText(lang, "promo_days_prompt")})
+}
+
+func (h *Handler) AdminPromoLimitMessageHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	if !contextkey.IsAdminFromContext(ctx) {
+		return
+	}
+	if !h.consumeLimit(update.Message.Chat.ID) {
+		return
+	}
+	lang := update.Message.From.LanguageCode
+	tm := translation.GetInstance()
+	state := h.adminStates[update.Message.From.ID]
+	if state == nil {
+		return
+	}
+	val, err := strconv.Atoi(strings.TrimSpace(update.Message.Text))
+	if err != nil || val < 0 {
+		h.expectLimit(update.Message.From.ID)
+		if _, serr := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo.limit.invalid")}); serr != nil {
+			slog.Error("send invalid limit", "err", serr)
+		}
+		return
+	}
+	state.Limit = val
+	state.Step = uimenu.StepConfirm
+	var kb [][]models.InlineKeyboardButton
+	var text string
+	if state.Type == "balance" {
+		kb = uimenu.BuildAdminPromoBalanceWizardStep(lang, uimenu.StepConfirm)
+		text = fmt.Sprintf(tm.GetText(lang, "promo_confirm_text"), state.Amount, state.Limit)
+	} else {
+		kb = uimenu.BuildAdminPromoSubWizardStep(lang, uimenu.StepConfirm)
+		text = fmt.Sprintf(tm.GetText(lang, "promo_confirm_text"), state.Days, state.Limit)
+	}
+	_, _ = b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb}, Text: text})
 }

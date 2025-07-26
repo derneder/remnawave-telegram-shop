@@ -65,4 +65,18 @@ func (a *App) InitHandlers(h *handler.Handler) {
 		return h.IsAwaitingAmount(upd.Message.Chat.ID)
 	}, h.AdminPromoAmountMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 
+	b.RegisterHandlerMatchFunc(func(upd *models.Update) bool {
+		if upd.Message == nil {
+			return false
+		}
+		return h.IsAwaitingCode(upd.Message.Chat.ID)
+	}, h.AdminPromoCodeMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+
+	b.RegisterHandlerMatchFunc(func(upd *models.Update) bool {
+		if upd.Message == nil {
+			return false
+		}
+		return h.IsAwaitingLimit(upd.Message.Chat.ID)
+	}, h.AdminPromoLimitMessageHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+
 }

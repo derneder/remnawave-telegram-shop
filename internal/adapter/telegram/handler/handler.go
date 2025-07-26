@@ -28,6 +28,8 @@ type Handler struct {
 	cache                    *cache.Cache
 	awaitingPromo            map[int64]bool
 	awaitingAmount           map[int64]bool
+	awaitingCode             map[int64]bool
+	awaitingLimit            map[int64]bool
 	promoMu                  sync.RWMutex
 	fsm                      map[int64]FSMState
 	adminStates              map[int64]*adminPromoState
@@ -71,6 +73,8 @@ func NewHandler(
 		cache:                    cache,
 		awaitingPromo:            make(map[int64]bool),
 		awaitingAmount:           make(map[int64]bool),
+		awaitingCode:             make(map[int64]bool),
+		awaitingLimit:            make(map[int64]bool),
 		fsm:                      make(map[int64]FSMState),
 		adminStates:              make(map[int64]*adminPromoState),
 		shortLinks:               make(map[int64][]ShortLink),
@@ -87,6 +91,18 @@ func (h *Handler) expectPromo(id int64) {
 func (h *Handler) expectAmount(id int64) {
 	h.promoMu.Lock()
 	h.awaitingAmount[id] = true
+	h.promoMu.Unlock()
+}
+
+func (h *Handler) expectCode(id int64) {
+	h.promoMu.Lock()
+	h.awaitingCode[id] = true
+	h.promoMu.Unlock()
+}
+
+func (h *Handler) expectLimit(id int64) {
+	h.promoMu.Lock()
+	h.awaitingLimit[id] = true
 	h.promoMu.Unlock()
 }
 
@@ -111,6 +127,26 @@ func (h *Handler) consumeAmount(id int64) bool {
 	return false
 }
 
+func (h *Handler) consumeCode(id int64) bool {
+	h.promoMu.Lock()
+	defer h.promoMu.Unlock()
+	if h.awaitingCode[id] {
+		delete(h.awaitingCode, id)
+		return true
+	}
+	return false
+}
+
+func (h *Handler) consumeLimit(id int64) bool {
+	h.promoMu.Lock()
+	defer h.promoMu.Unlock()
+	if h.awaitingLimit[id] {
+		delete(h.awaitingLimit, id)
+		return true
+	}
+	return false
+}
+
 func (h *Handler) IsAwaitingPromo(id int64) bool {
 	h.promoMu.RLock()
 	defer h.promoMu.RUnlock()
@@ -121,6 +157,26 @@ func (h *Handler) IsAwaitingAmount(id int64) bool {
 	h.promoMu.RLock()
 	defer h.promoMu.RUnlock()
 	return h.awaitingAmount[id]
+}
+
+func (h *Handler) IsAwaitingCode(id int64) bool {
+	h.promoMu.RLock()
+	defer h.promoMu.RUnlock()
+	return h.awaitingCode[id]
+}
+
+func (h *Handler) IsAwaitingLimit(id int64) bool {
+	h.promoMu.RLock()
+	defer h.promoMu.RUnlock()
+	return h.awaitingLimit[id]
+}
+
+func (h *Handler) clearAdminInputs(id int64) {
+	h.promoMu.Lock()
+	delete(h.awaitingAmount, id)
+	delete(h.awaitingCode, id)
+	delete(h.awaitingLimit, id)
+	h.promoMu.Unlock()
 }
 
 const (

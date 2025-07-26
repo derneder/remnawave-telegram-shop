@@ -153,3 +153,73 @@ func TestAdminPromoBalanceManualAmount(t *testing.T) {
 		t.Fatalf("manual amount not applied: %#v", svc.bal)
 	}
 }
+
+func TestAdminPromoBalanceManualLimit(t *testing.T) {
+	SetTestEnv(t)
+	tm := translation.GetInstance()
+	_ = tm.InitDefaultTranslations()
+	svc := &promoServiceStub{}
+	httpc := &stubHTTP{}
+	b, _ := bot.New("t", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
+	h := handlerpkg.NewHandler(nil, nil, tm, &StubCustomerRepo{}, nil, nil, nil, nil, svc, nil)
+
+	upd := &models.Update{CallbackQuery: &models.CallbackQuery{ID: "1", From: models.User{ID: 1, LanguageCode: "ru"}, Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}}}}
+	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceStart
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceAmount + ":100"
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceLimit + ":manual"
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	msgUpd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 1}, From: &models.User{ID: 1, LanguageCode: "ru"}, Text: "3"}}
+	h.AdminPromoLimitMessageHandler(ctx, b, msgUpd)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceConfirm
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	if svc.bal.limit != 3 {
+		t.Fatalf("manual limit not applied: %#v", svc.bal)
+	}
+}
+
+func TestAdminPromoSubCustomCodeManualLimit(t *testing.T) {
+	SetTestEnv(t)
+	tm := translation.GetInstance()
+	_ = tm.InitDefaultTranslations()
+	svc := &promoServiceStub{}
+	httpc := &stubHTTP{}
+	b, _ := bot.New("t", bot.WithHTTPClient(time.Second, httpc), bot.WithSkipGetMe())
+	h := handlerpkg.NewHandler(nil, nil, tm, &StubCustomerRepo{}, nil, nil, nil, nil, svc, nil)
+
+	upd := &models.Update{CallbackQuery: &models.CallbackQuery{ID: "1", From: models.User{ID: 1, LanguageCode: "ru"}, Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}}}}
+	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubStart
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubCodeCustom
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	msgUpd := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 1}, From: &models.User{ID: 1, LanguageCode: "ru"}, Text: "FOO"}}
+	h.AdminPromoCodeMessageHandler(ctx, b, msgUpd)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubDays + ":30"
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubLimit + ":manual"
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	msgUpd2 := &models.Update{Message: &models.Message{Chat: models.Chat{ID: 1}, From: &models.User{ID: 1, LanguageCode: "ru"}, Text: "5"}}
+	h.AdminPromoLimitMessageHandler(ctx, b, msgUpd2)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubConfirm
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	if svc.sub.code != "FOO" || svc.sub.limit != 5 {
+		t.Fatalf("custom code/manual limit not applied: %#v", svc.sub)
+	}
+}
