@@ -186,6 +186,24 @@ db/migrations/      SQL migrations
   Migrations are also executed automatically when the bot starts.
 - **Run tests**: `go test ./...`
 
+## Promocode Table
+
+The bot stores promo codes in the `promocode` table which is used for both admin and personal codes. Personal codes are created by users via the bot and saved in this table.
+
+| Column | Description |
+|-------|-------------|
+| `code` | Unique promocode string |
+| `months` | Subscription months for subscription codes |
+| `days` | Duration in days (optional) |
+| `amount` | Balance amount for balance codes |
+| `uses_left` | Remaining activations (`-1` for unlimited) |
+| `created_by` | Telegram ID of the code creator |
+| `active` | Whether the code can be redeemed |
+| `deleted` | Marks the code as removed |
+| `created_at` | Time when the code was created |
+| `type` | 1 - subscription, 2 - balance |
+
+Each time a code is activated, `uses_left` is decreased. When `active` is `false` the code cannot be redeemed. Deleted codes are ignored but kept in the table for history.
 ## Запуск через Docker Compose
 
 Для остановки или просмотра логов доступны удобные цели Makefile:
