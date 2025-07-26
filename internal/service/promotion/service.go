@@ -12,7 +12,7 @@ const codeAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // Service handles admin promocodes.
 type Creator interface {
-	CreateSubscription(ctx context.Context, code string, days, limit int, createdBy int64) (string, error)
+	CreateSubscription(ctx context.Context, code string, months, limit int, createdBy int64) (string, error)
 	CreateBalance(ctx context.Context, amount, limit int, createdBy int64) (string, error)
 	Freeze(ctx context.Context, id int64) error
 	Unfreeze(ctx context.Context, id int64) error
@@ -28,7 +28,8 @@ func NewService(repo Repository) *Service {
 }
 
 // CreateSubscription stores subscription promo code with given code and days.
-func (s *Service) CreateSubscription(ctx context.Context, code string, days, limit int, createdBy int64) (string, error) {
+// CreateSubscription stores subscription promo code with given code and months.
+func (s *Service) CreateSubscription(ctx context.Context, code string, months, limit int, createdBy int64) (string, error) {
 	if code == "" {
 		var err error
 		code, err = generateSubscriptionCode()
@@ -41,9 +42,9 @@ func (s *Service) CreateSubscription(ctx context.Context, code string, days, lim
 	}
 	_, err := s.repo.Create(ctx, &pg.Promocode{
 		Code:      code,
-		Months:    0,
+		Months:    months,
 		Type:      1,
-		Days:      days,
+		Days:      months * 30,
 		Amount:    0,
 		UsesLeft:  limit,
 		CreatedBy: createdBy,

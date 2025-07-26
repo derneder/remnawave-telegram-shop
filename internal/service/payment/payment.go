@@ -388,9 +388,9 @@ func (s PaymentService) ApplyPromocode(ctx context.Context, customer *domaincust
 		}
 		customer.Balance = newBal
 	} else {
-		days := promo.Days
+		days := promo.Months * 30
 		if days == 0 {
-			days = promo.Months * 30
+			days = promo.Days
 		}
 		user, err := s.remnawaveClient.CreateOrUpdateUser(ctx, customer.TelegramID, config.TrafficLimit(), days)
 		if err != nil {
