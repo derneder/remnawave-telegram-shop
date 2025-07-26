@@ -137,31 +137,14 @@ func (h *Handler) buildReferralInfo(customer *domaincustomer.Customer, lang stri
 	botURL = strings.TrimPrefix(botURL, "http://t.me/")
 	refLink := menu.BuildReferralLink(botURL, fmt.Sprintf("ref_%d", customer.TelegramID))
 
-	var sb strings.Builder
-	sb.WriteString(h.translation.GetText(lang, "ref.msg.welcome"))
-	sb.WriteString("\n\n")
-	sb.WriteString(h.translation.GetText(lang, "ref.msg.stats_title"))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.stats_invited"), 0))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.stats_paid"), 0))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.stats_sum"), 0))
-	sb.WriteString("\n\n")
-	sb.WriteString(h.translation.GetText(lang, "ref.msg.link_title"))
-	sb.WriteString("\n")
-	sb.WriteString(h.translation.GetText(lang, "ref.msg.link_note"))
-	sb.WriteString("\n")
-	sb.WriteString(h.translation.GetText(lang, "ref.msg.copy_hint"))
-	sb.WriteString(" ")
-	sb.WriteString(refLink)
-	sb.WriteString("\n\n")
-	sb.WriteString(h.translation.GetText(lang, "ref.msg.bonus_info_title"))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(h.translation.GetText(lang, "ref.msg.bonus_info_text"), config.GetReferralBonus(), config.GetReferralBonus()))
+	invited := 0
+	subscribed := 0
+	bonusTotal := 0
+
+	text := fmt.Sprintf(h.translation.GetText(lang, "ref.msg.full"), invited, subscribed, bonusTotal, refLink, config.GetReferralBonus(), config.GetReferralBonus())
 
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "ref.button.invite"), URL: refLink}}}
-	return sb.String(), kb
+	return text, kb
 }
 
 func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

@@ -12,7 +12,6 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 
-	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/contextkey"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
@@ -108,44 +107,8 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 		return
 	}
 
-	// stats are not tracked in current implementation
-	invited := 0
-	subscribed := 0
-	bonusTotal := 0
-
-	botURL := strings.TrimPrefix(config.BotURL(), "https://t.me/")
-	botURL = strings.TrimPrefix(botURL, "http://t.me/")
-	refLink := menu.BuildReferralLink(botURL, fmt.Sprintf("ref_%d", customer.TelegramID))
-
-	var sb strings.Builder
-	sb.WriteString(tm.GetText(langCode, "ref.msg.welcome"))
-	sb.WriteString("\n\n")
-	sb.WriteString(tm.GetText(langCode, "ref.msg.stats_title"))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.stats_invited"), invited))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.stats_paid"), subscribed))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.stats_sum"), bonusTotal))
-	sb.WriteString("\n\n")
-	sb.WriteString(tm.GetText(langCode, "ref.msg.link_title"))
-	sb.WriteString("\n")
-	sb.WriteString(tm.GetText(langCode, "ref.msg.link_note"))
-	sb.WriteString("\n")
-	sb.WriteString(tm.GetText(langCode, "ref.msg.copy_hint"))
-	sb.WriteString(" ")
-	sb.WriteString(refLink)
-	sb.WriteString("\n\n")
-	sb.WriteString(tm.GetText(langCode, "ref.msg.bonus_info_title"))
-	sb.WriteString("\n")
-	sb.WriteString(fmt.Sprintf(tm.GetText(langCode, "ref.msg.bonus_info_text"), config.GetReferralBonus(), config.GetReferralBonus()))
-
-	text := sb.String()
-
-	kb := [][]models.InlineKeyboardButton{
-		{{Text: tm.GetText(langCode, "ref.button.invite"), URL: refLink}},
-		{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral}},
-	}
+	text, kb := h.buildReferralInfo(customer, langCode)
+	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral}})
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {
