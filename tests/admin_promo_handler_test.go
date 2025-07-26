@@ -70,6 +70,9 @@ func TestAdminPromoBalanceWizard(t *testing.T) {
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenuPromos
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceStart
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
@@ -100,6 +103,9 @@ func TestAdminPromoSubWizard(t *testing.T) {
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenuPromos
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubStart
@@ -136,6 +142,8 @@ func TestAdminPromoBalanceManualAmount(t *testing.T) {
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
 	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenuPromos
+	h.AdminPromoCallbackHandler(ctx, b, upd)
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceStart
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceAmount + ":manual"
@@ -168,6 +176,8 @@ func TestAdminPromoBalanceManualLimit(t *testing.T) {
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
 	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenuPromos
+	h.AdminPromoCallbackHandler(ctx, b, upd)
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceStart
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminBalanceAmount + ":100"
@@ -199,6 +209,8 @@ func TestAdminPromoSubCustomCodeManualLimit(t *testing.T) {
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenuPromos
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubStart
 	h.AdminPromoCallbackHandler(ctx, b, upd)
@@ -240,6 +252,8 @@ func TestAdminPromoSubCustomCodeInvalid(t *testing.T) {
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, true)
 
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenu
+	h.AdminPromoCallbackHandler(ctx, b, upd)
+	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminMenuPromos
 	h.AdminPromoCallbackHandler(ctx, b, upd)
 	upd.CallbackQuery.Data = uimenu.CallbackPromoAdminSubStart
 	h.AdminPromoCallbackHandler(ctx, b, upd)

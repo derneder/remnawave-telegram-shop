@@ -118,6 +118,7 @@ traffic_limit: "├ 📊 Лимит в сутки: <b>%s / %s</b>\n"
 traffic_total_used: "├ ⚡ Всего использовано: <b>%s</b>\n"
 traffic_time_to_reset: '├ 🔄 До сброса трафика: <b>%s</b>'
 admin_panel_button: "⚙️ Админ-панель"
+admin_promo_codes_button: "🎁 Промокоды"
 admin_promo_balance_button: "💰 Промокод на баланс"
 admin_promo_sub_button: "📅 Промокод на подписку"
 create_button: "✅ Создать"

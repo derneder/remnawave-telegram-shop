@@ -107,6 +107,7 @@ traffic_limit: "├ 📊 Daily limit: <b>%s / %s</b>\n"
 traffic_total_used: "├ ⚡ Total used: <b>%s</b>\n"
 traffic_time_to_reset: '├ 🔄 Until reset: <b>%s</b>'
 admin_panel_button: "⚙️ Admin panel"
+admin_promo_codes_button: "🎁 Promo codes"
 admin_promo_balance_button: "💰 Balance promo"
 admin_promo_sub_button: "📅 Subscription promo"
 create_button: "✅ Create"

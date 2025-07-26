@@ -34,6 +34,7 @@ const (
 	CallbackPromoAdminSubMonths      = "promo_admin_sub_months"
 	CallbackPromoAdminSubLimit       = "promo_admin_sub_limit"
 	CallbackPromoAdminSubConfirm     = "promo_admin_sub_confirm"
+	CallbackPromoAdminMenuPromos     = "promo_admin_menu_promos"
 	CallbackPromoAdminBack           = "promo_admin_back"
 	CallbackPromoAdminCancel         = "promo_admin_cancel"
 )
@@ -117,9 +118,18 @@ func BuildPersonalCodesMenu(lang string) [][]models.InlineKeyboardButton {
 func BuildAdminPromoMenu(lang string) [][]models.InlineKeyboardButton {
 	tm := translation.GetInstance()
 	return [][]models.InlineKeyboardButton{
-		{{Text: tm.GetText(lang, "admin_promo_balance_button"), CallbackData: CallbackPromoAdminBalanceStart}},
-		{{Text: tm.GetText(lang, "admin_promo_sub_button"), CallbackData: CallbackPromoAdminSubStart}},
+		{{Text: tm.GetText(lang, "admin_promo_codes_button"), CallbackData: CallbackPromoAdminMenuPromos}},
 		{{Text: tm.GetText(lang, "back_button"), CallbackData: "start"}},
+	}
+}
+
+// BuildAdminPromoCodesMenu returns promo codes menu keyboard for admin section.
+func BuildAdminPromoCodesMenu(lang string) [][]models.InlineKeyboardButton {
+	tm := translation.GetInstance()
+	return [][]models.InlineKeyboardButton{
+		{{Text: tm.GetText(lang, "admin_promo_sub_button"), CallbackData: CallbackPromoAdminSubStart}},
+		{{Text: tm.GetText(lang, "admin_promo_balance_button"), CallbackData: CallbackPromoAdminBalanceStart}},
+		{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackPromoAdminMenu}},
 	}
 }
 
