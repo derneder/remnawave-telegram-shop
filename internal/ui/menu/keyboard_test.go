@@ -95,7 +95,7 @@ func TestBuildPersonalCodesMenu(t *testing.T) {
 			}
 		}
 	}
-	if !(haveCreate && haveList && haveBack) {
+	if !haveCreate || !haveList || !haveBack {
 		t.Fatalf("buttons missing")
 	}
 }

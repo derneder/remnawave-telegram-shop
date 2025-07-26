@@ -21,11 +21,6 @@ import (
 
 func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
 
 	customer, err := h.customerRepository.FindByTelegramId(ctx, update.CallbackQuery.From.ID)
 	if err != nil {
@@ -59,20 +54,11 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 		{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackStart}},
 	}
 
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("edit referral share", "err", err)
-	}
+	}, "edit referral share")
 
 	if _, err := b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: update.CallbackQuery.ID}); err != nil {
 		slog.Error("answer callback", "err", err)
@@ -83,13 +69,7 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
 
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	_, err = h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
+	_, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
 		return
@@ -103,31 +83,17 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		},
 	}
 
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        tm.GetText(langCode, "promo.activate.prompt"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("Error sending promo activate prompt", "err", err)
-	}
+	}, "Error sending promo activate prompt")
 
 }
 
 func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
 	customer, err := h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
 	if err != nil {
 		slog.Error("find or create customer", "err", err)
@@ -137,30 +103,16 @@ func (h *Handler) ReferralStatsCallbackHandler(ctx context.Context, b *bot.Bot, 
 	text, kb := h.buildReferralInfo(customer, langCode)
 	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(langCode, "back_button"), CallbackData: CallbackReferral}})
 
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("Error sending referral stats", "err", err)
-	}
+	}, "Error sending referral stats")
 }
 
 func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	lang := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
 	promos, err := h.promocodeRepository.FindByCreator(ctx, update.CallbackQuery.From.ID)
 	if err != nil {
 		slog.Error("list promos", "err", err)
@@ -196,20 +148,11 @@ func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, up
 
 	kb = append(kb, []models.InlineKeyboardButton{{Text: tm.GetText(lang, "back_button"), CallbackData: CallbackReferral}})
 
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        text.String(),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("send promo list", "err", err)
-	}
+	}, "send promo list")
 }
 
 func (h *Handler) PromoMyFreezeCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -234,8 +177,7 @@ func (h *Handler) PromoMyDeleteCallbackHandler(ctx context.Context, b *bot.Bot, 
 	lang := update.CallbackQuery.From.LanguageCode
 	tm := translation.GetInstance()
 	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyDelete+":")
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
+	if _, _, err := getCallbackIDs(update); err != nil {
 		slog.Error(err.Error())
 		return
 	}
@@ -243,20 +185,11 @@ func (h *Handler) PromoMyDeleteCallbackHandler(ctx context.Context, b *bot.Bot, 
 		{{Text: tm.GetText(lang, "confirm_button"), CallbackData: menu.CallbackPromoMyDeleteConfirm + ":" + idStr}},
 		{{Text: tm.GetText(lang, "cancel_button"), CallbackData: menu.CallbackPromoMyList}},
 	}
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        tm.GetText(lang, "promo.delete.confirm"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("send delete confirm", "err", err)
-	}
+	}, "send delete confirm")
 }
 
 func (h *Handler) PromoMyDeleteConfirmCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {

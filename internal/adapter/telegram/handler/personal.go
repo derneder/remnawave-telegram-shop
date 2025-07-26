@@ -29,53 +29,33 @@ type personalState struct {
 
 func (h *Handler) PersonalCodesCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	lang := update.CallbackQuery.From.LanguageCode
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
+	if _, _, err := getCallbackIDs(update); err != nil {
 		slog.Error(err.Error())
 		return
 	}
 	kb := menu.BuildPersonalCodesMenu(lang)
 	tm := translation.GetInstance()
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:    chatID,
-		MessageID: msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode: models.ParseModeHTML,
 		Text:      tm.GetText(lang, "personal_codes_button"),
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: kb,
 		},
-	})
-	if err != nil {
-		slog.Error("send personal menu", "err", err)
-	}
+	}, "send personal menu")
 }
 
 func (h *Handler) PersonalCreateCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	lang := update.CallbackQuery.From.LanguageCode
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
+	if _, _, err := getCallbackIDs(update); err != nil {
 		slog.Error(err.Error())
 		return
 	}
 	h.promoMu.Lock()
 	h.personalStates[update.CallbackQuery.From.ID] = &personalState{Step: personalStepMonths}
 	h.promoMu.Unlock()
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:    chatID,
-		MessageID: msgID,
-		Text:      h.translation.GetText(lang, "personal_months_prompt"),
-	})
-	if err != nil {
-		slog.Error("send personal months", "err", err)
-	}
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
+		Text: h.translation.GetText(lang, "personal_months_prompt"),
+	}, "send personal months")
 }
 
 func (h *Handler) IsAwaitingPersonalMonths(id int64) bool {

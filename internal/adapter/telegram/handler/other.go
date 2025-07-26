@@ -39,19 +39,8 @@ func (h *Handler) OtherCallbackHandler(ctx context.Context, b *bot.Bot, update *
 	}
 	kb = append(kb, []models.InlineKeyboardButton{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackStart}})
 
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	chatID, _, _, _ := callbackInfo(update)
+	err := editCallback(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        h.translation.GetText(lang, "other_menu_text"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
@@ -97,26 +86,11 @@ func (h *Handler) simpleBack(ctx context.Context, b *bot.Bot, update *models.Upd
 	lang := update.CallbackQuery.From.LanguageCode
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
 
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("send simple back", "err", err)
-	}
+	}, "send simple back")
 }
 
 func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -164,7 +138,7 @@ func (h *Handler) KeysCallbackHandler(ctx context.Context, b *bot.Bot, update *m
 	}
 
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
-	chatID, _, err := getCallbackIDs(update)
+	chatID, _, _, err := callbackInfo(update)
 	if err != nil {
 		slog.Error(err.Error())
 		return
@@ -224,7 +198,7 @@ func (h *Handler) QRCallbackHandler(ctx context.Context, b *bot.Bot, update *mod
 		text = fmt.Sprintf(h.translation.GetText(lang, "qr_text"), *customer.SubscriptionLink)
 		kb = ui.ConnectKeyboard(lang, "back_button", CallbackOther)
 	}
-	chatID, _, err := getCallbackIDs(update)
+	chatID, _, _, err := callbackInfo(update)
 	if err != nil {
 		slog.Error(err.Error())
 		return
@@ -286,26 +260,11 @@ func (h *Handler) ShortLinkCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		{{Text: h.translation.GetText(lang, "short_list_button"), CallbackData: CallbackShortList}},
 		{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}},
 	}
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        fmt.Sprintf(h.translation.GetText(lang, "short_created_text"), shortURL),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("send short", "err", err)
-	}
+	}, "send short")
 }
 
 func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -329,24 +288,9 @@ func (h *Handler) ShortListCallbackHandler(ctx context.Context, b *bot.Bot, upda
 		text = fmt.Sprintf(h.translation.GetText(lang, "short_list_text"), bld.String())
 	}
 	kb := [][]models.InlineKeyboardButton{{{Text: h.translation.GetText(lang, "back_button"), CallbackData: CallbackOther}}}
-	chatID, msgID, err := getCallbackIDs(update)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	var curMsg *models.Message
-	if update.CallbackQuery.Message.Message != nil {
-		curMsg = update.CallbackQuery.Message.Message
-	}
-	_, err = SafeEditMessageText(ctx, b, curMsg, &bot.EditMessageTextParams{
-		ChatID:      chatID,
-		MessageID:   msgID,
+	editCallbackWithLog(ctx, b, update, &bot.EditMessageTextParams{
 		ParseMode:   models.ParseModeHTML,
 		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
-	})
-	if err != nil {
-		slog.Error("send short list", "err", err)
-	}
+	}, "send short list")
 }

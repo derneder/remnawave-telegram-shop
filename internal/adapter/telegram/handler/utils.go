@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-telegram/bot/models"
 	"log/slog"
 	domaincustomer "remnawave-tg-shop-bot/internal/domain/customer"
+
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 )
 
 func parseCallbackData(data string) map[string]string {
@@ -71,4 +73,35 @@ func (h *Handler) buildPaymentBackData(month int, amount int) string {
 		return fmt.Sprintf("%s?amount=%d", CallbackTopupMethod, amount)
 	}
 	return fmt.Sprintf("%s?month=%d&amount=%d", CallbackSell, month, amount)
+}
+
+// callbackInfo returns chat id, message id and actual message pointer from a callback update.
+func callbackInfo(upd *models.Update) (int64, int, *models.Message, error) {
+	chatID, msgID, err := getCallbackIDs(upd)
+	if err != nil {
+		return 0, 0, nil, err
+	}
+	var curMsg *models.Message
+	if upd.CallbackQuery.Message.Message != nil {
+		curMsg = upd.CallbackQuery.Message.Message
+	}
+	return chatID, msgID, curMsg, nil
+}
+
+// editCallback wraps SafeEditMessageText using IDs extracted from update.
+func editCallback(ctx context.Context, b *bot.Bot, upd *models.Update, params *bot.EditMessageTextParams) error {
+	chatID, msgID, curMsg, err := callbackInfo(upd)
+	if err != nil {
+		return err
+	}
+	params.ChatID = chatID
+	params.MessageID = msgID
+	_, err = SafeEditMessageText(ctx, b, curMsg, params)
+	return err
+}
+
+func editCallbackWithLog(ctx context.Context, b *bot.Bot, upd *models.Update, params *bot.EditMessageTextParams, logMsg string) {
+	if err := editCallback(ctx, b, upd, params); err != nil {
+		slog.Error(logMsg, "err", err)
+	}
 }
