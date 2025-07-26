@@ -210,20 +210,20 @@ func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, up
 }
 
 func (h *Handler) PromoMyFreezeCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-       idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyFreeze+":")
-       id, _ := strconv.ParseInt(idStr, 10, 64)
-       if err := h.promotionService.Freeze(ctx, id); err != nil {
-               slog.Error("freeze promo", "err", err)
-       }
+	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyFreeze+":")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if err := h.promotionService.Freeze(ctx, id); err != nil {
+		slog.Error("freeze promo", "err", err)
+	}
 	h.PromoMyListCallbackHandler(ctx, b, update)
 }
 
 func (h *Handler) PromoMyUnfreezeCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-       idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyUnfreeze+":")
-       id, _ := strconv.ParseInt(idStr, 10, 64)
-       if err := h.promotionService.Unfreeze(ctx, id); err != nil {
-               slog.Error("unfreeze promo", "err", err)
-       }
+	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyUnfreeze+":")
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if err := h.promotionService.Unfreeze(ctx, id); err != nil {
+		slog.Error("unfreeze promo", "err", err)
+	}
 	h.PromoMyListCallbackHandler(ctx, b, update)
 }
 
@@ -257,11 +257,13 @@ func (h *Handler) PromoMyDeleteCallbackHandler(ctx context.Context, b *bot.Bot, 
 }
 
 func (h *Handler) PromoMyDeleteConfirmCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-       idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyDeleteConfirm+":")
-       id, _ := strconv.ParseInt(idStr, 10, 64)
-       if err := h.promotionService.Delete(ctx, id); err != nil {
-               slog.Error("delete promo", "err", err)
-       }
+	idStr := strings.TrimPrefix(update.CallbackQuery.Data, menu.CallbackPromoMyDeleteConfirm+":")
+	lang := update.CallbackQuery.From.LanguageCode
+	id, _ := strconv.ParseInt(idStr, 10, 64)
+	if err := h.promotionService.Delete(ctx, id); err != nil {
+		slog.Error("delete promo", "err", err)
+	}
+	_, _ = b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: update.CallbackQuery.ID, Text: translation.GetInstance().GetText(lang, "promo.delete.success")})
 	h.PromoMyListCallbackHandler(ctx, b, update)
 }
 
