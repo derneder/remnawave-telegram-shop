@@ -140,6 +140,18 @@ func (h *Handler) PromoMyListCallbackHandler(ctx context.Context, b *bot.Bot, up
 		return
 	}
 
+	var filtered []pg.Promocode
+	for _, p := range promos {
+		if p.Deleted {
+			continue
+		}
+		if p.UsesLeft <= 0 && p.UsesLeft != 0 {
+			continue
+		}
+		filtered = append(filtered, p)
+	}
+	promos = filtered
+
 	var text strings.Builder
 	var kb [][]models.InlineKeyboardButton
 

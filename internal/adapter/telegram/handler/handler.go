@@ -15,6 +15,10 @@ import (
 	syncsvc "remnawave-tg-shop-bot/internal/service/sync"
 )
 
+type PromocodeFinder interface {
+	FindByCreator(ctx context.Context, createdBy int64) ([]pg.Promocode, error)
+}
+
 type Handler struct {
 	customerRepository       custrepo.Repository
 	purchaseRepository       *pg.PurchaseRepository
@@ -22,7 +26,7 @@ type Handler struct {
 	paymentService           *payment.PaymentService
 	syncService              *syncsvc.SyncService
 	referralRepository       referralrepo.Repository
-	promocodeRepository      *pg.PromocodeRepository
+	promocodeRepository      PromocodeFinder
 	promocodeUsageRepository *pg.PromocodeUsageRepository
 	promotionService         promotion.Creator
 	cache                    *cache.Cache
@@ -56,7 +60,7 @@ func NewHandler(
 	customerRepository custrepo.Repository,
 	purchaseRepository *pg.PurchaseRepository,
 	referralRepository referralrepo.Repository,
-	promocodeRepository *pg.PromocodeRepository,
+	promocodeRepository PromocodeFinder,
 	promocodeUsageRepository *pg.PromocodeUsageRepository,
 	promotionService promotion.Creator,
 	cache *cache.Cache) *Handler {
