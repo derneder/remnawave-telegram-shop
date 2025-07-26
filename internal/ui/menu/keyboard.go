@@ -45,8 +45,8 @@ const (
 	StepDays
 )
 
-// BuildMainKeyboard creates main menu keyboard.
-func BuildMainKeyboard(lang string, c *domaincustomer.Customer, isAdmin bool) [][]models.InlineKeyboardButton {
+// BuildLKMenu creates personal account main menu.
+func BuildLKMenu(lang string, c *domaincustomer.Customer, isAdmin bool) [][]models.InlineKeyboardButton {
 	tm := translation.GetInstance()
 	var kb [][]models.InlineKeyboardButton
 	if c.SubscriptionLink == nil && config.TrialDays() > 0 {
@@ -75,21 +75,15 @@ func BuildMainKeyboard(lang string, c *domaincustomer.Customer, isAdmin bool) []
 	return kb
 }
 
-// BuildRefPromoUserMenu returns referral & promo menu for regular users.
-// BuildPromoRefMain builds promo/referral main menu depending on admin flag.
-func BuildPromoRefMain(lang string, isAdmin bool) [][]models.InlineKeyboardButton {
+// BuildPromoRefMenu builds promo/referral menu for regular users.
+func BuildPromoRefMenu(lang string) [][]models.InlineKeyboardButton {
 	tm := translation.GetInstance()
-	kb := [][]models.InlineKeyboardButton{
+	return [][]models.InlineKeyboardButton{
 		{{Text: tm.GetText(lang, "activate_promocode_button"), CallbackData: CallbackPromoUserActivate}},
 		{{Text: tm.GetText(lang, "referral_system_button"), CallbackData: CallbackRefUserStats}},
 		{{Text: tm.GetText(lang, "personal_promocodes_button"), CallbackData: CallbackPromoUserPersonal}},
-		{{Text: tm.GetText(lang, "faq_button"), CallbackData: "faq"}},
 		{{Text: tm.GetText(lang, "back_to_account_button"), CallbackData: "start"}},
 	}
-	if isAdmin {
-		kb = append([][]models.InlineKeyboardButton{{{Text: tm.GetText(lang, "admin_panel_button"), CallbackData: CallbackPromoAdminMenu}}}, kb...)
-	}
-	return kb
 }
 
 // BuildAdminPromoMenu returns root admin promo menu keyboard.

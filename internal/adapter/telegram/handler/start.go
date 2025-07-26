@@ -114,7 +114,7 @@ func (h *Handler) StartCallbackHandler(ctx context.Context, b *bot.Bot, update *
 		return
 	}
 
-	inlineKeyboard := menu.BuildMainKeyboard(langCode, existingCustomer, isAdmin(existingCustomer.TelegramID))
+	inlineKeyboard := menu.BuildLKMenu(langCode, existingCustomer, isAdmin(existingCustomer.TelegramID))
 
 	text := fmt.Sprintf(h.translation.GetText(langCode, "account_menu_text"), callback.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, existingCustomer, langCode)
 
@@ -188,7 +188,7 @@ func (h *Handler) MenuCommandHandler(ctx context.Context, b *bot.Bot, update *mo
 		return
 	}
 
-	kb := menu.BuildMainKeyboard(lang, customer, isAdmin(customer.TelegramID))
+	kb := menu.BuildLKMenu(lang, customer, isAdmin(customer.TelegramID))
 	text := fmt.Sprintf(h.translation.GetText(lang, "account_menu_text"), update.Message.From.FirstName) + "\n\n" + h.buildAccountInfo(ctxWithTime, customer, lang)
 
 	if _, err := b.SendMessage(ctxWithTime, &bot.SendMessageParams{

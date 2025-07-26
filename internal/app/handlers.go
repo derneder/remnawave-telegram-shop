@@ -30,10 +30,12 @@ func (a *App) InitHandlers(h *handler.Handler) {
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackActivateTrial, bot.MatchTypePrefix, h.ActivateTrialCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackReferral, bot.MatchTypePrefix, h.ReferralCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackReferralStats, bot.MatchTypePrefix, h.ReferralStatsCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, uimenu.CallbackRefUserStats, bot.MatchTypePrefix, h.ReferralStatsCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, uimenu.CallbackPromoAdminMenu, bot.MatchTypePrefix, h.AdminPromoCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "promo_admin_balance_", bot.MatchTypePrefix, h.AdminPromoCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "promo_admin_sub_", bot.MatchTypePrefix, h.AdminPromoCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackPromoEnter, bot.MatchTypePrefix, h.PromoEnterCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, uimenu.CallbackPromoUserActivate, bot.MatchTypePrefix, h.PromoEnterCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackOther, bot.MatchTypePrefix, h.OtherCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackFAQ, bot.MatchTypePrefix, h.FAQCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackTrafficLimit, bot.MatchTypePrefix, h.TrafficLimitCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
@@ -46,6 +48,7 @@ func (a *App) InitHandlers(h *handler.Handler) {
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackProxy, bot.MatchTypePrefix, h.ProxyCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackLanguage, bot.MatchTypePrefix, h.LanguageCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, handler.CallbackSetLanguage, bot.MatchTypePrefix, h.SetLanguageCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
+	b.RegisterHandler(bot.HandlerTypeCallbackQueryData, "", bot.MatchTypePrefix, h.UnknownCallbackHandler, h.CreateCustomerIfNotExistMiddleware, handler.LogUpdateMiddleware)
 
 	b.RegisterHandlerMatchFunc(func(upd *models.Update) bool {
 		if upd.Message == nil {

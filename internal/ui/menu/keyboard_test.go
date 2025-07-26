@@ -7,13 +7,13 @@ import (
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 )
 
-func TestBuildMainKeyboard_AdminButton(t *testing.T) {
+func TestBuildLKMenu_AdminButton(t *testing.T) {
 	tm := translation.GetInstance()
 	if err := tm.InitDefaultTranslations(); err != nil {
 		t.Fatalf("init translations: %v", err)
 	}
 	c := &domaincustomer.Customer{}
-	kb := BuildMainKeyboard("ru", c, true)
+	kb := BuildLKMenu("ru", c, true)
 	found := false
 	for _, r := range kb {
 		for _, b := range r {
@@ -25,7 +25,7 @@ func TestBuildMainKeyboard_AdminButton(t *testing.T) {
 	if !found {
 		t.Fatalf("admin button missing")
 	}
-	kb = BuildMainKeyboard("ru", c, false)
+	kb = BuildLKMenu("ru", c, false)
 	for _, r := range kb {
 		for _, b := range r {
 			if b.CallbackData == CallbackPromoAdminMenu {
@@ -35,20 +35,17 @@ func TestBuildMainKeyboard_AdminButton(t *testing.T) {
 	}
 }
 
-func TestBuildPromoRefMain(t *testing.T) {
+func TestBuildPromoRefMenu(t *testing.T) {
 	tm := translation.GetInstance()
 	if err := tm.InitDefaultTranslations(); err != nil {
 		t.Fatalf("init translations: %v", err)
 	}
-	userKb := BuildPromoRefMain("ru", false)
-	if userKb[0][0].CallbackData != CallbackPromoUserActivate {
-		t.Fatalf("unexpected first button %v", userKb[0][0])
-	}
-	adminKb := BuildPromoRefMain("ru", true)
-	if adminKb[0][0].CallbackData != CallbackPromoAdminMenu {
-		t.Fatalf("admin panel button missing")
-	}
-	if len(adminKb) != len(userKb)+1 {
-		t.Fatalf("admin menu rows mismatch")
+	kb := BuildPromoRefMenu("ru")
+	for _, row := range kb {
+		for _, b := range row {
+			if b.CallbackData == CallbackPromoAdminMenu || b.Text == tm.GetText("ru", "faq_button") {
+				t.Fatalf("unexpected button %v", b)
+			}
+		}
 	}
 }

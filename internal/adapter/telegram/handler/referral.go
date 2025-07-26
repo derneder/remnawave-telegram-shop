@@ -32,7 +32,7 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 		return
 	}
 
-	kb := menu.BuildPromoRefMain(langCode, contextkey.IsAdminFromContext(ctx))
+	kb := menu.BuildPromoRefMenu(langCode)
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {

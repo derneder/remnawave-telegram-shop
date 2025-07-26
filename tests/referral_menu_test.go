@@ -42,11 +42,7 @@ func TestReferralCallbackHandler_UserAdmin(t *testing.T) {
 	if !strings.Contains(httpc.body, string(uimenu.CallbackPromoUserActivate)) {
 		t.Fatalf("user menu missing activate button")
 	}
-
-	httpc.body = ""
-	ctx = context.WithValue(context.Background(), contextkey.IsAdminKey, true)
-	h.ReferralCallbackHandler(ctx, b, upd)
-	if !strings.Contains(httpc.body, string(uimenu.CallbackPromoAdminMenu)) {
-		t.Fatalf("admin menu missing admin panel")
+	if strings.Contains(httpc.body, string(uimenu.CallbackPromoAdminMenu)) {
+		t.Fatalf("unexpected admin button")
 	}
 }
