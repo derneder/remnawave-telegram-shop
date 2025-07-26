@@ -119,6 +119,7 @@ func (r *PromocodeRepository) FindByCreator(ctx context.Context, createdBy int64
 	sql, args, err := sq.Select("id", "code", "months", "type", "days", "amount", "uses_left", "created_by", "created_at", "active").
 		From("promocode").
 		Where(sq.Eq{"created_by": createdBy, "deleted": false}).
+		Where(sq.Or{sq.Gt{"uses_left": 0}, sq.Eq{"uses_left": 0}}).
 		OrderBy("created_at DESC").
 		PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
