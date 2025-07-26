@@ -15,6 +15,7 @@ const (
 	CallbackReferral      = "referral"
 	CallbackReferralStats = "referral_stats"
 	CallbackPromoEnter    = "promo_enter"
+	CallbackShareReferral = "share_referral"
 	CallbackOther         = "other"
 	CallbackFAQ           = "faq"
 	CallbackTrafficLimit  = "traffic_limit"

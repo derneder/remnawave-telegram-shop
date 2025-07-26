@@ -122,3 +122,10 @@ func (s *StubReferralRepo) MarkBonusGranted(ctx context.Context, referralID int6
 	}
 	return nil
 }
+
+func (s *StubReferralRepo) CountByReferrer(ctx context.Context, referrerID int64) (int, error) {
+	if s.Model != nil && s.Model.ReferrerID == referrerID {
+		return 1, nil
+	}
+	return 0, nil
+}

@@ -12,7 +12,7 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 
-	"remnawave-tg-shop-bot/internal/pkg/contextkey"
+	"remnawave-tg-shop-bot/internal/pkg/config"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
 	pg "remnawave-tg-shop-bot/internal/repository/pg"
 	"remnawave-tg-shop-bot/internal/service/payment"
@@ -21,20 +21,43 @@ import (
 
 func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	langCode := update.CallbackQuery.From.LanguageCode
-	tm := translation.GetInstance()
 	chatID, msgID, err := getCallbackIDs(update)
 	if err != nil {
 		slog.Error(err.Error())
 		return
 	}
-	_, err = h.findOrCreateCustomer(ctx, update.CallbackQuery.From.ID, langCode)
+
+	customer, err := h.customerRepository.FindByTelegramId(ctx, update.CallbackQuery.From.ID)
 	if err != nil {
-		slog.Error("find or create customer", "err", err)
+		slog.Error("find customer", "err", err)
+		return
+	}
+	if customer == nil {
+		slog.Error("customer not found")
 		return
 	}
 
-	admin := contextkey.IsAdminFromContext(ctx)
-	kb := menu.BuildPromoRefMain(langCode, admin)
+	refCount := 0
+	if h.referralRepository != nil {
+		var errCount error
+		refCount, errCount = h.referralRepository.CountByReferrer(ctx, customer.TelegramID)
+		if errCount != nil {
+			slog.Error("count referrals", "err", errCount)
+			refCount = 0
+		}
+	}
+
+	botUsername := strings.TrimPrefix(config.BotURL(), "https://t.me/")
+	botUsername = strings.TrimPrefix(botUsername, "http://t.me/")
+	deepLink := buildDeepLink(botUsername, customer.TelegramID)
+	shareText := h.translation.GetText(langCode, "referral_share_text")
+	shareURL := buildShareURL(deepLink, shareText)
+
+	text := fmt.Sprintf(h.translation.GetText(langCode, "referral_text"), refCount)
+	kb := [][]models.InlineKeyboardButton{
+		{{Text: h.translation.GetText(langCode, "share_referral_button"), URL: shareURL}},
+		{{Text: h.translation.GetText(langCode, "back_button"), CallbackData: CallbackStart}},
+	}
 
 	var curMsg *models.Message
 	if update.CallbackQuery.Message.Message != nil {
@@ -44,11 +67,15 @@ func (h *Handler) ReferralCallbackHandler(ctx context.Context, b *bot.Bot, updat
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
-		Text:        tm.GetText(langCode, "referral_menu_text"),
+		Text:        text,
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 	})
 	if err != nil {
-		slog.Error("Error sending referral menu", "err", err)
+		slog.Error("edit referral share", "err", err)
+	}
+
+	if _, err := b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{CallbackQueryID: update.CallbackQuery.ID}); err != nil {
+		slog.Error("answer callback", "err", err)
 	}
 }
 

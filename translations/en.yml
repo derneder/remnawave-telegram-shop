@@ -36,7 +36,6 @@ trial_activated: Trial period activated
 trial_text: Your trial version is active
 activate_trial_button: Activate trial version
 referral_button: 🎉 Referral system & promo
-referral_menu_text: "✨ Welcome to Promo Codes and Referrals ✨\n\n🤝 1. View your referral menu\n🎫 2. Activate a promo code\n\n👉 Please select an action below."
 referral_system_button: 🤝 Referral system
 referral_bonus_granted: You have received a referral bonus!
 stars_button: ' ⭐Telegram Stars'
@@ -148,3 +147,7 @@ promo.item.compact_sub: "%s %s — %dmo (%d left)"
 promo.item.compact_bal: "%s %s — %d RUB (%d left)"
 promo.item.status_icon.active: "🟢"
 promo.item.status_icon.inactive: "⏸"
+
+referral_text: "You have invited %d friends"
+referral_share_text: "Join using my link!"
+share_referral_button: "🔗 Share"

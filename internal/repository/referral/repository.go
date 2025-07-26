@@ -10,6 +10,7 @@ type Repository interface {
 	Create(ctx context.Context, referrerID int64, refereeID int64) error
 	FindByReferee(ctx context.Context, refereeID int64) (*Model, error)
 	MarkBonusGranted(ctx context.Context, referralID int64) error
+	CountByReferrer(ctx context.Context, referrerID int64) (int, error)
 }
 
 // Model represents a referral record.

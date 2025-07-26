@@ -77,3 +77,21 @@ func (r *repository) MarkBonusGranted(ctx context.Context, referralID int64) err
 	}
 	return nil
 }
+
+func (r *repository) CountByReferrer(ctx context.Context, referrerID int64) (int, error) {
+	query := sq.Select("count(*)").
+		From("referral").
+		Where(sq.Eq{"referrer_id": referrerID}).
+		PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := query.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("build count referral: %w", err)
+	}
+
+	var cnt int
+	if err := r.pool.QueryRow(ctx, sql, args...).Scan(&cnt); err != nil {
+		return 0, fmt.Errorf("exec count referral: %w", err)
+	}
+	return cnt, nil
+}
