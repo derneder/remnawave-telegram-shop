@@ -1,9 +1,9 @@
 package referral
 
-import domain "remnawave-tg-shop-bot/internal/domain/referral"
+import referralrepo "remnawave-tg-shop-bot/internal/repository/referral"
 
 // Repository exposes persistence operations for referrals.
-type Repository = domain.Repository
+type Repository = referralrepo.Repository
 
-// Referral is an alias to the domain Referral type.
-type Referral = domain.Referral
+// Referral is an alias to the repository Model type.
+type Referral = referralrepo.Model
