@@ -38,7 +38,7 @@ func TestPromoActivateCallback(t *testing.T) {
 	upd := &models.Update{CallbackQuery: &models.CallbackQuery{ID: "1", Data: uimenu.CallbackPromoUserActivate, From: models.User{ID: 1, LanguageCode: "ru"}, Message: models.MaybeInaccessibleMessage{Message: &models.Message{ID: 1, Chat: models.Chat{ID: 1}}}}}
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, false)
 	h.PromoEnterCallbackHandler(ctx, b, upd)
-	if !strings.Contains(httpc.body, tm.GetText("ru", "enter_promocode_prompt")) {
+	if !strings.Contains(httpc.body, tm.GetText("ru", "promo.activate.prompt")) {
 		t.Fatalf("unexpected body: %s", httpc.body)
 	}
 }

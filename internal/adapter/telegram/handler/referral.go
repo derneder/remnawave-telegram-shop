@@ -83,11 +83,11 @@ func (h *Handler) PromoEnterCallbackHandler(ctx context.Context, b *bot.Bot, upd
 		ChatID:      chatID,
 		MessageID:   msgID,
 		ParseMode:   models.ParseModeHTML,
-		Text:        tm.GetText(langCode, "enter_promocode_prompt"),
+		Text:        tm.GetText(langCode, "promo.activate.prompt"),
 		ReplyMarkup: models.InlineKeyboardMarkup{InlineKeyboard: kb},
 	})
 	if err != nil {
-		slog.Error("Error sending enter_promocode_prompt code msg", "err", err)
+		slog.Error("Error sending promo activate prompt", "err", err)
 	}
 
 }
@@ -210,8 +210,9 @@ func (h *Handler) PromocodeCommandHandler(ctx context.Context, b *bot.Bot, updat
 
 	parts := strings.Fields(update.Message.Text)
 	if len(parts) < 2 {
-		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo_invalid")}); err != nil {
-			slog.Error("send promo invalid", "err", err)
+		h.expectPromo(update.Message.Chat.ID)
+		if _, err := b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: tm.GetText(lang, "promo.activate.prompt")}); err != nil {
+			slog.Error("send promo activate prompt", "err", err)
 		}
 		return
 	}
