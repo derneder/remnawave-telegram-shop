@@ -99,3 +99,23 @@ func TestBuildPersonalCodesMenu(t *testing.T) {
 		t.Fatalf("buttons missing")
 	}
 }
+
+func TestBuildAdminPromoMenus(t *testing.T) {
+	tm := translation.GetInstance()
+	if err := tm.InitDefaultTranslations(); err != nil {
+		t.Fatalf("init translations: %v", err)
+	}
+
+	kb := BuildAdminPromoMenu("en")
+	if len(kb) != 2 || kb[0][0].CallbackData != CallbackPromoAdminMenuPromos {
+		t.Fatalf("unexpected admin promo menu: %#v", kb)
+	}
+
+	kb = BuildAdminPromoCodesMenu("en")
+	if len(kb) != 3 ||
+		kb[0][0].CallbackData != CallbackPromoAdminSubStart ||
+		kb[1][0].CallbackData != CallbackPromoAdminBalanceStart ||
+		kb[2][0].CallbackData != CallbackPromoAdminMenu {
+		t.Fatalf("unexpected admin promo codes menu: %#v", kb)
+	}
+}
