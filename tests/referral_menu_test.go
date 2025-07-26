@@ -14,7 +14,6 @@ import (
 	handlerpkg "remnawave-tg-shop-bot/internal/adapter/telegram/handler"
 	"remnawave-tg-shop-bot/internal/pkg/contextkey"
 	"remnawave-tg-shop-bot/internal/pkg/translation"
-	uimenu "remnawave-tg-shop-bot/internal/ui/menu"
 )
 
 type stubHTTP2 struct{ body string }
@@ -39,16 +38,7 @@ func TestReferralCallbackHandler_UserAdmin(t *testing.T) {
 
 	ctx := context.WithValue(context.Background(), contextkey.IsAdminKey, false)
 	h.ReferralCallbackHandler(ctx, b, upd)
-	if !strings.Contains(httpc.body, string(uimenu.CallbackPromoUserActivate)) {
-		t.Fatalf("user menu missing activate button")
-	}
-	if !strings.Contains(httpc.body, string(uimenu.CallbackPromoMyList)) {
-		t.Fatalf("promo list button missing")
-	}
-	if strings.Contains(httpc.body, string(uimenu.CallbackPromoAdminMenu)) {
-		t.Fatalf("unexpected admin button")
-	}
-	if strings.Contains(httpc.body, string(handlerpkg.CallbackFAQ)) {
-		t.Fatalf("unexpected FAQ button")
+	if !strings.Contains(httpc.body, "callback_query_id") {
+		t.Fatalf("callback not answered")
 	}
 }

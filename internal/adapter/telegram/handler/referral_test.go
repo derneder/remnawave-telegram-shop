@@ -16,6 +16,9 @@ func (stubReferralRepo) FindByReferee(ctx context.Context, refereeID int64) (*re
 	return nil, nil
 }
 func (stubReferralRepo) MarkBonusGranted(ctx context.Context, referralID int64) error { return nil }
+func (stubReferralRepo) CountByReferrer(ctx context.Context, referrerID int64) (int, error) {
+	return 0, nil
+}
 
 func TestNewHandlerReferral(t *testing.T) {
 	tm := translation.GetInstance()
